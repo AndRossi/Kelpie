@@ -1,7 +1,7 @@
 import copy
 from collections import defaultdict
 import numpy as np
-from kelpie.dataset import Dataset
+from kelpie.dataset import Dataset, FB15K
 
 
 class ComplExDataset(Dataset):
@@ -146,13 +146,24 @@ class KelpieComplExDataset(ComplExDataset):
         self.kelpie_inverse_valid_samples = self._replace_entity_in_samples(self.inverse_valid_samples, self.original_entity_id, self.kelpie_entity_id)
         self.kelpie_inverse_test_samples = self._replace_entity_in_samples(self.inverse_test_samples, self.original_entity_id, self.kelpie_entity_id)
 
-        # update the to_filter sets to have them also include the Kelpie entity
-        for (entity_id, relation_id) in dataset.to_filter:
-            if self.original_entity_id in self.to_filter[(entity_id, relation_id)]:
-                self.to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+        # update the to_filter sets to include the filter lists for the facts with the Kelpie entity
         for (entity_id, relation_id) in dataset.to_filter:
             if entity_id == self.original_entity_id:
                 self.to_filter[(self.kelpie_entity_id, relation_id)] = copy.deepcopy(self.to_filter[(entity_id, relation_id)])
+
+        # add the kelpie entity in the filter list for all original facts
+        for (entity_id, relation_id) in self.to_filter:
+
+            # if the couple (entity_id, relation_id) was in the original dataset,
+            # ALWAYS add the kelpie entity to the filtering list
+            if (entity_id, relation_id) in dataset.to_filter:
+                self.to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+
+            # else, it means that the entity id is the kelpie entity id.
+            # in this case add the kelpie entity id to the list only if the original entity id is already in the list
+            elif self.original_entity_id in self.to_filter[(entity_id, relation_id)]:
+                self.to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+
 
     #override
     def load(self):

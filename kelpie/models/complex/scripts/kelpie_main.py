@@ -177,28 +177,33 @@ for e in range(args.max_epochs):
 
 ###########  EXTRACT RESULTS
 
-print("\n\nExtracting results...")
+print("\nExtracting results...")
 kelpie_entity_id = kelpie_dataset.kelpie_entity_id
 kelpie_sample_tuple = (kelpie_entity_id, relation_id, tail_id) if args.perspective == "head" else (head_id, relation_id, kelpie_entity_id)
 kelpie_sample = numpy.array(kelpie_sample_tuple)
 
 ### Evaluation on original entity
 
-# results on original fact
+# Original model on original fact
 scores, ranks, predictions = original_model.predict_sample(original_sample)
-print("Original model on original test fact: <%s, %s, %s>" % original_sample_tuple)
+print("\nOriginal model on original test fact: <%s, %s, %s>" % original_sample_tuple)
 print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
 print("\tHead Rank: %f" % ranks[0])
 print("\tTail Rank: %f" % ranks[1])
 
-# results on original fact
+# Original model on all facts containing the original entity
+print("\nOriginal model on all test facts containing the original entity:")
+mrr, h1 = ComplExEvaluator().eval(original_model, original_entity_test_samples)
+print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
+
+# Kelpie model model on original fact
 scores, ranks, predictions = kelpie_model.predict_sample(original_sample)
-print("Kelpie model on original test fact: <%s, %s, %s>" % original_sample_tuple)
+print("\nKelpie model on original test fact: <%s, %s, %s>" % original_sample_tuple)
 print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
 print("\tHead Rank: %f" % ranks[0])
 print("\tTail Rank: %f" % ranks[1])
 
-# results on all facts containing the original entity
+# Kelpie model on all facts containing the original entity
 print("\nKelpie model on all test facts containing the original entity:")
 mrr, h1 = ComplExEvaluator().eval(kelpie_model, original_entity_test_samples)
 print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
@@ -208,7 +213,7 @@ print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 # results on kelpie fact
 scores, ranks, _ = kelpie_model.predict_sample(kelpie_sample)
-print("Kelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
+print("\nKelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
 print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
 print("\tHead Rank: %f" % ranks[0])
 print("\tTail Rank: %f" % ranks[1])

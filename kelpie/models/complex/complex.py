@@ -173,7 +173,6 @@ class ComplEx(nn.Module, ABC):
             head_embeddings[0] * relation_embeddings[1] + head_embeddings[1] * relation_embeddings[0]
         ], 1)
 
-
     def predict_sample(self, direct_sample: np.array):
         sample_tuple = (direct_sample[0], direct_sample[1], direct_sample[2])
         sample_2_scores, sample_2_ranks, sample_2_predictions = self.predict_samples(np.array([direct_sample]))
