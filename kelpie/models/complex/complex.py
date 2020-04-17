@@ -173,6 +173,31 @@ class ComplEx(nn.Module, ABC):
             head_embeddings[0] * relation_embeddings[1] + head_embeddings[1] * relation_embeddings[0]
         ], 1)
 
+
+    def temporary_test(self, samples):
+
+        result = dict()
+        with torch.no_grad():
+
+            # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
+            # and compute the scores using any possible entity as a tail
+            q = self._get_queries(samples)
+            rhs = self._get_rhs()
+            all_scores = q @ rhs
+
+        all_scores = all_scores.cpu().numpy()
+        for i, (head_id, rel_id, tail_id) in enumerate(samples):
+
+            result[(head_id, rel_id, tail_id)] = dict()
+            sample_scores = all_scores[i]
+
+            for entity_id in range(self.num_entities):
+                result[(head_id, rel_id, tail_id)][entity_id] = sample_scores[entity_id]
+
+        return result
+
+
+
     def predict_sample(self, direct_sample: np.array):
         sample_tuple = (direct_sample[0], direct_sample[1], direct_sample[2])
         sample_2_scores, sample_2_ranks, sample_2_predictions = self.predict_samples(np.array([direct_sample]))

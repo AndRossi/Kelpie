@@ -2,14 +2,11 @@ import argparse
 import os
 
 import torch
-from torch import optim
-
 from kelpie.dataset import ALL_DATASET_NAMES
 from kelpie.models.complex.complex import ComplEx
 from kelpie.models.complex.dataset import ComplExDataset
 from kelpie.models.complex.evaluators import ComplExEvaluator
 from kelpie.models.complex.optimizers import ComplExOptimizer
-from kelpie.models.complex.regularizers import N2, N3
 
 # todo: when we add more models, we should move these variables to another location
 MODEL_HOME = os.path.abspath("./models/")
@@ -50,7 +47,7 @@ parser.add_argument('--max_epochs',
 )
 
 parser.add_argument('--valid',
-                    default=3,
+                    default=-1,
                     type=float,
                     help="Number of epochs before valid."
 )
@@ -97,7 +94,8 @@ parser.add_argument('--decay2',
 )
 
 parser.add_argument('--load',
-                    help="path to the model to load")
+                    help="path to the model to load",
+                    required=False)
 
 args = parser.parse_args()
 
@@ -105,49 +103,31 @@ model_path = "./models/" + "_".join([args.model, args.dataset]) + ".pt"
 if args.load is not None:
     model_path = args.load
 
+print("Loading %s dataset..." % args.dataset)
+dataset = ComplExDataset(name=args.dataset, separator="\t", load=True)
 
-regularizer = {
-    'N2': N2(args.reg),
-    'N3': N3(args.reg),
-}[args.regularizer]
-
-
-dataset = ComplExDataset(args.dataset, separator="\t")
-print("Loading %s dataset..." % dataset.name)
-dataset.load()
-
+print("Initializing model...")
 model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)
 model.to('cuda')
-
-optim_method = {
-    'Adagrad': lambda: optim.Adagrad(model.parameters(), lr=args.learning_rate),
-    'Adam': lambda: optim.Adam(model.parameters(), lr=args.learning_rate, betas=(args.decay1, args.decay2)),
-    'SGD': lambda: optim.SGD(model.parameters(), lr=args.learning_rate)
-}[args.optimizer]()
-
-optimizer = ComplExOptimizer(model, regularizer, optim_method, args.batch_size)
-
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))
-    model.eval()
 
-evaluator = ComplExEvaluator()
-train_samples = dataset.get_train_samples(with_inverse=True)
-for e in range(args.max_epochs):
+print("Training model...")
+optimizer = ComplExOptimizer(model=model,
+                             optimizer_name=args.optimizer,
+                             batch_size=args.batch_size,
+                             learning_rate=args.learning_rate,
+                             decay1=args.decay1,
+                             decay2=args.decay2,
+                             regularizer_name=args.regularizer,
+                             regularizer_weight=args.reg)
+optimizer.train(train_samples=dataset.train_samples,
+                max_epochs=args.max_epochs,
+                save_path=model_path,
+                evaluate_every=args.valid,
+                valid_samples=dataset.valid_samples)
 
-    cur_loss = optimizer.epoch(train_samples)
-
-    if (e + 1) % args.valid == 0:
-        mrr, h1 = evaluator.eval(model, dataset.get_valid_samples(with_inverse=False), write_output=False)
-
-        print("\tValidation Hits@1: %f" % h1)
-        print("\tValidation Mean Reciprocal Rank: %f" % mrr)
-
-        print("\t saving model...")
-        torch.save(model.state_dict(), model_path)
-        print("\t done.")
-
-mrr, h1 = evaluator.eval(model, dataset.get_test_samples(with_inverse=False), write_output=False)
-print("\n")
+print("\nEvaluating model...")
+mrr, h1 = ComplExEvaluator(model=model).eval(samples=dataset.test_samples, write_output=False)
 print("\tTest Hits@1: %f" % h1)
 print("\tTest Mean Reciprocal Rank: %f" % mrr)

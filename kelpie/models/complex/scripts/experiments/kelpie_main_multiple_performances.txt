@@ -1,0 +1,684 @@
+Loading dataset...
+Loading original trained model...
+
+Working with entity /m/09c7w0 (train degree 9739; test degree 1203): explaining fact </m/06yxd, /base/biblioness/bibs_location/country, /m/09c7w0>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <6675, 267, 58>
+	Direct fact score: 25.359087; Inverse fact score: 16.786091
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.649079; H@1: 0.588944;
+
+Kelpie model on kelpie test fact: <6675, 267, 14951>
+	Direct fact score: 32.944283; Inverse fact score: 21.602314
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.644666; H@1: 0.579800;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 21.009481 (min: 16.094467, max: 34.661057)
+	Average distance of all entities from kelpie entity: 24.774580 (min: 19.564594, max: 37.096863)
+	Distance between original entity and kelpie entity:6.970908
+
+Done.
+
+
+Working with entity /m/02sdk9v (train degree 3807; test degree 436): explaining fact </m/02b13y, /sports/sports_team/roster./sports/sports_team_roster/position, /m/02sdk9v>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <11730, 138, 17>
+	Direct fact score: 15.389131; Inverse fact score: 12.861451
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.997515; H@1: 0.995413;
+
+Kelpie model on kelpie test fact: <11730, 138, 14951>
+	Direct fact score: 21.799341; Inverse fact score: 16.067373
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.997276; H@1: 0.995413;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 20.205114 (min: 14.259627, max: 31.950422)
+	Average distance of all entities from kelpie entity: 24.115515 (min: 16.795799, max: 33.842865)
+	Distance between original entity and kelpie entity:8.878032
+
+Done.
+
+
+Working with entity /m/08mbj32 (train degree 4670; test degree 603): explaining fact </m/080v2, /common/topic/webpage./common/webpage/category, /m/08mbj32>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3768, 43, 403>
+	Direct fact score: 35.420734; Inverse fact score: 1.702676
+	Head Rank: 81.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.691711; H@1: 0.533167;
+
+Kelpie model on kelpie test fact: <3768, 43, 14951>
+	Direct fact score: 59.043915; Inverse fact score: 1.234734
+	Head Rank: 531.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.761758; H@1: 0.687396;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 21.358202 (min: 18.364323, max: 33.120346)
+	Average distance of all entities from kelpie entity: 23.800371 (min: 20.442368, max: 34.163517)
+	Distance between original entity and kelpie entity:8.631047
+
+Done.
+
+
+Working with entity /m/02nzb8 (train degree 3754; test degree 452): explaining fact </m/02gys2, /sports/sports_team/roster./soccer/football_roster_position/position, /m/02nzb8>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <1527, 171, 9>
+	Direct fact score: 13.542608; Inverse fact score: 12.693142
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.987011; H@1: 0.976770;
+
+Kelpie model on kelpie test fact: <1527, 171, 14951>
+	Direct fact score: 19.599049; Inverse fact score: 14.439385
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.982737; H@1: 0.969027;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 19.916502 (min: 13.679328, max: 31.922644)
+	Average distance of all entities from kelpie entity: 23.694933 (min: 16.254366, max: 33.874859)
+	Distance between original entity and kelpie entity:8.809545
+
+Done.
+
+
+Working with entity /m/02h40lc (train degree 2924; test degree 350): explaining fact </m/0bwfn, /education/educational_institution/students_graduates./education/education/major_field_of_study, /m/02h40lc>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <5571, 202, 251>
+	Direct fact score: 17.094931; Inverse fact score: 18.035679
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.644231; H@1: 0.567143;
+
+Kelpie model on kelpie test fact: <5571, 202, 14951>
+	Direct fact score: 24.966585; Inverse fact score: 24.065165
+	Head Rank: 2.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.629000; H@1: 0.540000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 20.998047 (min: 17.158688, max: 33.392689)
+	Average distance of all entities from kelpie entity: 23.972254 (min: 18.874413, max: 35.140022)
+	Distance between original entity and kelpie entity:8.092169
+
+Done.
+
+
+Working with entity /m/02_286 (train degree 1581; test degree 188): explaining fact </m/07jrjb, /people/person/places_lived./people/place_lived/location, /m/02_286>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <5482, 119, 657>
+	Direct fact score: 22.161854; Inverse fact score: 16.379892
+	Head Rank: 64.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.672862; H@1: 0.635638;
+
+Kelpie model on kelpie test fact: <5482, 119, 14951>
+	Direct fact score: 33.775261; Inverse fact score: 20.400301
+	Head Rank: 45.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.740385; H@1: 0.720745;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 18.824589 (min: 14.734640, max: 32.358429)
+	Average distance of all entities from kelpie entity: 20.221107 (min: 15.702965, max: 33.191071)
+	Distance between original entity and kelpie entity:8.165306
+
+Done.
+
+
+Working with entity /m/02jknp (train degree 1223; test degree 151): explaining fact </m/02jknp, /people/profession/people_with_this_profession, /m/03ysmg>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <651, 32, 8690>
+	Direct fact score: 11.940522; Inverse fact score: 17.834373
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.882387; H@1: 0.860927;
+
+Kelpie model on kelpie test fact: <14951, 32, 8690>
+	Direct fact score: 14.007235; Inverse fact score: 26.581810
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.902098; H@1: 0.890728;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 16.329638 (min: 10.635282, max: 31.794102)
+	Average distance of all entities from kelpie entity: 18.234802 (min: 11.798444, max: 32.607784)
+	Distance between original entity and kelpie entity:6.4531746
+
+Done.
+
+
+Working with entity /m/09sb52 (train degree 1177; test degree 145): explaining fact </m/027f7dj, /award/award_nominee/award_nominations./award/award_nomination/award, /m/09sb52>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <2255, 37, 682>
+	Direct fact score: 15.612950; Inverse fact score: 12.564166
+	Head Rank: 8.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.930452; H@1: 0.910345;
+
+Kelpie model on kelpie test fact: <2255, 37, 14951>
+	Direct fact score: 23.596624; Inverse fact score: 16.841621
+	Head Rank: 36.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.923475; H@1: 0.913793;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 15.563338 (min: 10.478595, max: 31.652491)
+	Average distance of all entities from kelpie entity: 18.110632 (min: 12.281973, max: 32.746754)
+	Distance between original entity and kelpie entity:7.0299096
+
+Done.
+
+
+Working with entity /m/086k8 (train degree 979; test degree 109): explaining fact </m/02ny6g, /film/film/distributors./film/film_film_distributor_relationship/distributor, /m/086k8>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <5222, 184, 436>
+	Direct fact score: 22.977018; Inverse fact score: 13.014872
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.931842; H@1: 0.917431;
+
+Kelpie model on kelpie test fact: <5222, 184, 14951>
+	Direct fact score: 30.964907; Inverse fact score: 16.706404
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.882350; H@1: 0.839450;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 16.368015 (min: 11.776000, max: 31.996986)
+	Average distance of all entities from kelpie entity: 19.162271 (min: 14.123067, max: 33.409107)
+	Distance between original entity and kelpie entity:7.6416554
+
+Done.
+
+
+Working with entity /m/05qd_ (train degree 824; test degree 107): explaining fact </m/06t6dz, /award/award_nominated_work/award_nominations./award/award_nomination/award_nominee, /m/05qd_>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <6684, 53, 552>
+	Direct fact score: 17.867783; Inverse fact score: 16.813549
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.887873; H@1: 0.850467;
+
+Kelpie model on kelpie test fact: <6684, 53, 14951>
+	Direct fact score: 25.137678; Inverse fact score: 19.727684
+	Head Rank: 2.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.875608; H@1: 0.827103;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 15.995698 (min: 11.343385, max: 32.105530)
+	Average distance of all entities from kelpie entity: 18.659838 (min: 13.180295, max: 33.385036)
+	Distance between original entity and kelpie entity:7.702808
+
+Done.
+
+
+Working with entity /m/06b1q (train degree 688; test degree 85): explaining fact </m/06b1q, /sports/sports_position/players./american_football/football_historical_roster_position/team, /m/070xg>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <1274, 45, 4530>
+	Direct fact score: 15.443254; Inverse fact score: 13.580304
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.964706; H@1: 0.929412;
+
+Kelpie model on kelpie test fact: <14951, 45, 4530>
+	Direct fact score: 19.469837; Inverse fact score: 21.515846
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.957843; H@1: 0.917647;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 17.654991 (min: 10.842057, max: 32.004360)
+	Average distance of all entities from kelpie entity: 21.447134 (min: 13.138513, max: 33.657749)
+	Distance between original entity and kelpie entity:8.356304
+
+Done.
+
+
+Working with entity /m/016z4k (train degree 575; test degree 59): explaining fact </m/01w58n3, /people/person/profession, /m/016z4k>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <8436, 30, 202>
+	Direct fact score: 12.859697; Inverse fact score: 8.832023
+	Head Rank: 204.000000
+	Tail Rank: 5.000000
+Original model overall results on the original entity:	MR: 0.844680; H@1: 0.813559;
+
+Kelpie model on kelpie test fact: <8436, 30, 14951>
+	Direct fact score: 21.647371; Inverse fact score: 12.634255
+	Head Rank: 143.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.872133; H@1: 0.838983;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 15.576184 (min: 10.600250, max: 31.763485)
+	Average distance of all entities from kelpie entity: 17.351271 (min: 11.540385, max: 32.471439)
+	Distance between original entity and kelpie entity:6.7373147
+
+Done.
+
+
+Working with entity /m/018j2 (train degree 397; test degree 45): explaining fact </m/0l1589, /music/performance_role/track_performances./music/track_contribution/role, /m/018j2>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3970, 136, 1166>
+	Direct fact score: 12.982940; Inverse fact score: 10.996748
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.877664; H@1: 0.855556;
+
+Kelpie model on kelpie test fact: <3970, 136, 14951>
+	Direct fact score: 20.973644; Inverse fact score: 13.967489
+	Head Rank: 3.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.834359; H@1: 0.777778;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 16.080067 (min: 11.702556, max: 31.218245)
+	Average distance of all entities from kelpie entity: 19.093956 (min: 13.273012, max: 32.322460)
+	Distance between original entity and kelpie entity:8.379416
+
+Done.
+
+
+Working with entity /m/07y_7 (train degree 345; test degree 39): explaining fact </m/03qjg, /music/performance_role/regular_performances./music/group_membership/role, /m/07y_7>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <4077, 15, 31>
+	Direct fact score: 9.292791; Inverse fact score: 8.416327
+	Head Rank: 6.000000
+	Tail Rank: 9.000000
+Original model overall results on the original entity:	MR: 0.903326; H@1: 0.884615;
+
+Kelpie model on kelpie test fact: <4077, 15, 14951>
+	Direct fact score: 17.595615; Inverse fact score: 11.936735
+	Head Rank: 4.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.813481; H@1: 0.730769;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 16.465305 (min: 11.312375, max: 31.235432)
+	Average distance of all entities from kelpie entity: 19.325539 (min: 13.115702, max: 32.227852)
+	Distance between original entity and kelpie entity:8.059472
+
+Done.
+
+
+Working with entity /m/062z7 (train degree 294; test degree 41): explaining fact </m/01p896, /education/educational_institution/students_graduates./education/education/major_field_of_study, /m/062z7>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <11521, 202, 2670>
+	Direct fact score: 20.648041; Inverse fact score: 18.968124
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.805210; H@1: 0.780488;
+
+Kelpie model on kelpie test fact: <11521, 202, 14951>
+	Direct fact score: 30.009089; Inverse fact score: 22.338463
+	Head Rank: 4.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.813760; H@1: 0.768293;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 15.290359 (min: 11.526174, max: 31.108639)
+	Average distance of all entities from kelpie entity: 17.976004 (min: 12.493998, max: 31.778011)
+	Distance between original entity and kelpie entity:7.9496965
+
+Done.
+
+
+Working with entity /m/09n4nb (train degree 250; test degree 21): explaining fact </m/047q2wc, /award/award_winner/awards_won./award/award_honor/ceremony, /m/09n4nb>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <5634, 80, 4542>
+	Direct fact score: 19.441759; Inverse fact score: 16.061224
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.965079; H@1: 0.952381;
+
+Kelpie model on kelpie test fact: <5634, 80, 14951>
+	Direct fact score: 23.318846; Inverse fact score: 16.835026
+	Head Rank: 34.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.961018; H@1: 0.952381;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 14.066771 (min: 8.685032, max: 30.609236)
+	Average distance of all entities from kelpie entity: 16.700653 (min: 10.019226, max: 31.374426)
+	Distance between original entity and kelpie entity:6.8726225
+
+Done.
+
+
+Working with entity /m/02lyr4 (train degree 202; test degree 24): explaining fact </m/07l8x, /baseball/baseball_team/current_roster./sports/sports_team_roster/position, /m/02lyr4>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3937, 540, 1912>
+	Direct fact score: 15.469206; Inverse fact score: 15.661782
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 1.000000; H@1: 1.000000;
+
+Kelpie model on kelpie test fact: <3937, 540, 14951>
+	Direct fact score: 20.618908; Inverse fact score: 17.971729
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 14.900780 (min: 6.476963, max: 31.137575)
+	Average distance of all entities from kelpie entity: 17.899557 (min: 8.591342, max: 32.057152)
+	Distance between original entity and kelpie entity:7.577552
+
+Done.
+
+
+Working with entity /m/02q1tc5 (train degree 168; test degree 16): explaining fact </m/02q1tc5, /award/award_category/winners./award/award_honor/honored_for, /m/02_1kl>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <1482, 72, 9405>
+	Direct fact score: 17.338392; Inverse fact score: 18.533743
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 1.000000; H@1: 1.000000;
+
+Kelpie model on kelpie test fact: <14951, 72, 9405>
+	Direct fact score: 20.986303; Inverse fact score: 29.534283
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.984375; H@1: 0.968750;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.827274 (min: 6.468355, max: 30.534115)
+	Average distance of all entities from kelpie entity: 15.259204 (min: 8.895436, max: 31.269848)
+	Distance between original entity and kelpie entity:6.0564084
+
+Done.
+
+
+Working with entity /m/02y8z (train degree 167; test degree 23): explaining fact </m/018qb4, /olympics/olympic_games/sports, /m/02y8z>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3334, 118, 4169>
+	Direct fact score: 13.280108; Inverse fact score: 13.745630
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.890233; H@1: 0.869565;
+
+Kelpie model on kelpie test fact: <3334, 118, 14951>
+	Direct fact score: 20.135006; Inverse fact score: 17.249237
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.834640; H@1: 0.782609;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.786419 (min: 7.509401, max: 31.218119)
+	Average distance of all entities from kelpie entity: 15.877306 (min: 9.313171, max: 31.658319)
+	Distance between original entity and kelpie entity:7.6915565
+
+Done.
+
+
+Working with entity /m/05zl0 (train degree 132; test degree 23): explaining fact </m/05zl0, /award/ranked_item/appears_in_ranked_lists./award/ranking/list, /m/09g7thr>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <5892, 389, 3191>
+	Direct fact score: 20.530098; Inverse fact score: 14.890990
+	Head Rank: 2.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.799548; H@1: 0.782609;
+
+Kelpie model on kelpie test fact: <14951, 389, 3191>
+	Direct fact score: 23.891817; Inverse fact score: 24.044338
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.821994; H@1: 0.760870;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 13.225601 (min: 9.202335, max: 31.413055)
+	Average distance of all entities from kelpie entity: 15.497487 (min: 10.551626, max: 31.565136)
+	Distance between original entity and kelpie entity:7.592921
+
+Done.
+
+
+Working with entity /m/021bk (train degree 123; test degree 20): explaining fact </m/021bk, /award/award_nominee/award_nominations./award/award_nomination/award_nominee, /m/02qx69>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3356, 13, 2807>
+	Direct fact score: 11.400950; Inverse fact score: 11.042028
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.918281; H@1: 0.900000;
+
+Kelpie model on kelpie test fact: <14951, 13, 2807>
+	Direct fact score: 12.553546; Inverse fact score: 18.450283
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.937500; H@1: 0.875000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.592660 (min: 7.464304, max: 31.068529)
+	Average distance of all entities from kelpie entity: 15.494094 (min: 9.816740, max: 31.816982)
+	Distance between original entity and kelpie entity:7.3654103
+
+Done.
+
+
+Working with entity /m/049qx (train degree 100; test degree 13): explaining fact </m/049qx, /people/person/profession, /m/0cbd2>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <6191, 30, 391>
+	Direct fact score: 16.473644; Inverse fact score: 12.417838
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.890290; H@1: 0.884615;
+
+Kelpie model on kelpie test fact: <14951, 30, 391>
+	Direct fact score: 21.511078; Inverse fact score: 20.625551
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.945266; H@1: 0.923077;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 13.050673 (min: 9.000953, max: 31.387259)
+	Average distance of all entities from kelpie entity: 15.718950 (min: 10.922679, max: 31.853783)
+	Distance between original entity and kelpie entity:7.774163
+
+Done.
+
+
+Working with entity /m/09kvv (train degree 91; test degree 7): explaining fact </m/09kvv, /education/university/domestic_tuition./measurement_unit/dated_money_value/currency, /m/09nqf>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <2562, 362, 138>
+	Direct fact score: 25.307472; Inverse fact score: 19.548437
+	Head Rank: 7.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.801247; H@1: 0.785714;
+
+Kelpie model on kelpie test fact: <14951, 362, 138>
+	Direct fact score: 30.336975; Inverse fact score: 30.049467
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.934066; H@1: 0.928571;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.577834 (min: 8.965632, max: 30.804003)
+	Average distance of all entities from kelpie entity: 15.130123 (min: 10.474158, max: 31.225422)
+	Distance between original entity and kelpie entity:7.2686334
+
+Done.
+
+
+Working with entity /m/05kh_ (train degree 87; test degree 9): explaining fact </m/05kh_, /film/director/film, /m/01lsl>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <7078, 203, 4208>
+	Direct fact score: 20.604641; Inverse fact score: 24.203125
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.861713; H@1: 0.833333;
+
+Kelpie model on kelpie test fact: <14951, 203, 4208>
+	Direct fact score: 20.824030; Inverse fact score: 28.420477
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.944815; H@1: 0.944444;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.417202 (min: 9.009698, max: 31.679752)
+	Average distance of all entities from kelpie entity: 15.250759 (min: 10.772861, max: 31.960751)
+	Distance between original entity and kelpie entity:8.7363615
+
+Done.
+
+
+Working with entity /m/01tnbn (train degree 72; test degree 7): explaining fact </m/0cbd2, /people/profession/people_with_this_profession, /m/01tnbn>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <391, 32, 8169>
+	Direct fact score: 12.225790; Inverse fact score: 16.802402
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.791811; H@1: 0.785714;
+
+Kelpie model on kelpie test fact: <391, 32, 14951>
+	Direct fact score: 20.639893; Inverse fact score: 21.678850
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.931818; H@1: 0.928571;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.976332 (min: 9.248333, max: 31.192068)
+	Average distance of all entities from kelpie entity: 15.525696 (min: 10.840861, max: 31.791798)
+	Distance between original entity and kelpie entity:7.0887127
+
+Done.
+
+
+Working with entity /m/028d4v (train degree 69; test degree 11): explaining fact </m/028d4v, /people/person/profession, /m/0dxtg>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3455, 30, 667>
+	Direct fact score: 18.728487; Inverse fact score: 11.308518
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.781957; H@1: 0.727273;
+
+Kelpie model on kelpie test fact: <14951, 30, 667>
+	Direct fact score: 21.535818; Inverse fact score: 19.860685
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 0.775495; H@1: 0.727273;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 11.699003 (min: 6.796189, max: 31.534204)
+	Average distance of all entities from kelpie entity: 14.971020 (min: 9.666402, max: 31.552994)
+	Distance between original entity and kelpie entity:9.545074
+
+Done.
+
+
+Working with entity /m/03193l (train degree 43; test degree 5): explaining fact </m/03193l, /common/topic/webpage./common/webpage/category, /m/08mbj32>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3874, 43, 403>
+	Direct fact score: 21.231188; Inverse fact score: 3.285941
+	Head Rank: 2.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 0.668519; H@1: 0.500000;
+
+Kelpie model on kelpie test fact: <14951, 43, 403>
+	Direct fact score: 13.982168; Inverse fact score: 9.789106
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.039086 (min: 8.026898, max: 31.006323)
+	Average distance of all entities from kelpie entity: 14.441260 (min: 9.460774, max: 31.214548)
+	Distance between original entity and kelpie entity:7.9007845
+
+Done.
+
+
+Working with entity /m/0g2ff (train degree 29; test degree 4): explaining fact </m/0g2ff, /music/performance_role/regular_performances./music/group_membership/role, /m/0mkg>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <8011, 15, 814>
+	Direct fact score: 13.256302; Inverse fact score: 11.289805
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 1.000000; H@1: 1.000000;
+
+Kelpie model on kelpie test fact: <14951, 15, 814>
+	Direct fact score: 14.022379; Inverse fact score: 17.939501
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 12.323248 (min: 9.073355, max: 31.150860)
+	Average distance of all entities from kelpie entity: 16.212421 (min: 11.246812, max: 31.170744)
+	Distance between original entity and kelpie entity:10.469534
+
+Done.
+
+
+Working with entity /m/0269kx (train degree 21; test degree 1): explaining fact </m/0h52w, /protected_sites/natural_or_cultural_site_designation/sites./protected_sites/natural_or_cultural_site_listing/listed_site, /m/0269kx>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3784, 243, 7573>
+	Direct fact score: 14.573653; Inverse fact score: 18.789598
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 1.000000; H@1: 1.000000;
+
+Kelpie model on kelpie test fact: <3784, 243, 14951>
+	Direct fact score: 17.262939; Inverse fact score: 15.116811
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 11.300165 (min: 7.455228, max: 30.958609)
+	Average distance of all entities from kelpie entity: 14.043146 (min: 9.624304, max: 30.888632)
+	Distance between original entity and kelpie entity:8.571948
+
+Done.
+
+
+Working with entity /m/028cl7 (train degree 5; test degree 1): explaining fact </m/03lty, /music/genre/subgenre, /m/028cl7>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <3258, 410, 14497>
+	Direct fact score: 14.966707; Inverse fact score: 20.384771
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Original model overall results on the original entity:	MR: 1.000000; H@1: 1.000000;
+
+Kelpie model on kelpie test fact: <3258, 410, 14951>
+	Direct fact score: 20.988476; Inverse fact score: 14.377192
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 13.742911 (min: 6.663897, max: 33.161774)
+	Average distance of all entities from kelpie entity: 14.344296 (min: 9.923925, max: 31.039221)
+	Distance between original entity and kelpie entity:15.94678
+
+Done.
+
+
+Working with entity /m/03rg5x (train degree 4; test degree 1): explaining fact </m/0cbd2, /people/profession/people_with_this_profession, /m/03rg5x>.
+Running post-training on the Kelpie model...
+Original model on original test fact: <391, 32, 14618>
+	Direct fact score: 9.972353; Inverse fact score: 12.336308
+	Head Rank: 1.000000
+	Tail Rank: 5.000000
+Original model overall results on the original entity:	MR: 0.600000; H@1: 0.500000;
+
+Kelpie model on kelpie test fact: <391, 32, 14951>
+	Direct fact score: 19.879114; Inverse fact score: 19.420507
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+Kelpie model overall results on the kelpie entity:	MR: 1.000000; H@1: 1.000000;
+
+Computing embedding distances...
+	Average distance of all entities from original entity: 13.098140 (min: 3.762386, max: 32.979099)
+	Average distance of all entities from kelpie entity: 13.063459 (min: 8.342303, max: 30.638411)
+	Distance between original entity and kelpie entity:15.302319
+
+Done.
+

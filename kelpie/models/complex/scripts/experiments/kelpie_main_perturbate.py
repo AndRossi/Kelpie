@@ -3,13 +3,16 @@ This module does explanation for ComplEx model
 """
 import argparse
 import torch
+from torch import optim
 import numpy
 
+from kelpie import kelpie_perturbation
 from kelpie.dataset import ALL_DATASET_NAMES
 from kelpie.models.complex.complex import ComplEx, KelpieComplEx
 from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
 from kelpie.models.complex.evaluators import ComplExEvaluator
 from kelpie.models.complex.optimizers import KelpieComplExOptimizer
+from kelpie.models.complex.regularizers import N3
 
 datasets = ALL_DATASET_NAMES
 
@@ -92,6 +95,8 @@ parser.add_argument('--decay2',
 
 #   E.G.    explain  why  /m/02mjmr (Barack Obama)  is predicted as the head for
 #   /m/02mjmr (Barack Obama) 	/people/person/ethnicity	/m/033tf_ (Irish American)
+#   or
+#   /m/02mjmr (Barack Obama)	/people/person/places_lived./people/place_lived/location	/m/02hrh0_ (Honolulu)
 args = parser.parse_args()
 
 
@@ -103,9 +108,7 @@ entity_to_explain = head if args.perspective.lower() == "head" else tail
 
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
-original_dataset = ComplExDataset(name=args.dataset,
-                                  separator="\t",
-                                  load=True)
+original_dataset = ComplExDataset(name=args.dataset, separator="\t", load=True)
 
 # get the ids of the elements of the fact to explain and the perspective entity
 head_id, relation_id, tail_id = original_dataset.get_id_for_entity_name(head), \
@@ -114,8 +117,8 @@ head_id, relation_id, tail_id = original_dataset.get_id_for_entity_name(head), \
 original_entity_id = head_id if args.perspective == "head" else tail_id
 
 # create the fact to explain as a numpy array of its ids
-original_sample_tuple = (head_id, relation_id, tail_id)
-original_sample = numpy.array(original_sample_tuple)
+original_triple = (head_id, relation_id, tail_id)
+original_sample = numpy.array(original_triple)
 
 # check that the fact to explain is actually a test fact
 assert(original_sample in original_dataset.test_samples)
@@ -128,11 +131,7 @@ original_model = ComplEx(dataset=original_dataset, dimension=args.dimension, ini
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
 
-print("Wrapping the original model in a Kelpie explainable model...")
-# use model_to_explain to initialize the Kelpie model
 kelpie_dataset = KelpieComplExDataset(dataset=original_dataset, entity_id=original_entity_id)
-kelpie_model = KelpieComplEx(model=original_model, dataset=kelpie_dataset, init_size=1e-3)
-kelpie_model.to('cuda')
 
 
 ############ EXTRACT TEST FACTS AND TRAINING FACTS
@@ -140,95 +139,85 @@ kelpie_model.to('cuda')
 print("Extracting train and test samples for the original and the kelpie entities...")
 # extract all training facts and test facts involving the entity to explain
 # and replace the id of the entity to explain with the id of the fake kelpie entity
-original_entity_test_samples = kelpie_dataset.original_test_samples
+original_test_samples = kelpie_dataset.original_test_samples
 kelpie_test_samples = kelpie_dataset.kelpie_test_samples
+kelpie_train_samples = kelpie_dataset.kelpie_train_samples
+
+perturbed_list, skipped_list = kelpie_perturbation.perturbate_samples(kelpie_train_samples)
+
+def run_kelpie(train_samples):
+    print("Wrapping the original model in a Kelpie explainable model...")
+    # use model_to_explain to initialize the Kelpie model
+    kelpie_model = KelpieComplEx(model=original_model, dataset=kelpie_dataset, init_size=1e-3)
+    kelpie_model.to('cuda')
+
+    ###########  BUILD THE OPTIMIZER AND RUN POST-TRAINING
+    print("Running post-training on the Kelpie model...")
+    optimizer = KelpieComplExOptimizer(model=kelpie_model,
+                                       optimizer_name=args.optimizer,
+                                       batch_size=args.batch_size,
+                                       learning_rate=args.learning_rate,
+                                       decay1=args.decay1,
+                                       decay2=args.decay2,
+                                       regularizer_name="N3",
+                                       regularizer_weight=args.reg)
+    optimizer.train(train_samples=train_samples, max_epochs=args.max_epochs)
+
+    ###########  EXTRACT RESULTS
+
+    print("\nExtracting results...")
+    kelpie_entity_id = kelpie_dataset.kelpie_entity_id
+    kelpie_sample_tuple = (kelpie_entity_id, relation_id, tail_id) if args.perspective == "head" else (head_id, relation_id, kelpie_entity_id)
+    kelpie_sample = numpy.array(kelpie_sample_tuple)
+
+    ### Evaluation on original entity
+
+    # Kelpie model model on original fact
+    scores, ranks, predictions = kelpie_model.predict_sample(original_sample)
+    print("\nKelpie model on original test fact: <%s, %s, %s>" % original_triple)
+    print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
+    print("\tHead Rank: %f" % ranks[0])
+    print("\tTail Rank: %f" % ranks[1])
+
+    # Kelpie model on all facts containing the original entity
+    print("\nKelpie model on all test facts containing the original entity:")
+    mrr, h1 = ComplExEvaluator(kelpie_model).eval(original_test_samples)
+    print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 
-###########  BUILD THE OPTIMIZER AND RUN POST-TRAINING
+    ### Evaluation on kelpie entity
 
-print("Running post-training on the Kelpie model...")
-# build the Optimizer
-optimizer = KelpieComplExOptimizer(model=kelpie_model,
-                                   optimizer_name=args.optimizer,
-                                   batch_size=args.batch_size,
-                                   learning_rate=args.learning_rate,
-                                   decay1=args.decay1,
-                                   decay2=args.decay2,
-                                   regularizer_name="N3",
-                                   regularizer_weight=args.reg)
+    # results on kelpie fact
+    scores, ranks, _ = kelpie_model.predict_sample(kelpie_sample)
+    print("\nKelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
+    print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
+    print("\tHead Rank: %f" % ranks[0])
+    print("\tTail Rank: %f" % ranks[1])
 
-optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
-                max_epochs=args.max_epochs)
-
-###########  EXTRACT RESULTS
-
-print("\nExtracting results...")
-kelpie_entity_id = kelpie_dataset.kelpie_entity_id
-kelpie_sample_tuple = (kelpie_entity_id, relation_id, tail_id) if args.perspective == "head" else (head_id, relation_id, kelpie_entity_id)
-kelpie_sample = numpy.array(kelpie_sample_tuple)
-
-### Evaluation on original entity
-
-# Original model on original fact
-scores, ranks, predictions = original_model.predict_sample(original_sample)
-print("\nOriginal model on original test fact: <%s, %s, %s>" % original_sample_tuple)
-print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
-print("\tHead Rank: %f" % ranks[0])
-print("\tTail Rank: %f" % ranks[1])
-
-# Original model on all facts containing the original entity
-print("\nOriginal model on all test facts containing the original entity:")
-mrr, h1 = ComplExEvaluator(original_model).eval(original_entity_test_samples)
-print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
-
-# Kelpie model model on original fact
-scores, ranks, predictions = kelpie_model.predict_sample(original_sample)
-print("\nKelpie model on original test fact: <%s, %s, %s>" % original_sample_tuple)
-print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
-print("\tHead Rank: %f" % ranks[0])
-print("\tTail Rank: %f" % ranks[1])
-
-# Kelpie model on all facts containing the original entity
-print("\nKelpie model on all test facts containing the original entity:")
-mrr, h1 = ComplExEvaluator(kelpie_model).eval(original_entity_test_samples)
-print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
+    # results on all facts containing the kelpie entity
+    print("\nKelpie model on all test facts containing the Kelpie entity:")
+    mrr, h1 = ComplExEvaluator(kelpie_model).eval(kelpie_test_samples)
+    print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 
-### Evaluation on kelpie entity
+for i in range(len(perturbed_list)):
+    samples = perturbed_list[i]
 
-# results on kelpie fact
-scores, ranks, _ = kelpie_model.predict_sample(kelpie_sample)
-print("\nKelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
-print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
-print("\tHead Rank: %f" % ranks[0])
-print("\tTail Rank: %f" % ranks[1])
+    skipped_samples = skipped_list[i]
+    skipped_facts = []
+    for s in skipped_samples:
+        print(kelpie_dataset.entity_id_2_name[s[0]])
+        print(kelpie_dataset.relation_id_2_name[int(s[1])])
+        print(s[2])
+        fact = (kelpie_dataset.entity_id_2_name[int(s[0])],
+                kelpie_dataset.relation_id_2_name[int(s[1])],
+                kelpie_dataset.entity_id_2_name[int(s[2])])
+        skipped_facts.append(";".join(fact))
 
-# results on all facts containing the kelpie entity
-print("\nKelpie model on all test facts containing the Kelpie entity:")
-mrr, h1 = ComplExEvaluator(kelpie_model).eval(kelpie_test_samples)
-print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
+    print("### ITER %i" % i)
 
+    print("### SKIPPED FACTS: ")
+    for x in skipped_facts:
+        print("\t" + x)
 
-print("\n\nComputing embedding distances...")
-with torch.no_grad():
-    all_embeddings = kelpie_model.entity_embeddings.cpu().numpy()
-    kelpie_embedding = all_embeddings[-1]
-    original_embedding = all_embeddings[original_entity_id]
-
-    original_distances = []
-    kelpie_distances = []
-    for i in range(kelpie_dataset.num_entities):
-        if i != original_entity_id and i != kelpie_entity_id :
-            original_distances.append(numpy.linalg.norm(all_embeddings[i] - original_embedding, 2))
-            kelpie_distances.append(numpy.linalg.norm(all_embeddings[i] - kelpie_embedding, 2))
-
-    print("\tAverage distance of all entities from Barack Obama: %f (min: %f, max: %f)" %
-          (numpy.average(original_distances), min(original_distances), max(original_distances)) )
-    print("\tAverage distance of all entities from Fake Obama: %f (min: %f, max: %f)" %
-          (numpy.average(kelpie_distances), min(kelpie_distances), max(kelpie_distances)) )
-    print("\tDistance between original entity and kelpie entity:" + str(numpy.linalg.norm(original_embedding-kelpie_embedding, 2)))
-
-#print("\nEnsuring that weights were actually frozen, and that the Kelpie entity weight was actually learned...")
-#identical = kelpie_model.entities_weights.data[0:kelpie_dataset.n_entities] == original_model.entity_embeddings.data[0:kelpie_dataset.n_entities]
-
-print("\nDone.")
+    run_kelpie(samples)

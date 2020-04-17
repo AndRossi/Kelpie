@@ -1,0 +1,865 @@
+Loading dataset FB15k...
+Loading model at location models/ComplEx_FB15k_no_reg.pt...
+Extracting train and test samples for the original and the kelpie entities...
+
+### ITER 0
+### SKIPPED FACTS: 
+	/m/013zdg;/education/educational_degree/people_with_this_degree./education/education/student;kelpie
+	/m/0f8l9c;/base/popstra/location/vacationers./base/popstra/vacation_choice/vacationer;kelpie
+	kelpie;/government/politician/government_positions_held./government/government_position_held/basic_title;/m/060c4
+	/m/0d05fv;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;kelpie
+	kelpie;/people/person/profession;/m/0kyk
+	/m/01w5m;/education/educational_institution/students_graduates./education/education/student;kelpie
+	/m/0d06vc;/base/culturalevent/event/entity_involved;kelpie
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/0bw8r
+	kelpie;/people/person/education./education/education/institution;/m/05q2c
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/01l9p
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.430651; Inverse fact score: 24.431808
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.744191
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.449556 (min: 12.897818, max: 33.394867)
+	Distance between original entity and kelpie entity:9.618222
+
+Done.
+### ITER 1
+### SKIPPED FACTS: 
+	kelpie;/people/person/education./education/education/institution;/m/02d9nr
+	/m/0151w_;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	/m/0413cff;/film/film/personal_appearances./film/personal_film_appearance/person;kelpie
+	/m/02fn5;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+	/m/0d06m5;/government/politician/government_positions_held./government/government_position_held/appointed_by;kelpie
+	/m/02114t;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	kelpie;/people/person/education./education/education/degree;/m/013zdg
+	/m/04gc2;/people/profession/people_with_this_profession;kelpie
+	/m/0cbd2;/people/profession/people_with_this_profession;kelpie
+	/m/0c0cs;/government/governmental_body/members./government/government_position_held/appointed_by;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.432074; Inverse fact score: 24.427443
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742410
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.441025 (min: 12.843555, max: 33.378902)
+	Distance between original entity and kelpie entity:9.607494
+
+Done.
+### ITER 2
+### SKIPPED FACTS: 
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/07y07
+	/m/016fly;/people/profession/people_with_this_profession;kelpie
+	kelpie;/people/person/nationality;/m/09c7w0
+	kelpie;/people/person/employment_history./business/employment_tenure/company;/m/07wrz
+	kelpie;/government/political_appointer/appointees./government/government_position_held/basic_title;/m/0789n
+	kelpie;/government/political_appointer/appointees./government/government_position_held/governmental_body;/m/07y0n
+	kelpie;/base/popstra/celebrity/vacations_in./base/popstra/vacation_choice/location;/m/0f8l9c
+	kelpie;/people/person/education./education/education/institution;/m/01w5m
+	/m/026cl_m;/award/ranked_list/ranked_list_items./award/ranking/item;kelpie
+	kelpie;/people/person/places_lived./people/place_lived/location;/m/0rh6k
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.420319; Inverse fact score: 24.405622
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742599
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.492939 (min: 12.913174, max: 33.391022)
+	Distance between original entity and kelpie entity:9.630703
+
+Done.
+
+### ITER 3
+### SKIPPED FACTS: 
+	/m/02rjjll;/award/award_ceremony/awards_presented./award/award_honor/award_winner;kelpie
+	kelpie;/people/person/ethnicity;/m/09vc4s
+	/m/03nh9;/celebrities/sexual_orientation/celebrities./celebrities/sexual_orientation_phase/celebrity;kelpie
+	/m/03f2_rc;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	/m/05_wyz;/people/appointed_role/appointment./people/appointment/appointed_by;kelpie
+	/m/033tf_;/people/ethnicity/people;kelpie
+	/m/07wrz;/business/employer/employees./business/employment_tenure/person;kelpie
+	/m/016m9h;/people/profession/people_with_this_profession;kelpie
+	kelpie;/government/political_appointer/appointees./government/government_position_held/basic_title;/m/01q24l
+	/m/0bq2g;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 26.955288; Inverse fact score: 21.972424
+	Head Rank: 1.000000
+	Tail Rank: 3.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.724719
+	H@1: 0.676471
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.440981 (min: 12.828034, max: 33.379642)
+	Distance between original entity and kelpie entity:9.700952
+
+Done.
+kelpie
+/government/political_appointer/appointees./government/government_position_held/governmental_body
+7628
+kelpie
+/people/person/places_lived./people/place_lived/location
+2018
+/m/014mlp
+/education/educational_degree/people_with_this_degree./education/education/student
+14951
+/m/026_dq6
+/base/popstra/celebrity/supporter./base/popstra/support/supported_organization
+14951
+kelpie
+/celebrities/celebrity/sexual_orientation./celebrities/sexual_orientation_phase/sexual_orientation
+7822
+/m/019pm_
+/base/popstra/celebrity/endorsements./base/popstra/paid_support/company
+14951
+/m/07t58
+/government/governmental_body/members./government/government_position_held/office_holder
+14951
+/m/09x7p1
+/base/culturalevent/event/entity_involved
+14951
+/m/07x_h
+/government/governmental_body/members./government/government_position_held/appointed_by
+14951
+/m/04fzk
+/base/popstra/celebrity/supporter./base/popstra/support/supported_organization
+14951
+### ITER 4
+### SKIPPED FACTS: 
+	kelpie;/government/political_appointer/appointees./government/government_position_held/governmental_body;/m/0c0cs
+	kelpie;/people/person/places_lived./people/place_lived/location;/m/01_d4
+	/m/014mlp;/education/educational_degree/people_with_this_degree./education/education/student;kelpie
+	/m/026_dq6;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+	kelpie;/celebrities/celebrity/sexual_orientation./celebrities/sexual_orientation_phase/sexual_orientation;/m/03nh9
+	/m/019pm_;/base/popstra/celebrity/endorsements./base/popstra/paid_support/company;kelpie
+	/m/07t58;/government/governmental_body/members./government/government_position_held/office_holder;kelpie
+	/m/09x7p1;/base/culturalevent/event/entity_involved;kelpie
+	/m/07x_h;/government/governmental_body/members./government/government_position_held/appointed_by;kelpie
+	/m/04fzk;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.040054; Inverse fact score: 24.262861
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.726127
+	H@1: 0.676471
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.416817 (min: 12.825917, max: 33.349804)
+	Distance between original entity and kelpie entity:9.662281
+
+Done.
+
+### ITER 5
+### SKIPPED FACTS: 
+	/m/0g9z_32;/film/film/personal_appearances./film/personal_film_appearance/person;kelpie
+	kelpie;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;/m/0d05fv
+	/m/06pj8;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	kelpie;/people/person/profession;/m/016fly
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/016_mj
+	kelpie;/government/political_appointer/appointees./government/government_position_held/office_holder;/m/08_hns
+	/m/0gfhg1y;/base/culturalevent/event/entity_involved;kelpie
+	/m/014zcr;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;kelpie
+	kelpie;/government/politician/government_positions_held./government/government_position_held/district_represented;/m/03v0t
+	kelpie;/film/person_or_entity_appearing_in_film/films./film/personal_film_appearance/film;/m/0g9z_32
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.635290; Inverse fact score: 24.479523
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.743978
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.408649 (min: 12.815298, max: 33.360519)
+	Distance between original entity and kelpie entity:9.596366
+
+Done.
+
+### ITER 6
+### SKIPPED FACTS: 
+	kelpie;/government/political_appointer/appointees./government/government_position_held/governmental_body;/m/07x_h
+	/m/0f4vbz;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+	/m/0bh8tgs;/film/film/personal_appearances./film/personal_film_appearance/person;kelpie
+	/m/05q2c;/education/educational_institution/students_graduates./education/education/student;kelpie
+	kelpie;/government/politician/government_positions_held./government/government_position_held/jurisdiction_of_office;/m/09c7w0
+	/m/0d3qd0;/government/politician/government_positions_held./government/government_position_held/appointed_by;kelpie
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/0f4vbz
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/02fn5
+	kelpie;/government/politician/government_positions_held./government/government_position_held/jurisdiction_of_office;/m/07ww5
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/0bq2g
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.357134; Inverse fact score: 24.477686
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.743936
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.405064 (min: 12.823065, max: 33.390244)
+	Distance between original entity and kelpie entity:9.631532
+
+Done.
+
+
+### ITER 7
+### SKIPPED FACTS: 
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/03f2_rc
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/06rgq
+	/m/02grdc;/award/award_category/winners./award/award_honor/award_winner;kelpie
+	/m/02vntj;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+	/m/07p__7;/government/legislative_session/members./government/government_position_held/office_holder;kelpie
+	/m/0169dl;/base/popstra/celebrity/supporter./base/popstra/support/supported_organization;kelpie
+	kelpie;/government/political_appointer/appointees./government/government_position_held/office_holder;/m/0d3qd0
+	/m/07vsl;/government/governmental_body/members./government/government_position_held/appointed_by;kelpie
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/0169dl
+	/m/04ztj;/people/marriage_union_type/unions_of_this_type./people/marriage/spouse;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.309011; Inverse fact score: 24.408258
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742952
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.385706 (min: 12.816398, max: 33.334576)
+	Distance between original entity and kelpie entity:9.6226845
+
+Done.
+
+
+### ITER 8
+### SKIPPED FACTS: 
+	/m/024jvz;/base/culturalevent/event/entity_involved;kelpie
+	kelpie;/award/ranked_item/appears_in_ranked_lists./award/ranking/list;/m/026cl_m
+	/m/08mbj5d;/common/annotation_category/annotations./common/webpage/topic;kelpie
+	/m/02hrh0_;/location/location/people_born_here;kelpie
+	kelpie;/award/award_nominee/award_nominations./award/award_nomination/award;/m/02grdc
+	kelpie;/people/person/places_lived./people/place_lived/location;/m/044rv
+	kelpie;/government/politician/government_positions_held./government/government_position_held/legislative_sessions;/m/07p__7
+	/m/01l9p;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	/m/02d9nr;/education/educational_institution/students_graduates./education/education/student;kelpie
+	kelpie;/government/political_appointer/appointees./government/government_position_held/office_holder;/m/0d06m5
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.408930; Inverse fact score: 24.455645
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.741617
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.450951 (min: 12.962064, max: 33.394222)
+	Distance between original entity and kelpie entity:9.599007
+
+Done.
+
+
+### ITER 9
+### SKIPPED FACTS: 
+	kelpie;/award/award_winner/awards_won./award/award_honor/ceremony;/m/02rjjll
+	/m/016_mj;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+	/m/01l9p;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;kelpie
+	kelpie;/award/award_winner/awards_won./award/award_honor/ceremony;/m/09n4nb
+	kelpie;/government/political_appointer/appointees./government/government_position_held/governmental_body;/m/07vsl
+	kelpie;/government/politician/government_positions_held./government/government_position_held/legislative_sessions;/m/06f0dc
+	kelpie;/people/appointer/appointment_made./people/appointment/appointee;/m/0d06m5
+	kelpie;/people/person/gender;/m/05zppz
+	/m/03v0t;/government/governmental_jurisdiction/governing_officials./government/government_position_held/office_holder;kelpie
+	/m/07y07;/government/government_office_or_title/office_holders./government/government_position_held/appointed_by;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.274893; Inverse fact score: 24.400753
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.759103
+	H@1: 0.735294
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.387806 (min: 12.823521, max: 33.365421)
+	Distance between original entity and kelpie entity:9.624978
+
+Done.
+
+
+### ITER 10
+### SKIPPED FACTS: 
+	/m/09vc4s;/people/ethnicity/people;kelpie
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/02vntj
+	kelpie;/people/person/profession;/m/0cbd2
+	kelpie;/base/popstra/organization/supporter./base/popstra/support/supporter;/m/04fzk
+	kelpie;/government/political_appointer/appointees./government/government_position_held/jurisdiction_of_office;/m/09c7w0
+	/m/07k2d;/base/endorsements/endorsing_newspaper/endorsements./base/endorsements/newspaper_endorsement/endorsee;kelpie
+	kelpie;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;/m/014zcr
+	kelpie;/government/politician/government_positions_held./government/government_position_held/office_position_or_title;/m/060d2
+	/m/07ww5;/government/governmental_jurisdiction/governing_officials./government/government_position_held/office_holder;kelpie
+	/m/062z7;/education/field_of_study/students_majoring./education/education/student;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.510139; Inverse fact score: 24.525923
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742640
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.414721 (min: 12.817060, max: 33.387047)
+	Distance between original entity and kelpie entity:9.614278
+
+Done.
+
+
+### ITER 11
+### SKIPPED FACTS: 
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/02114t
+	kelpie;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;/m/01l9p
+	/m/03v0t;/government/political_district/representatives./government/government_position_held/office_holder;kelpie
+	kelpie;/people/person/profession;/m/0fj9f
+	kelpie;/people/person/education./education/education/major_field_of_study;/m/062z7
+	/m/0fj9f;/people/profession/people_with_this_profession;kelpie
+	kelpie;/government/political_appointer/appointees./government/government_position_held/office_position_or_title;/m/0bw8r
+	/m/03f77;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;kelpie
+	kelpie;/people/person/spouse_s./people/marriage/type_of_union;/m/04ztj
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/05_wyz
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.473656; Inverse fact score: 24.526361
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742584
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.449108 (min: 12.886435, max: 33.423164)
+	Distance between original entity and kelpie entity:9.605126
+
+Done.
+
+
+
+### ITER 12
+### SKIPPED FACTS: 
+	kelpie;/film/person_or_entity_appearing_in_film/films./film/personal_film_appearance/film;/m/0bh8tgs
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/0grwj
+	kelpie;/people/person/places_lived./people/place_lived/location;/m/02_286
+	kelpie;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;/m/06pj8
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/0krdk
+	kelpie;/base/popstra/company/product_endorser./base/popstra/paid_support/endorser;/m/019pm_
+	kelpie;/government/politician/government_positions_held./government/government_position_held/governmental_body;/m/07t58
+	kelpie;/government/political_appointer/appointees./government/government_position_held/office_holder;/m/03l3ln
+	/m/012w3;/people/appointed_role/appointment./people/appointment/appointed_by;kelpie
+	/m/0grwj;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.472479; Inverse fact score: 24.477139
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.743682
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.424557 (min: 12.893027, max: 33.360516)
+	Distance between original entity and kelpie entity:9.640059
+
+Done.
+
+
+### ITER 13
+### SKIPPED FACTS: 
+	kelpie;/base/schemastaging/person_extra/net_worth./measurement_unit/dated_money_value/currency;/m/09nqf
+	kelpie;/base/popstra/celebrity/friendship./base/popstra/friendship/participant;/m/03f77
+	/m/03gh4;/base/popstra/location/vacationers./base/popstra/vacation_choice/vacationer;kelpie
+	kelpie;/award/award_winner/awards_won./award/award_honor/award;/m/02grdc
+	/m/08mbj32;/common/annotation_category/annotations./common/webpage/topic;kelpie
+	/m/06f0dc;/government/legislative_session/members./government/government_position_held/office_holder;kelpie
+	/m/0bw8r;/people/appointed_role/appointment./people/appointment/appointed_by;kelpie
+	/m/0kyk;/people/profession/people_with_this_profession;kelpie
+	/m/0krdk;/people/appointed_role/appointment./people/appointment/appointed_by;kelpie
+	/m/06rgq;/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.218121; Inverse fact score: 24.315722
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742749
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.411327 (min: 12.853909, max: 33.350048)
+	Distance between original entity and kelpie entity:9.605832
+
+Done.
+
+
+### ITER 14
+### SKIPPED FACTS: 
+	/m/08_hns;/government/politician/government_positions_held./government/government_position_held/appointed_by;kelpie
+	kelpie;/government/politician/party./government/political_party_tenure/party;/m/0d075m
+	/m/01q24l;/government/government_office_category/officeholders./government/government_position_held/appointed_by;kelpie
+	kelpie;/people/person/profession;/m/04gc2
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/012w3
+	/m/09c7w0;/government/governmental_jurisdiction/governing_officials./government/government_position_held/office_holder;kelpie
+	/m/09c7w0;/government/governmental_jurisdiction/governing_officials./government/government_position_held/appointed_by;kelpie
+	kelpie;/people/appointer/appointment_made./people/appointment/appointed_role;/m/07vsl
+	/m/060c4;/government/government_office_category/officeholders./government/government_position_held/office_holder;kelpie
+	/m/060d2;/government/government_office_or_title/office_holders./government/government_position_held/office_holder;kelpie
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.380617; Inverse fact score: 24.522949
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742417
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.479513 (min: 12.960464, max: 33.363293)
+	Distance between original entity and kelpie entity:9.633862
+
+Done.
+
+
+### ITER 15
+### SKIPPED FACTS: 
+	kelpie;/common/topic/webpage./common/webpage/category;/m/08mbj32
+	/m/07y0n;/government/governmental_body/members./government/government_position_held/appointed_by;kelpie
+	kelpie;/base/endorsements/endorsee/newspaper_endorsements./base/endorsements/newspaper_endorsement/newspaper;/m/07k2d
+Wrapping the original model in a Kelpie explainable model...
+Running post-training on the Kelpie model...
+
+Extracting results...
+
+Original model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Original model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <3878, 24, 2076>
+	Direct fact score: 27.152992; Inverse fact score: 15.043717
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the original entity:
+	MRR: 0.674543
+	H@1: 0.647059
+
+Kelpie model on original test fact: <14951, 24, 2076>
+	Direct fact score: 29.308399; Inverse fact score: 24.375828
+	Head Rank: 1.000000
+	Tail Rank: 1.000000
+
+Kelpie model on all test facts containing the Kelpie entity:
+	MRR: 0.742454
+	H@1: 0.705882
+
+
+Computing embedding distances...
+	Average distance of all entities from Barack Obama: 14.848612 (min: 11.599546, max: 32.811428)
+	Average distance of all entities from Fake Obama: 17.449249 (min: 12.873508, max: 33.404278)
+	Distance between original entity and kelpie entity:9.60694
+
+Done.

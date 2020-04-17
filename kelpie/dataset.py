@@ -13,7 +13,23 @@ ALL_DATASET_NAMES = [FB15K, FB15K_237, WN18, WN18RR, YAGO3_10]
 
 class Dataset:
 
-    def __init__(self, name, separator="\t"):
+    def __init__(self,
+                 name:str,
+                 separator:str="\t",
+                 load:bool=True):
+        """
+            Dataset constructor.
+            This method will initialize the Dataset and its structures.
+            If parameter "load" is set to true, it will immediately read the dataset files
+            and fill the data structures with the read data.
+            :param name: the dataset name. It must correspond to the dataset folder name in DATA_PATH
+            :param separator: the character that separates head, relation and tail in each triple in the dataset files
+            :param load: boolean flag; if True, the dataset files must be accessed and read immediately.
+        """
+
+        # note: the "load" flag is necessary because the Kelpie datasets do not require loading,
+        #       as they are built from already loaded pre-existing datasets.
+
         self.name = name
         self.separator = separator
         self.home = os.path.join(DATA_PATH, self.name)
@@ -40,23 +56,23 @@ class Dataset:
         # number of distinct entities and relations in this dataset
         self.num_entities, self.num_relations = -1, -1
 
-    def load(self):
-        if not os.path.isdir(self.home):
-            raise Exception("Folder %s does not exist" % self.home)
+        if load:
+            if not os.path.isdir(self.home):
+                raise Exception("Folder %s does not exist" % self.home)
 
-        # internal counter for the distinct entities and relations encountered so far
-        self._entity_counter, self._relation_counter = 0, 0
+            # internal counter for the distinct entities and relations encountered so far
+            self._entity_counter, self._relation_counter = 0, 0
 
-        # read train, valid and test set triples with entities and relations
-        # both in their textual format (train_triples, valid_triples and test_triples lists)
-        # and in their numeric format (train_data, valid_data and test_data )
-        self.train_triples, self.train_samples = self._read_triples(self.train_path, self.separator)
-        self.valid_triples, self.valid_samples = self._read_triples(self.valid_path, self.separator)
-        self.test_triples, self.test_samples = self._read_triples(self.test_path, self.separator)
+            # read train, valid and test set triples with entities and relations
+            # both in their textual format (train_triples, valid_triples and test_triples lists)
+            # and in their numeric format (train_data, valid_data and test_data )
+            self.train_triples, self.train_samples = self._read_triples(self.train_path, self.separator)
+            self.valid_triples, self.valid_samples = self._read_triples(self.valid_path, self.separator)
+            self.test_triples, self.test_samples = self._read_triples(self.test_path, self.separator)
 
-        # update the overall number of distinct entities and distinct relations in the dataset
-        self.num_entities = len(self.entities)
-        self.num_relations = len(self.relations)
+            # update the overall number of distinct entities and distinct relations in the dataset
+            self.num_entities = len(self.entities)
+            self.num_relations = len(self.relations)
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """

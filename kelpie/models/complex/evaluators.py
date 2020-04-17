@@ -4,17 +4,18 @@ import numpy as np
 
 class ComplExEvaluator:
 
+    def __init__(self, model: ComplEx):
+        self.model = model
+        self.dataset = model.dataset    # the Dataset may be useful to convert ids to names
+
     def eval(
             self,
-            model: ComplEx,
             samples: np.array,
             write_output = False
     ):
 
-        dataset = model.dataset
-
         # run prediction on the samples
-        sample_2_scores, sample_2_ranks, sample_2_predictions = model.predict_samples(samples)
+        sample_2_scores, sample_2_ranks, sample_2_predictions = self.model.predict_samples(samples)
 
         all_ranks = []
         for sample in sample_2_ranks:
@@ -34,16 +35,16 @@ class ComplExEvaluator:
                 head_prediction_ids, tail_prediction_ids = sample_2_predictions[sample]
 
                 head_id, rel_id, tail_id = sample[0], sample[1], sample[2]
-                head_name = dataset.get_name_for_entity_id()[head_id]
-                rel_name = dataset.get_name_for_relation_id()[rel_id]
-                tail_name = dataset.get_name_for_entity_id[tail_id]
+                head_name = self.dataset.get_name_for_entity_id()[head_id]
+                rel_name = self.dataset.get_name_for_relation_id()[rel_id]
+                tail_name = self.dataset.get_name_for_entity_id[tail_id]
 
                 textual_fact_key = ";".join([head_name, rel_name, tail_name])
 
                 result_lines.append(textual_fact_key + ";" + str(head_rank) + ";" + str(tail_rank) + "\n")
 
-                head_prediction_names = [dataset.get_name_for_entity_id()[x] for x in head_prediction_ids]
-                tail_prediction_names = [dataset.get_name_for_entity_id[x] for x in tail_prediction_ids]
+                head_prediction_names = [self.dataset.get_name_for_entity_id()[x] for x in head_prediction_ids]
+                tail_prediction_names = [self.dataset.get_name_for_entity_id[x] for x in tail_prediction_ids]
 
                 detail_lines.append(textual_fact_key + ";predict head;[" + ";".join(head_prediction_names) + "]\n")
                 detail_lines.append(textual_fact_key + ";predict tail;[" + ";".join(tail_prediction_names) + "]\n")
