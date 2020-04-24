@@ -63,14 +63,16 @@ class Evaluator:
         with open("filtered_details.csv", "w") as output_file:
             output_file.writelines(detail_lines)
 
-    def mrr(self, values):
+    @staticmethod
+    def mrr(values):
         mrr = 0.0
         for value in values:
             mrr += 1.0 / float(value)
         mrr = mrr / float(len(values))
         return mrr
 
-    def hits_at(self, values, k:int):
+    @staticmethod
+    def hits_at(values, k:int):
         hits = 0
         for value in values:
             if value <= k:
@@ -82,6 +84,7 @@ class KelpieEvaluator(Evaluator):
 
     def __init__(self, model: KelpieComplEx):
         super().__init__(model)
+        self.model = model
 
     # override
     def eval(self,

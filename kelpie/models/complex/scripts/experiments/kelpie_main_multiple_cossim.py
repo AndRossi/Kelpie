@@ -1,9 +1,11 @@
 import torch
 import numpy
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.evaluators import ComplExEvaluator
-from kelpie.models.complex.optimizers import KelpieComplExOptimizer
+
+from kelpie.dataset import Dataset
+from kelpie.evaluation import Evaluator, KelpieEvaluator
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.models.complex.optimizer import KelpieComplExOptimizer
 from numpy import dot
 from numpy.linalg import norm
 
@@ -12,7 +14,7 @@ def cossim(vec_a, vec_b):
     return dot(vec_a, vec_b) / (norm(vec_a) * norm(vec_b))
 
 dataset_name = 'FB15k'
-model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k_no_reg.pt'
+model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k.pt'
 #model_path = './models/ComplEx_FB15K.pt'
 optimizer_name = 'Adagrad'
 batch_size = 100
@@ -23,7 +25,7 @@ decay1 = 0.9
 decay2 = 0.999
 init = 1e-3
 regularizer_name = "N3"
-regularizer_weight = 0
+regularizer_weight = 2.5e-3
 
 entity_2_params = {
     '/m/09c7w0': [9739, 1203, '/m/06yxd', '/base/biblioness/bibs_location/country', '/m/09c7w0', 'tail'],
@@ -61,7 +63,7 @@ entity_2_params = {
 
 #### LOAD DATASET
 print("Loading dataset...")
-complex_dataset = ComplExDataset(name=dataset_name, separator="\t", load=True)
+complex_dataset = Dataset(name=dataset_name, separator="\t", load=True)
 
 ### LOAD TRAINED ORIGINAL MODEL
 print("Loading original trained model...")
@@ -87,7 +89,7 @@ for entity_to_explain in entity_2_params:
     # check that the fact to explain is actually a test fact
     assert(original_sample in complex_dataset.test_samples)
 
-    kelpie_dataset = KelpieComplExDataset(dataset=complex_dataset, entity_id=original_entity_id)
+    kelpie_dataset = KelpieDataset(dataset=complex_dataset, entity_id=original_entity_id)
 
     ### INITIALIZE AND POST-TRAIN KELPIE MODEL
     print("Wrapping the original model in a Kelpie model...")
@@ -118,18 +120,18 @@ for entity_to_explain in entity_2_params:
     print("\tTail Rank: %f" % ranks[1])
 
     # original model overall results on the original entity
-    mr, h1 = ComplExEvaluator(original_model).eval(kelpie_dataset.original_test_samples)
+    mr, h1 = Evaluator(original_model).eval(kelpie_dataset.original_test_samples)
     print("Original model overall results on the original entity:\tMR: %f; H@1: %f;" % (mr, h1))
 
     # kelpie model results on kelpie fact
-    scores, ranks, _ = kelpie_model.predict_sample(kelpie_sample)
+    scores, ranks, _ = kelpie_model.predict_sample(sample=kelpie_sample, original_mode=False)
     print("\nKelpie model on kelpie test fact: <%s, %s, %s>" % kelpie_triple)
     print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
     print("\tHead Rank: %f" % ranks[0])
     print("\tTail Rank: %f" % ranks[1])
 
     # kelpie model overall results on the kelpie entity
-    mr, h1 = ComplExEvaluator(kelpie_model).eval(kelpie_dataset.original_test_samples)
+    mr, h1 = KelpieEvaluator(kelpie_model).eval(samples=kelpie_dataset.kelpie_test_samples, original_mode=False)
     print("Kelpie model overall results on the kelpie entity:\tMR: %f; H@1: %f;" % (mr, h1))
 
     print("\nComputing embedding distances...")

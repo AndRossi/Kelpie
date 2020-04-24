@@ -3,9 +3,11 @@ This module does explanation for ComplEx-N3 model
 """
 import torch
 import numpy
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.optimizers import KelpieComplExOptimizer
+
+from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.models.complex.optimizer import KelpieComplExOptimizer
 
 def average(values):
     return numpy.average(numpy.array(values))
@@ -29,7 +31,7 @@ decay1 = 0.9
 decay2 = 0.999
 init = 1e-3
 regularizer_name = "N3"
-regularizer_weight = 0
+regularizer_weight = 2.5e-3
 
 entity_2_params = {
     '/m/09c7w0': [9739, 1203, '/m/06yxd', '/base/biblioness/bibs_location/country', '/m/09c7w0', 'tail'],
@@ -67,11 +69,11 @@ entity_2_params = {
 
 #### LOAD DATASET
 print("Loading dataset...")
-complex_dataset = ComplExDataset(name=dataset_name, separator="\t", load=True)
+complex_dataset = Dataset(name=dataset_name, separator="\t", load=True)
 
 ### LOAD TRAINED ORIGINAL MODEL
 print("Loading original trained model...")
-original_model = ComplEx(dataset=complex_dataset, dimension=dimension, init_random=True, init_size=init)
+original_model = ComplEx(dataset=complex_dataset, dimension=dimension, init_random=True, init_size=init) # type: ComplEx
 original_model.load_state_dict(torch.load(model_path))
 original_model.to('cuda')
 
@@ -93,13 +95,13 @@ for entity_to_explain in entity_2_params:
     # check that the fact to explain is actually a test fact
     assert(original_sample in complex_dataset.test_samples)
 
-    kelpie_dataset = KelpieComplExDataset(dataset=complex_dataset, entity_id=original_entity_id)
+    kelpie_dataset = KelpieDataset(dataset=complex_dataset, entity_id=original_entity_id)
     kelpie_entity_id = kelpie_dataset.kelpie_entity_id
     kelpie_triple = (kelpie_entity_id, relation_id, tail_id) if perspective == 'head' else (head_id, relation_id, kelpie_entity_id)
     kelpie_sample = numpy.array(kelpie_triple)
 
     print("Wrapping the original model in a Kelpie model...")
-    kelpie_model = KelpieComplEx(dataset=kelpie_dataset, model=original_model, init_size=1e-3)
+    kelpie_model = KelpieComplEx(dataset=kelpie_dataset, model=original_model, init_size=1e-3) # type: KelpieComplEx
     kelpie_model.to('cuda')
 
     print("Running post-training on the Kelpie model...")
@@ -138,7 +140,7 @@ for entity_to_explain in entity_2_params:
     for (head_id, rel_id, tail_id) in original_direct_scores:
 
         original_direct_sample = (head_id, rel_id, tail_id)
-        original_inverse_sample = (tail_id, rel_id + kelpie_dataset.num_original_relations, head_id)
+        original_inverse_sample = (tail_id, rel_id + kelpie_dataset.num_direct_relations, head_id)
 
         # if the head is the entity was kelpized, then we need to analyze the scores of the direct facts
         if head_id == original_entity_id:
@@ -149,7 +151,7 @@ for entity_to_explain in entity_2_params:
                 kelpie_direct_sample = (kelpie_entity_id, rel_id, kelpie_entity_id)
 
             kelpie_inverse_sample = (kelpie_direct_sample[2],
-                                     rel_id + kelpie_dataset.num_original_relations,
+                                     rel_id + kelpie_dataset.num_direct_relations,
                                      kelpie_direct_sample[0])
 
             for i in range(len(original_direct_scores[original_direct_sample])):
@@ -166,7 +168,7 @@ for entity_to_explain in entity_2_params:
                 kelpie_direct_sample = (kelpie_entity_id, rel_id, kelpie_entity_id)
 
             kelpie_inverse_sample = (kelpie_direct_sample[2],
-                                     rel_id + kelpie_dataset.num_original_relations,
+                                     rel_id + kelpie_dataset.num_direct_relations,
                                      kelpie_direct_sample[0])
 
             for i in range(len(original_inverse_scores[original_inverse_sample])):

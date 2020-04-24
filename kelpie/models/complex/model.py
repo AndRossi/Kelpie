@@ -1,4 +1,5 @@
-from abc import ABC
+from typing import Tuple, Any
+
 import torch
 from torch import nn
 import numpy as np
@@ -6,11 +7,12 @@ from torch.nn import Parameter
 
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.model import Model
 
 
-class ComplEx(nn.Module, ABC):
+class ComplEx(Model, nn.Module):
     """
-        The ComplEx class provides a PyTorch implementation for the ComplEx model.
+        The ComplEx class provides a Model implementation in PyTorch for the ComplEx system.
         This implementation adheres to paper "Canonical Tensor Decomposition for Knowledge Base Completion",
         and is largely inspired by the official implementation provided by the authors Lacroix, Usunier and Obozinski
         at https://github.com/facebookresearch/kbc/tree/master/kbc.
@@ -24,13 +26,11 @@ class ComplEx(nn.Module, ABC):
     """
 
 
-    def __init__(
-            self,
-            dataset: Dataset,
-            dimension: int,
-            init_random = True,
-            init_size: float = 1e-3
-    ):
+    def __init__(self,
+                 dataset: Dataset,
+                 dimension: int,
+                 init_random = True,
+                 init_size: float = 1e-3):
         """
             Constructor for ComplEx model.
 
@@ -42,9 +42,11 @@ class ComplEx(nn.Module, ABC):
         # note: the init_random parameter is important because when initializing a KelpieComplEx,
         #       self.entity_embeddings and self.relation_embeddings must not be initialized as Parameters!
 
-        super(ComplEx, self).__init__()
+        # initialize this object both as a Model and as a nn.Module
+        Model.__init__(self, dataset)
+        nn.Module.__init__(self)
 
-        self.dataset = dataset                       # ComplExDataset on which the model will be trained and evaluated
+        self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of relations in dataset
         self.dimension = dimension                   # embedding dimension
@@ -65,11 +67,11 @@ class ComplEx(nn.Module, ABC):
                 self.relation_embeddings *= init_size
 
 
-    def score(self, samples: np.array):
+    def score(self, samples: np.array) -> np.array:
         """
-
-        :param samples:
-        :return:
+            Compute scores for the passed samples
+            :param samples: a 2-dimensional numpy array containing the samples to score, one per row
+            :return: a numpy array containing the scores of the passed samples
         """
         lhs = self.entity_embeddings[samples[:, 0]]      # list of entity embeddings for the heads of the facts
         rel = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the heads
@@ -100,9 +102,17 @@ class ComplEx(nn.Module, ABC):
             (lhs[0] * rel[0] - lhs[1] * rel[1]) * rhs[0] +
             (lhs[0] * rel[1] + lhs[1] * rel[0]) * rhs[1],
             1, keepdim=True
-        )
+        ).cpu().numpy()
 
     def forward(self, samples: np.array):
+        """
+            Perform forward propagation on the passed samples
+            :param samples: a 2-dimensional numpy array containing the samples to use in forward propagation, one per row
+            :return: a tuple containing
+                        - the scores for each passed sample with all possible tails
+                        - a partial result to use in regularization
+        """
+
         lhs = self.entity_embeddings[samples[:, 0]]       # list of entity embeddings for the heads of the facts
         rel = self.relation_embeddings[samples[:, 1]]     # list of relation embeddings for the relations of the heads
         rhs = self.entity_embeddings[samples[:, 2]]       # list of entity embeddings for the tails of the facts
@@ -203,15 +213,7 @@ class ComplEx(nn.Module, ABC):
     #
     #     return result
 
-    def predict_sample(self, sample: np.array):
-        """
-            :param sample: the DIRECT sample
-            :return:
-        """
-        scores, ranks, predictions = self.predict_samples(np.array([sample]))
-        return scores[0], ranks[0], predictions[0]
-
-    def predict_samples(self, samples: np.array):
+    def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             This method takes as an input a tensor of 'direct' samples,
             runs head and tail prediction on each of them
@@ -256,12 +258,12 @@ class ComplEx(nn.Module, ABC):
         return scores, ranks, predictions
 
 
-    def predict_tails(self, samples: np.array):
+    def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
-        Returns filtered scores, ranks and predicted entities for each passed fact.
-        :param samples: a torch.LongTensor of triples (head, relation, tail).
-                      The triples can also be "inverse triples" with (tail, inverse_relation_id, head)
-        :return:
+            Returns filtered scores, ranks and predicted entities for each passed fact.
+            :param samples: a torch.LongTensor of triples (head, relation, tail).
+                          The triples can also be "inverse triples" with (tail, inverse_relation_id, head)
+            :return:
         """
 
         ranks = torch.ones(len(samples))    # initialize with ONES
@@ -335,13 +337,12 @@ class ComplEx(nn.Module, ABC):
                                                   np.array([tail_id]),
                                                   predicted_tails[j:]))
 
-
-
                 # add to the results data structure
                 predictions.append(predicted_tails)     # as a np array!
 
         return scores, ranks, predictions
 
+################
 
 class KelpieComplEx(ComplEx):
     def __init__(
@@ -350,11 +351,13 @@ class KelpieComplEx(ComplEx):
             model: ComplEx,
             init_size: float = 1e-3):
 
-        super(KelpieComplEx, self).__init__(dataset=dataset,
-                                            dimension=model.dimension,
-                                            init_random=False,
-                                            init_size=init_size)
+        ComplEx.__init__(self,
+                         dataset=dataset,
+                         dimension=model.dimension,
+                         init_random=False,
+                         init_size=init_size)
 
+        self.model = model
         self.original_entity_id = dataset.original_entity_id
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
@@ -380,25 +383,13 @@ class KelpieComplEx(ComplEx):
         self.relation_embeddings = frozen_relation_embeddings
 
     # Override
-    def predict_sample(self,
-                       sample: np.array,
-                       original_mode: bool = False):
-        """
-        :param sample: the DIRECT sample. Will be inverted to perform head prediction
-        :param original_mode:
-        :return:
-        """
-
-        assert sample[1] < self.dataset.num_direct_relations
-
-        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
-        return scores[0], ranks[0], predictions[0]
-
-    # Override
     def predict_samples(self,
                         samples: np.array,
                         original_mode: bool = False):
         """
+        This method overrides the Model predict_samples method
+        by adding the possibility to run predictions in original_mode
+        which means,
         :param samples: the DIRECT samples. Will be inverted to perform head prediction
         :param original_mode:
         :return:
@@ -414,9 +405,9 @@ class KelpieComplEx(ComplEx):
         forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
         assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
 
-        # use the superclass method to obtain scores, ranks and prediction results.
+        # use the Model implementation method to obtain scores, ranks and prediction results.
         # these WILL feature the forbidden entity, so we now need to filter them
-        scores, ranks, predictions = super(KelpieComplEx, self).predict_samples(direct_samples)
+        scores, ranks, predictions = super().predict_samples(direct_samples)
 
         # remove any reference to the forbidden entity id
         # (that may have been included in the predicted entities)
@@ -446,6 +437,22 @@ class KelpieComplEx(ComplEx):
             ranks[i] = (head_rank, tail_rank)
 
         return scores, ranks, predictions
+
+    # Override
+    def predict_sample(self,
+                       sample: np.array,
+                       original_mode: bool = False):
+        """
+        Override the
+        :param sample: the DIRECT sample. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
+        return scores[0], ranks[0], predictions[0]
 
     def update_embeddings(self):
         with torch.no_grad():

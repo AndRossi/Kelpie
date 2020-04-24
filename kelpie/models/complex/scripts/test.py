@@ -1,11 +1,9 @@
 import argparse
 import os
-
 import torch
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 from kelpie.models.complex.model import ComplEx
-from kelpie.models.complex.optimizer import ComplExOptimizer
 
 # todo: when we add more models, we should move these variables to another location
 MODEL_HOME = os.path.abspath("./models/")
@@ -93,8 +91,7 @@ parser.add_argument('--decay2',
 )
 
 parser.add_argument('--load',
-                    help="path to the model to load",
-                    required=False)
+                    help="path to the model to load")
 
 args = parser.parse_args()
 
@@ -108,25 +105,10 @@ dataset = Dataset(name=args.dataset, separator="\t", load=True)
 print("Initializing model...")
 model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)
 model.to('cuda')
-if args.load is not None:
-    model.load_state_dict(torch.load(model_path))
-
-print("Training model...")
-optimizer = ComplExOptimizer(model=model,
-                             optimizer_name=args.optimizer,
-                             batch_size=args.batch_size,
-                             learning_rate=args.learning_rate,
-                             decay1=args.decay1,
-                             decay2=args.decay2,
-                             regularizer_name=args.regularizer,
-                             regularizer_weight=args.reg)
-optimizer.train(train_samples=dataset.train_samples,
-                max_epochs=args.max_epochs,
-                save_path=model_path,
-                evaluate_every=args.valid,
-                valid_samples=dataset.valid_samples)
+model.load_state_dict(torch.load(model_path))
+model.eval()
 
 print("\nEvaluating model...")
-mrr, h1 = Evaluator(model=model).eval(samples=dataset.test_samples, write_output=False)
+mrr, h1 = Evaluator(model=model).eval(samples=dataset.test_samples, write_output=True)
 print("\tTest Hits@1: %f" % h1)
 print("\tTest Mean Reciprocal Rank: %f" % mrr)

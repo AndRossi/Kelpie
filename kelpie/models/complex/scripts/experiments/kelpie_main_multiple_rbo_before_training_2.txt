@@ -1,0 +1,652 @@
+Loading dataset...
+Loading original trained model...
+
+Working with entity /m/09c7w0 (train degree 9739; test degree 1203): explaining fact </m/06yxd, /base/biblioness/bibs_location/country, /m/09c7w0>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 9738
+		TRAIN Average Rank-based overlap: 0.000022
+		TRAIN Original performances: MRR: 0.999833; H1: 0.999692
+		TRAIN Kelpie performances: MRR: 0.002223; H1: 0.000000
+	VALID FACTS: 1021
+		VALID Average Rank-based overlap: 0.002545
+		VALID Original performances: MRR: 0.682646; H1: 0.624878
+		VALID Kelpie performances: MRR: 0.002204; H1: 0.000000
+	TEST FACTS: 1203
+		TEST Average Rank-based overlap: 0.002658
+		TEST Original performances: MRR: 0.676559; H1: 0.617623
+		TEST Kelpie performances: MRR: 0.002618; H1: 0.000000
+	ALL FACTS: 11962
+		ALL Average Rank-based overlap: 0.000502
+		ALL Original performances: MRR: 0.940249; H1: 0.929276
+		ALL Kelpie performances: MRR: 0.002261; H1: 0.000000
+
+Working with entity /m/08mbj32 (train degree 4670; test degree 603): explaining fact </m/080v2, /common/topic/webpage./common/webpage/category, /m/08mbj32>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 4670
+		TRAIN Average Rank-based overlap: 0.000343
+		TRAIN Original performances: MRR: 0.999395; H1: 0.999358
+		TRAIN Kelpie performances: MRR: 0.005881; H1: 0.000000
+	VALID FACTS: 462
+		VALID Average Rank-based overlap: 0.017048
+		VALID Original performances: MRR: 0.846725; H1: 0.812771
+		VALID Kelpie performances: MRR: 0.005997; H1: 0.000000
+	TEST FACTS: 603
+		TEST Average Rank-based overlap: 0.014119
+		TEST Original performances: MRR: 0.870114; H1: 0.844942
+		TEST Kelpie performances: MRR: 0.005908; H1: 0.000000
+	ALL FACTS: 5735
+		ALL Average Rank-based overlap: 0.003137
+		ALL Original performances: MRR: 0.973503; H1: 0.968091
+		ALL Kelpie performances: MRR: 0.005893; H1: 0.000000
+
+Working with entity /m/02sdk9v (train degree 3807; test degree 436): explaining fact </m/02b13y, /sports/sports_team/roster./sports/sports_team_roster/position, /m/02sdk9v>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 3807
+		TRAIN Average Rank-based overlap: 0.000065
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.005697; H1: 0.000000
+	VALID FACTS: 418
+		VALID Average Rank-based overlap: 0.000188
+		VALID Original performances: MRR: 0.994547; H1: 0.992823
+		VALID Kelpie performances: MRR: 0.005799; H1: 0.000000
+	TEST FACTS: 436
+		TEST Average Rank-based overlap: 0.000069
+		TEST Original performances: MRR: 0.998662; H1: 0.997706
+		TEST Kelpie performances: MRR: 0.005839; H1: 0.000000
+	ALL FACTS: 4661
+		ALL Average Rank-based overlap: 0.000076
+		ALL Original performances: MRR: 0.999386; H1: 0.999142
+		ALL Kelpie performances: MRR: 0.005720; H1: 0.000000
+
+Working with entity /m/02nzb8 (train degree 3754; test degree 452): explaining fact </m/02gys2, /sports/sports_team/roster./soccer/football_roster_position/position, /m/02nzb8>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 3754
+		TRAIN Average Rank-based overlap: 0.000066
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.005747; H1: 0.000000
+	VALID FACTS: 409
+		VALID Average Rank-based overlap: 0.000067
+		VALID Original performances: MRR: 0.992706; H1: 0.986553
+		VALID Kelpie performances: MRR: 0.005756; H1: 0.000000
+	TEST FACTS: 452
+		TEST Average Rank-based overlap: 0.000067
+		TEST Original performances: MRR: 0.994469; H1: 0.990044
+		TEST Kelpie performances: MRR: 0.005781; H1: 0.000000
+	ALL FACTS: 4615
+		ALL Average Rank-based overlap: 0.000066
+		ALL Original performances: MRR: 0.998812; H1: 0.997833
+		ALL Kelpie performances: MRR: 0.005751; H1: 0.000000
+
+Working with entity /m/02h40lc (train degree 2924; test degree 350): explaining fact </m/0bwfn, /education/educational_institution/students_graduates./education/education/major_field_of_study, /m/02h40lc>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 2924
+		TRAIN Average Rank-based overlap: 0.000018
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.002543; H1: 0.000000
+	VALID FACTS: 279
+		VALID Average Rank-based overlap: 0.006254
+		VALID Original performances: MRR: 0.631755; H1: 0.551971
+		VALID Kelpie performances: MRR: 0.002553; H1: 0.000000
+	TEST FACTS: 350
+		TEST Average Rank-based overlap: 0.005162
+		TEST Original performances: MRR: 0.648172; H1: 0.571429
+		TEST Kelpie performances: MRR: 0.002724; H1: 0.000000
+	ALL FACTS: 3553
+		ALL Average Rank-based overlap: 0.001015
+		ALL Original performances: MRR: 0.936425; H1: 0.922601
+		ALL Kelpie performances: MRR: 0.002562; H1: 0.000000
+
+Working with entity /m/02_286 (train degree 1581; test degree 188): explaining fact </m/07jrjb, /people/person/places_lived./people/place_lived/location, /m/02_286>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 1581
+		TRAIN Average Rank-based overlap: 0.000123
+		TRAIN Original performances: MRR: 0.999842; H1: 0.999684
+		TRAIN Kelpie performances: MRR: 0.001790; H1: 0.000000
+	VALID FACTS: 167
+		VALID Average Rank-based overlap: 0.015206
+		VALID Original performances: MRR: 0.698338; H1: 0.661677
+		VALID Kelpie performances: MRR: 0.000830; H1: 0.000000
+	TEST FACTS: 188
+		TEST Average Rank-based overlap: 0.019438
+		TEST Original performances: MRR: 0.693806; H1: 0.648936
+		TEST Kelpie performances: MRR: 0.001057; H1: 0.000000
+	ALL FACTS: 1936
+		ALL Average Rank-based overlap: 0.003299
+		ALL Original performances: MRR: 0.944116; H1: 0.936467
+		ALL Kelpie performances: MRR: 0.001636; H1: 0.000000
+
+Working with entity /m/02jknp (train degree 1223; test degree 151): explaining fact </m/02jknp, /people/profession/people_with_this_profession, /m/03ysmg>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 1223
+		TRAIN Average Rank-based overlap: 0.000056
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.004394; H1: 0.000000
+	VALID FACTS: 124
+		VALID Average Rank-based overlap: 0.005587
+		VALID Original performances: MRR: 0.907571; H1: 0.891129
+		VALID Kelpie performances: MRR: 0.004274; H1: 0.000000
+	TEST FACTS: 151
+		TEST Average Rank-based overlap: 0.005674
+		TEST Original performances: MRR: 0.886042; H1: 0.864238
+		TEST Kelpie performances: MRR: 0.004156; H1: 0.000000
+	ALL FACTS: 1498
+		ALL Average Rank-based overlap: 0.001080
+		ALL Original performances: MRR: 0.980862; H1: 0.977303
+		ALL Kelpie performances: MRR: 0.004360; H1: 0.000000
+
+Working with entity /m/09sb52 (train degree 1177; test degree 145): explaining fact </m/027f7dj, /award/award_nominee/award_nominations./award/award_nomination/award, /m/09sb52>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 1177
+		TRAIN Average Rank-based overlap: 0.001040
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.004216; H1: 0.000850
+	VALID FACTS: 124
+		VALID Average Rank-based overlap: 0.001059
+		VALID Original performances: MRR: 0.942319; H1: 0.931452
+		VALID Kelpie performances: MRR: 0.002614; H1: 0.000000
+	TEST FACTS: 145
+		TEST Average Rank-based overlap: 0.004717
+		TEST Original performances: MRR: 0.950957; H1: 0.937931
+		TEST Kelpie performances: MRR: 0.006929; H1: 0.003448
+	ALL FACTS: 1446
+		ALL Average Rank-based overlap: 0.001410
+		ALL Original performances: MRR: 0.990136; H1: 0.987898
+		ALL Kelpie performances: MRR: 0.004351; H1: 0.001037
+
+Working with entity /m/086k8 (train degree 979; test degree 109): explaining fact </m/02ny6g, /film/film/distributors./film/film_film_distributor_relationship/distributor, /m/086k8>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 979
+		TRAIN Average Rank-based overlap: 0.000011
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.001119; H1: 0.000000
+	VALID FACTS: 93
+		VALID Average Rank-based overlap: 0.005404
+		VALID Original performances: MRR: 0.928192; H1: 0.913978
+		VALID Kelpie performances: MRR: 0.006462; H1: 0.005376
+	TEST FACTS: 109
+		TEST Average Rank-based overlap: 0.004458
+		TEST Original performances: MRR: 0.938143; H1: 0.926606
+		TEST Kelpie performances: MRR: 0.005715; H1: 0.004587
+	ALL FACTS: 1181
+		ALL Average Rank-based overlap: 0.000846
+		ALL Original performances: MRR: 0.988636; H1: 0.986452
+		ALL Kelpie performances: MRR: 0.001964; H1: 0.000847
+
+Working with entity /m/05qd_ (train degree 824; test degree 107): explaining fact </m/06t6dz, /award/award_nominated_work/award_nominations./award/award_nomination/award_nominee, /m/05qd_>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 824
+		TRAIN Average Rank-based overlap: 0.001218
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.002440; H1: 0.001214
+	VALID FACTS: 82
+		VALID Average Rank-based overlap: 0.000548
+		VALID Original performances: MRR: 0.916541; H1: 0.890244
+		VALID Kelpie performances: MRR: 0.001212; H1: 0.000000
+	TEST FACTS: 107
+		TEST Average Rank-based overlap: 0.006766
+		TEST Original performances: MRR: 0.900011; H1: 0.859813
+		TEST Kelpie performances: MRR: 0.001454; H1: 0.000000
+	ALL FACTS: 1013
+		ALL Average Rank-based overlap: 0.001750
+		ALL Original performances: MRR: 0.982683; H1: 0.976308
+		ALL Kelpie performances: MRR: 0.002237; H1: 0.000987
+
+Working with entity /m/06b1q (train degree 688; test degree 85): explaining fact </m/06b1q, /sports/sports_position/players./american_football/football_historical_roster_position/team, /m/070xg>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 688
+		TRAIN Average Rank-based overlap: 0.000065
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.005602; H1: 0.000000
+	VALID FACTS: 73
+		VALID Average Rank-based overlap: 0.000070
+		VALID Original performances: MRR: 0.982877; H1: 0.965753
+		VALID Kelpie performances: MRR: 0.005806; H1: 0.000000
+	TEST FACTS: 85
+		TEST Average Rank-based overlap: 0.000449
+		TEST Original performances: MRR: 0.970588; H1: 0.941176
+		TEST Kelpie performances: MRR: 0.005749; H1: 0.000000
+	ALL FACTS: 846
+		ALL Average Rank-based overlap: 0.000104
+		ALL Original performances: MRR: 0.995567; H1: 0.991135
+		ALL Kelpie performances: MRR: 0.005634; H1: 0.000000
+
+Working with entity /m/016z4k (train degree 575; test degree 59): explaining fact </m/01w58n3, /people/person/profession, /m/016z4k>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 575
+		TRAIN Average Rank-based overlap: 0.000027
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.003765; H1: 0.000000
+	VALID FACTS: 62
+		VALID Average Rank-based overlap: 0.005198
+		VALID Original performances: MRR: 0.831314; H1: 0.790323
+		VALID Kelpie performances: MRR: 0.003907; H1: 0.000000
+	TEST FACTS: 59
+		TEST Average Rank-based overlap: 0.005569
+		TEST Original performances: MRR: 0.857442; H1: 0.830508
+		TEST Kelpie performances: MRR: 0.003744; H1: 0.000000
+	ALL FACTS: 696
+		ALL Average Rank-based overlap: 0.000958
+		ALL Original performances: MRR: 0.972889; H1: 0.966954
+		ALL Kelpie performances: MRR: 0.003776; H1: 0.000000
+
+Working with entity /m/018j2 (train degree 397; test degree 45): explaining fact </m/0l1589, /music/performance_role/track_performances./music/track_contribution/role, /m/018j2>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 397
+		TRAIN Average Rank-based overlap: 0.029657
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.068233; H1: 0.007557
+	VALID FACTS: 40
+		VALID Average Rank-based overlap: 0.043991
+		VALID Original performances: MRR: 0.836231; H1: 0.800000
+		VALID Kelpie performances: MRR: 0.055364; H1: 0.000000
+	TEST FACTS: 45
+		TEST Average Rank-based overlap: 0.054522
+		TEST Original performances: MRR: 0.901632; H1: 0.877778
+		TEST Kelpie performances: MRR: 0.083809; H1: 0.011111
+	ALL FACTS: 482
+		ALL Average Rank-based overlap: 0.033168
+		ALL Original performances: MRR: 0.977225; H1: 0.971992
+		ALL Kelpie performances: MRR: 0.068619; H1: 0.007261
+
+Working with entity /m/07y_7 (train degree 345; test degree 39): explaining fact </m/03qjg, /music/performance_role/regular_performances./music/group_membership/role, /m/07y_7>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 345
+		TRAIN Average Rank-based overlap: 0.011381
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.037703; H1: 0.002899
+	VALID FACTS: 47
+		VALID Average Rank-based overlap: 0.054601
+		VALID Original performances: MRR: 0.780617; H1: 0.734043
+		VALID Kelpie performances: MRR: 0.028885; H1: 0.010638
+	TEST FACTS: 39
+		TEST Average Rank-based overlap: 0.032024
+		TEST Original performances: MRR: 0.887951; H1: 0.833333
+		TEST Kelpie performances: MRR: 0.048404; H1: 0.012821
+	ALL FACTS: 431
+		ALL Average Rank-based overlap: 0.017962
+		ALL Original performances: MRR: 0.965938; H1: 0.955916
+		ALL Kelpie performances: MRR: 0.037710; H1: 0.004640
+
+Working with entity /m/062z7 (train degree 294; test degree 41): explaining fact </m/01p896, /education/educational_institution/students_graduates./education/education/major_field_of_study, /m/062z7>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 294
+		TRAIN Average Rank-based overlap: 0.000025
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.001491; H1: 0.000000
+	VALID FACTS: 39
+		VALID Average Rank-based overlap: 0.011426
+		VALID Original performances: MRR: 0.741941; H1: 0.692308
+		VALID Kelpie performances: MRR: 0.001308; H1: 0.000000
+	TEST FACTS: 41
+		TEST Average Rank-based overlap: 0.014260
+		TEST Original performances: MRR: 0.810218; H1: 0.780488
+		TEST Kelpie performances: MRR: 0.001164; H1: 0.000000
+	ALL FACTS: 374
+		ALL Average Rank-based overlap: 0.002774
+		ALL Original performances: MRR: 0.952285; H1: 0.943850
+		ALL Kelpie performances: MRR: 0.001436; H1: 0.000000
+
+Working with entity /m/09n4nb (train degree 250; test degree 21): explaining fact </m/047q2wc, /award/award_winner/awards_won./award/award_honor/ceremony, /m/09n4nb>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 250
+		TRAIN Average Rank-based overlap: 0.000007
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.001866; H1: 0.000000
+	VALID FACTS: 31
+		VALID Average Rank-based overlap: 0.002082
+		VALID Original performances: MRR: 0.917759; H1: 0.903226
+		VALID Kelpie performances: MRR: 0.001539; H1: 0.000000
+	TEST FACTS: 21
+		TEST Average Rank-based overlap: 0.000261
+		TEST Original performances: MRR: 0.962018; H1: 0.952381
+		TEST Kelpie performances: MRR: 0.001801; H1: 0.000000
+	ALL FACTS: 302
+		ALL Average Rank-based overlap: 0.000238
+		ALL Original performances: MRR: 0.988917; H1: 0.986755
+		ALL Kelpie performances: MRR: 0.001828; H1: 0.000000
+
+Working with entity /m/02lyr4 (train degree 202; test degree 24): explaining fact </m/07l8x, /baseball/baseball_team/current_roster./sports/sports_team_roster/position, /m/02lyr4>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 202
+		TRAIN Average Rank-based overlap: 0.000019
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.002406; H1: 0.000000
+	VALID FACTS: 24
+		VALID Average Rank-based overlap: 0.000017
+		VALID Original performances: MRR: 0.984375; H1: 0.979167
+		VALID Kelpie performances: MRR: 0.002048; H1: 0.000000
+	TEST FACTS: 24
+		TEST Average Rank-based overlap: 0.000022
+		TEST Original performances: MRR: 1.000000; H1: 1.000000
+		TEST Kelpie performances: MRR: 0.002594; H1: 0.000000
+	ALL FACTS: 250
+		ALL Average Rank-based overlap: 0.000019
+		ALL Original performances: MRR: 0.998500; H1: 0.998000
+		ALL Kelpie performances: MRR: 0.002390; H1: 0.000000
+
+Working with entity /m/02q1tc5 (train degree 168; test degree 16): explaining fact </m/02q1tc5, /award/award_category/winners./award/award_honor/honored_for, /m/02_1kl>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 168
+		TRAIN Average Rank-based overlap: 0.000223
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.003291; H1: 0.000000
+	VALID FACTS: 16
+		VALID Average Rank-based overlap: 0.000023
+		VALID Original performances: MRR: 0.984375; H1: 0.968750
+		VALID Kelpie performances: MRR: 0.002743; H1: 0.000000
+	TEST FACTS: 16
+		TEST Average Rank-based overlap: 0.000009
+		TEST Original performances: MRR: 1.000000; H1: 1.000000
+		TEST Kelpie performances: MRR: 0.002358; H1: 0.000000
+	ALL FACTS: 200
+		ALL Average Rank-based overlap: 0.000190
+		ALL Original performances: MRR: 0.998750; H1: 0.997500
+		ALL Kelpie performances: MRR: 0.003172; H1: 0.000000
+
+Working with entity /m/02y8z (train degree 167; test degree 23): explaining fact </m/018qb4, /olympics/olympic_games/sports, /m/02y8z>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 167
+		TRAIN Average Rank-based overlap: 0.000071
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.002700; H1: 0.000000
+	VALID FACTS: 15
+		VALID Average Rank-based overlap: 0.007077
+		VALID Original performances: MRR: 0.886700; H1: 0.866667
+		VALID Kelpie performances: MRR: 0.002432; H1: 0.000000
+	TEST FACTS: 23
+		TEST Average Rank-based overlap: 0.001184
+		TEST Original performances: MRR: 0.917508; H1: 0.869565
+		TEST Kelpie performances: MRR: 0.002309; H1: 0.000000
+	ALL FACTS: 205
+		ALL Average Rank-based overlap: 0.000708
+		ALL Original performances: MRR: 0.982455; H1: 0.975610
+		ALL Kelpie performances: MRR: 0.002637; H1: 0.000000
+
+Working with entity /m/05zl0 (train degree 132; test degree 23): explaining fact </m/05zl0, /award/ranked_item/appears_in_ranked_lists./award/ranking/list, /m/09g7thr>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 131
+		TRAIN Average Rank-based overlap: 0.013573
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.018987; H1: 0.011450
+	VALID FACTS: 17
+		VALID Average Rank-based overlap: 0.038576
+		VALID Original performances: MRR: 0.834285; H1: 0.823529
+		VALID Kelpie performances: MRR: 0.039726; H1: 0.029412
+	TEST FACTS: 23
+		TEST Average Rank-based overlap: 0.049176
+		TEST Original performances: MRR: 0.816907; H1: 0.804348
+		TEST Kelpie performances: MRR: 0.024782; H1: 0.021739
+	ALL FACTS: 171
+		ALL Average Rank-based overlap: 0.020847
+		ALL Original performances: MRR: 0.958899; H1: 0.956140
+		ALL Kelpie performances: MRR: 0.021828; H1: 0.014620
+
+Working with entity /m/021bk (train degree 123; test degree 20): explaining fact </m/021bk, /award/award_nominee/award_nominations./award/award_nomination/award_nominee, /m/02qx69>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 123
+		TRAIN Average Rank-based overlap: 0.015461
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.024096; H1: 0.012195
+	VALID FACTS: 9
+		VALID Average Rank-based overlap: 0.060325
+		VALID Original performances: MRR: 0.849878; H1: 0.833333
+		VALID Kelpie performances: MRR: 0.063690; H1: 0.055556
+	TEST FACTS: 20
+		TEST Average Rank-based overlap: 0.005922
+		TEST Original performances: MRR: 0.901422; H1: 0.875000
+		TEST Kelpie performances: MRR: 0.007796; H1: 0.000000
+	ALL FACTS: 152
+		ALL Average Rank-based overlap: 0.016862
+		ALL Original performances: MRR: 0.978140; H1: 0.973684
+		ALL Kelpie performances: MRR: 0.024295; H1: 0.013158
+
+Working with entity /m/049qx (train degree 100; test degree 13): explaining fact </m/049qx, /people/person/profession, /m/0cbd2>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 100
+		TRAIN Average Rank-based overlap: 0.011363
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.014712; H1: 0.010000
+	VALID FACTS: 12
+		VALID Average Rank-based overlap: 0.026785
+		VALID Original performances: MRR: 0.695874; H1: 0.666667
+		VALID Kelpie performances: MRR: 0.019541; H1: 0.000000
+	TEST FACTS: 13
+		TEST Average Rank-based overlap: 0.012028
+		TEST Original performances: MRR: 0.871637; H1: 0.846154
+		TEST Kelpie performances: MRR: 0.002451; H1: 0.000000
+	ALL FACTS: 125
+		ALL Average Rank-based overlap: 0.012913
+		ALL Original performances: MRR: 0.957454; H1: 0.952000
+		ALL Kelpie performances: MRR: 0.013901; H1: 0.008000
+
+Working with entity /m/09kvv (train degree 91; test degree 7): explaining fact </m/09kvv, /education/university/domestic_tuition./measurement_unit/dated_money_value/currency, /m/09nqf>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 90
+		TRAIN Average Rank-based overlap: 0.022705
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.025971; H1: 0.022222
+	VALID FACTS: 10
+		VALID Average Rank-based overlap: 0.004100
+		VALID Original performances: MRR: 0.814208; H1: 0.800000
+		VALID Kelpie performances: MRR: 0.001261; H1: 0.000000
+	TEST FACTS: 7
+		TEST Average Rank-based overlap: 0.001560
+		TEST Original performances: MRR: 0.867396; H1: 0.857143
+		TEST Kelpie performances: MRR: 0.008238; H1: 0.000000
+	ALL FACTS: 107
+		ALL Average Rank-based overlap: 0.019583
+		ALL Original performances: MRR: 0.973961; H1: 0.971963
+		ALL Kelpie performances: MRR: 0.022501; H1: 0.018692
+
+Working with entity /m/05kh_ (train degree 87; test degree 9): explaining fact </m/05kh_, /film/director/film, /m/01lsl>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 87
+		TRAIN Average Rank-based overlap: 0.006480
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.009934; H1: 0.005747
+	VALID FACTS: 12
+		VALID Average Rank-based overlap: 0.003513
+		VALID Original performances: MRR: 0.917507; H1: 0.916667
+		VALID Kelpie performances: MRR: 0.001465; H1: 0.000000
+	TEST FACTS: 9
+		TEST Average Rank-based overlap: 0.058826
+		TEST Original performances: MRR: 0.890460; H1: 0.888889
+		TEST Kelpie performances: MRR: 0.055756; H1: 0.055556
+	ALL FACTS: 108
+		ALL Average Rank-based overlap: 0.010513
+		ALL Original performances: MRR: 0.981706; H1: 0.981481
+		ALL Kelpie performances: MRR: 0.012811; H1: 0.009259
+
+Working with entity /m/01tnbn (train degree 72; test degree 7): explaining fact </m/0cbd2, /people/profession/people_with_this_profession, /m/01tnbn>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 72
+		TRAIN Average Rank-based overlap: 0.000094
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.002958; H1: 0.000000
+	VALID FACTS: 4
+		VALID Average Rank-based overlap: 0.154740
+		VALID Original performances: MRR: 0.452643; H1: 0.375000
+		VALID Kelpie performances: MRR: 0.022816; H1: 0.000000
+	TEST FACTS: 7
+		TEST Average Rank-based overlap: 0.084804
+		TEST Original performances: MRR: 0.756835; H1: 0.714286
+		TEST Kelpie performances: MRR: 0.006531; H1: 0.000000
+	ALL FACTS: 83
+		ALL Average Rank-based overlap: 0.014691
+		ALL Original performances: MRR: 0.953113; H1: 0.945783
+		ALL Kelpie performances: MRR: 0.004217; H1: 0.000000
+
+Working with entity /m/028d4v (train degree 69; test degree 11): explaining fact </m/028d4v, /people/person/profession, /m/0dxtg>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 69
+		TRAIN Average Rank-based overlap: 0.009286
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.013596; H1: 0.007246
+	VALID FACTS: 11
+		VALID Average Rank-based overlap: 0.013472
+		VALID Original performances: MRR: 0.878980; H1: 0.863636
+		VALID Kelpie performances: MRR: 0.000941; H1: 0.000000
+	TEST FACTS: 11
+		TEST Average Rank-based overlap: 0.022161
+		TEST Original performances: MRR: 0.689506; H1: 0.636364
+		TEST Kelpie performances: MRR: 0.023048; H1: 0.000000
+	ALL FACTS: 91
+		ALL Average Rank-based overlap: 0.011348
+		ALL Original performances: MRR: 0.947839; H1: 0.939560
+		ALL Kelpie performances: MRR: 0.013209; H1: 0.005495
+
+Working with entity /m/03193l (train degree 43; test degree 5): explaining fact </m/03193l, /common/topic/webpage./common/webpage/category, /m/08mbj32>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 43
+		TRAIN Average Rank-based overlap: 0.035005
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.037645; H1: 0.034884
+	VALID FACTS: 7
+		VALID Average Rank-based overlap: 0.056260
+		VALID Original performances: MRR: 0.619658; H1: 0.571429
+		VALID Kelpie performances: MRR: 0.019702; H1: 0.000000
+	TEST FACTS: 5
+		TEST Average Rank-based overlap: 0.111635
+		TEST Original performances: MRR: 0.704826; H1: 0.600000
+		TEST Kelpie performances: MRR: 0.142416; H1: 0.100000
+	ALL FACTS: 55
+		ALL Average Rank-based overlap: 0.044676
+		ALL Original performances: MRR: 0.924759; H1: 0.909091
+		ALL Kelpie performances: MRR: 0.044886; H1: 0.036364
+
+Working with entity /m/0g2ff (train degree 29; test degree 4): explaining fact </m/0g2ff, /music/performance_role/regular_performances./music/group_membership/role, /m/0mkg>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 29
+		TRAIN Average Rank-based overlap: 0.002721
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.025507; H1: 0.000000
+	VALID FACTS: 3
+		VALID Average Rank-based overlap: 0.001520
+		VALID Original performances: MRR: 0.916667; H1: 0.833333
+		VALID Kelpie performances: MRR: 0.019564; H1: 0.000000
+	TEST FACTS: 4
+		TEST Average Rank-based overlap: 0.009630
+		TEST Original performances: MRR: 0.916667; H1: 0.875000
+		TEST Kelpie performances: MRR: 0.013057; H1: 0.000000
+	ALL FACTS: 36
+		ALL Average Rank-based overlap: 0.003389
+		ALL Original performances: MRR: 0.983796; H1: 0.972222
+		ALL Kelpie performances: MRR: 0.023628; H1: 0.000000
+
+Working with entity /m/0269kx (train degree 21; test degree 1): explaining fact </m/0h52w, /protected_sites/natural_or_cultural_site_designation/sites./protected_sites/natural_or_cultural_site_listing/listed_site, /m/0269kx>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 20
+		TRAIN Average Rank-based overlap: 0.056252
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.063037; H1: 0.050000
+	VALID FACTS: 2
+		VALID Average Rank-based overlap: 0.000000
+		VALID Original performances: MRR: 1.000000; H1: 1.000000
+		VALID Kelpie performances: MRR: 0.000318; H1: 0.000000
+	TEST FACTS: 1
+		TEST Average Rank-based overlap: 0.000000
+		TEST Original performances: MRR: 1.000000; H1: 1.000000
+		TEST Kelpie performances: MRR: 0.000443; H1: 0.000000
+	ALL FACTS: 23
+		ALL Average Rank-based overlap: 0.048915
+		ALL Original performances: MRR: 1.000000; H1: 1.000000
+		ALL Kelpie performances: MRR: 0.054862; H1: 0.043478
+
+Working with entity /m/028cl7 (train degree 5; test degree 1): explaining fact </m/03lty, /music/genre/subgenre, /m/028cl7>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 5
+		TRAIN Average Rank-based overlap: 0.000000
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.000082; H1: 0.000000
+	VALID FACTS: 0
+	TEST FACTS: 1
+		TEST Average Rank-based overlap: 0.000000
+		TEST Original performances: MRR: 1.000000; H1: 1.000000
+		TEST Kelpie performances: MRR: 0.000074; H1: 0.000000
+	ALL FACTS: 6
+		ALL Average Rank-based overlap: 0.000000
+		ALL Original performances: MRR: 1.000000; H1: 1.000000
+		ALL Kelpie performances: MRR: 0.000080; H1: 0.000000
+
+Working with entity /m/03rg5x (train degree 4; test degree 1): explaining fact </m/0cbd2, /people/profession/people_with_this_profession, /m/03rg5x>.
+Wrapping the original model in a Kelpie model...
+Extracting samples...
+ Computing RBO between original model predictions and Kelpie model predictions...
+	TRAIN FACTS: 4
+		TRAIN Average Rank-based overlap: 0.000001
+		TRAIN Original performances: MRR: 1.000000; H1: 1.000000
+		TRAIN Kelpie performances: MRR: 0.000441; H1: 0.000000
+	VALID FACTS: 1
+		VALID Average Rank-based overlap: 0.202844
+		VALID Original performances: MRR: 0.500332; H1: 0.500000
+		VALID Kelpie performances: MRR: 0.035758; H1: 0.000000
+	TEST FACTS: 1
+		TEST Average Rank-based overlap: 0.000452
+		TEST Original performances: MRR: 0.750000; H1: 0.500000
+		TEST Kelpie performances: MRR: 0.002968; H1: 0.000000
+	ALL FACTS: 6
+		ALL Average Rank-based overlap: 0.033883
+		ALL Original performances: MRR: 0.875055; H1: 0.833333
+		ALL Kelpie performances: MRR: 0.006748; H1: 0.000000
+
+Done.

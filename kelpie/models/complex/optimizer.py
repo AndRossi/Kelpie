@@ -4,9 +4,9 @@ import numpy as np
 from torch import nn
 from torch import optim
 
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.evaluators import ComplExEvaluator
-from kelpie.models.complex.regularizers import N3, N2
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.evaluation import Evaluator
+from kelpie.models.complex.regularizer import N3, N2
 
 class ComplExOptimizer:
     def __init__(self,
@@ -43,7 +43,7 @@ class ComplExOptimizer:
         self.regularizer = supported_regularizers[regularizer_name]
 
         # create the evaluator to use between epochs
-        self.evaluator = ComplExEvaluator(self.model)
+        self.evaluator = Evaluator(self.model)
 
     def train(self,
               train_samples: np.array,

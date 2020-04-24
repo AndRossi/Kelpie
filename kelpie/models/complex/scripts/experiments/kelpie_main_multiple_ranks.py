@@ -1,19 +1,13 @@
 """
 This module does explanation for ComplEx-N3 model
 """
-from collections import defaultdict
-
 import torch
-from torch import optim
 import numpy
-import copy
 
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.evaluators import ComplExEvaluator
-from kelpie.models.complex.optimizers import KelpieComplExOptimizer
-from kelpie.models.complex.regularizers import N3
-
+from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.models.complex.optimizer import KelpieComplExOptimizer
 
 def average(values):
     return numpy.average(numpy.array(values))
@@ -26,7 +20,7 @@ def mean_reciprocal_rank_error(couples):
 
 
 dataset_name = 'FB15k'
-model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k_no_reg.pt'
+model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k.pt'
 #model_path = './models/ComplEx_FB15K.pt'
 optimizer_name = 'Adagrad'
 batch_size = 100
@@ -37,7 +31,7 @@ decay1 = 0.9
 decay2 = 0.999
 init = 1e-3
 regularizer_name = "N3"
-regularizer_weight = 0
+regularizer_weight = 2.5e-3
 
 entity_2_params = {
     '/m/09c7w0': [9739, 1203, '/m/06yxd', '/base/biblioness/bibs_location/country', '/m/09c7w0', 'tail'],
@@ -75,7 +69,7 @@ entity_2_params = {
 
 #### LOAD DATASET
 print("Loading dataset...")
-complex_dataset = ComplExDataset(name=dataset_name, separator="\t", load=True)
+complex_dataset = Dataset(name=dataset_name, separator="\t", load=True)
 
 ### LOAD TRAINED ORIGINAL MODEL
 print("Loading original trained model...")
@@ -101,7 +95,7 @@ for entity_to_explain in entity_2_params:
     # check that the fact to explain is actually a test fact
     assert(original_sample in complex_dataset.test_samples)
 
-    kelpie_dataset = KelpieComplExDataset(dataset=complex_dataset, entity_id=original_entity_id)
+    kelpie_dataset = KelpieDataset(dataset=complex_dataset, entity_id=original_entity_id)
     kelpie_entity_id = kelpie_dataset.kelpie_entity_id
     kelpie_triple = (kelpie_entity_id, relation_id, tail_id) if perspective == 'head' else (head_id, relation_id, kelpie_entity_id)
     kelpie_sample = numpy.array(kelpie_triple)
@@ -131,21 +125,21 @@ for entity_to_explain in entity_2_params:
     original_direct_samples = numpy.vstack((original_train_samples, original_valid_samples, original_test_samples))
     kelpie_direct_samples = numpy.vstack((kelpie_train_samples, kelpie_valid_samples, kelpie_test_samples))
 
-    _, original_sample_2_ranks, _ = original_model.predict_samples(original_direct_samples)
-    _, kelpie_sample_2_ranks, _ = kelpie_model.predict_samples(kelpie_direct_samples)
+    _, original_ranks, _ = original_model.predict_samples(samples=original_direct_samples)
+    _, kelpie_ranks, _ = kelpie_model.predict_samples(samples=kelpie_direct_samples, original_mode=False)
 
     train_ranks = []
     valid_ranks = []
     test_ranks = []
-    
+
     for i in range(len(original_train_samples)):
         (head_id, relation_id, tail_id) = original_train_samples[i]
         cur_original_triple = (head_id, relation_id, tail_id)
         (head_id, relation_id, tail_id) = kelpie_train_samples[i]
         cur_kelpie_triple = (head_id, relation_id, tail_id)
 
-        original_head_rank, original_tail_rank = original_sample_2_ranks[cur_original_triple]
-        kelpie_head_rank, kelpie_tail_rank = kelpie_sample_2_ranks[cur_kelpie_triple]
+        original_head_rank, original_tail_rank = original_ranks[i]
+        kelpie_head_rank, kelpie_tail_rank = kelpie_ranks[i]
 
         train_ranks.append((original_head_rank, kelpie_head_rank))
         train_ranks.append((original_tail_rank, kelpie_tail_rank))
@@ -156,8 +150,8 @@ for entity_to_explain in entity_2_params:
         (head_id, relation_id, tail_id) = kelpie_valid_samples[i]
         cur_kelpie_triple = (head_id, relation_id, tail_id)
 
-        original_head_rank, original_tail_rank = original_sample_2_ranks[cur_original_triple]
-        kelpie_head_rank, kelpie_tail_rank = kelpie_sample_2_ranks[cur_kelpie_triple]
+        original_head_rank, original_tail_rank = original_ranks[i]
+        kelpie_head_rank, kelpie_tail_rank = kelpie_ranks[i]
 
         valid_ranks.append((original_head_rank, kelpie_head_rank))
         valid_ranks.append((original_tail_rank, kelpie_tail_rank))
@@ -168,8 +162,8 @@ for entity_to_explain in entity_2_params:
         (head_id, relation_id, tail_id) = kelpie_test_samples[i]
         cur_kelpie_sample = (head_id, relation_id, tail_id)
 
-        original_head_rank, original_tail_rank = original_sample_2_ranks[cur_original_sample]
-        kelpie_head_rank, kelpie_tail_rank = kelpie_sample_2_ranks[cur_kelpie_sample]
+        original_head_rank, original_tail_rank = original_ranks[i]
+        kelpie_head_rank, kelpie_tail_rank = kelpie_ranks[i]
 
         test_ranks.append((original_head_rank, kelpie_head_rank))
         test_ranks.append((original_tail_rank, kelpie_tail_rank))

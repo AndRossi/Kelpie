@@ -1,19 +1,13 @@
 """
 This module does explanation for ComplEx-N3 model
 """
-from collections import defaultdict
-
 import torch
-from torch import optim
 import numpy
-import copy
 
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.evaluators import ComplExEvaluator
-from kelpie.models.complex.optimizers import KelpieComplExOptimizer
-from kelpie.models.complex.regularizers import N3
-
+from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.models.complex.optimizer import KelpieComplExOptimizer
 def average(values):
     return numpy.average(numpy.array(values))
 
@@ -25,7 +19,7 @@ def mse(couples):
     return squared_errors_sum / float(len(couples))
 
 dataset_name = 'FB15k'
-model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k_no_reg.pt'
+model_path = '/home/nvidia/workspace/dbgroup/andrea/kelpie/models/ComplEx_FB15k.pt'
 #model_path = './models/ComplEx_FB15K.pt'
 optimizer_name = 'Adagrad'
 batch_size = 100
@@ -36,7 +30,7 @@ decay1 = 0.9
 decay2 = 0.999
 init = 1e-3
 regularizer_name = "N3"
-regularizer_weight = 0
+regularizer_weight = 2.5e-3
 
 entity_2_params = {
     '/m/09c7w0': [9739, 1203, '/m/06yxd', '/base/biblioness/bibs_location/country', '/m/09c7w0', 'tail'],
@@ -74,11 +68,11 @@ entity_2_params = {
 
 #### LOAD DATASET
 print("Loading dataset...")
-complex_dataset = ComplExDataset(name=dataset_name, separator="\t", load=True)
+complex_dataset = Dataset(name=dataset_name, separator="\t", load=True)
 
 ### LOAD TRAINED ORIGINAL MODEL
 print("Loading original trained model...")
-original_model = ComplEx(dataset=complex_dataset, dimension=dimension, init_random=True, init_size=init)
+original_model = ComplEx(dataset=complex_dataset, dimension=dimension, init_random=True, init_size=init)  # type: ComplEx
 original_model.load_state_dict(torch.load(model_path))
 original_model.to('cuda')
 
@@ -100,13 +94,13 @@ for entity_to_explain in entity_2_params:
     # check that the fact to explain is actually a test fact
     assert(original_sample in complex_dataset.test_samples)
 
-    kelpie_dataset = KelpieComplExDataset(dataset=complex_dataset, entity_id=original_entity_id)
+    kelpie_dataset = KelpieDataset(dataset=complex_dataset, entity_id=original_entity_id)
     kelpie_entity_id = kelpie_dataset.kelpie_entity_id
     kelpie_triple = (kelpie_entity_id, relation_id, tail_id) if perspective == 'head' else (head_id, relation_id, kelpie_entity_id)
     kelpie_sample = numpy.array(kelpie_triple)
 
     print("Wrapping the original model in a Kelpie model...")
-    kelpie_model = KelpieComplEx(dataset=kelpie_dataset, model=original_model, init_size=1e-3)
+    kelpie_model = KelpieComplEx(dataset=kelpie_dataset, model=original_model, init_size=1e-3) # type: KelpieComplEx
     kelpie_model.to('cuda')
 
     print("Running post-training on the Kelpie model...")

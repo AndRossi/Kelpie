@@ -3,16 +3,14 @@ This module does explanation for ComplEx model
 """
 import argparse
 import torch
-from torch import optim
 import numpy
 
 from kelpie import kelpie_perturbation
-from kelpie.dataset import ALL_DATASET_NAMES
-from kelpie.models.complex.complex import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.evaluators import ComplExEvaluator
-from kelpie.models.complex.optimizers import KelpieComplExOptimizer
-from kelpie.models.complex.regularizers import N3
+from kelpie.dataset import ALL_DATASET_NAMES, Dataset
+from kelpie.evaluation import KelpieEvaluator
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.models.complex.model import ComplEx, KelpieComplEx
+from kelpie.models.complex.optimizer import KelpieComplExOptimizer
 
 datasets = ALL_DATASET_NAMES
 
@@ -108,7 +106,7 @@ entity_to_explain = head if args.perspective.lower() == "head" else tail
 
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
-original_dataset = ComplExDataset(name=args.dataset, separator="\t", load=True)
+original_dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 # get the ids of the elements of the fact to explain and the perspective entity
 head_id, relation_id, tail_id = original_dataset.get_id_for_entity_name(head), \
@@ -127,11 +125,14 @@ assert(original_sample in original_dataset.test_samples)
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
 print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
-original_model = ComplEx(dataset=original_dataset, dimension=args.dimension, init_random=True, init_size=args.init)
+original_model = ComplEx(dataset=original_dataset,
+                         dimension=args.dimension,
+                         init_random=True,
+                         init_size=args.init) # type: ComplEx
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
 
-kelpie_dataset = KelpieComplExDataset(dataset=original_dataset, entity_id=original_entity_id)
+kelpie_dataset = KelpieDataset(dataset=original_dataset, entity_id=original_entity_id)
 
 
 ############ EXTRACT TEST FACTS AND TRAINING FACTS
@@ -145,10 +146,11 @@ kelpie_train_samples = kelpie_dataset.kelpie_train_samples
 
 perturbed_list, skipped_list = kelpie_perturbation.perturbate_samples(kelpie_train_samples)
 
+
 def run_kelpie(train_samples):
     print("Wrapping the original model in a Kelpie explainable model...")
     # use model_to_explain to initialize the Kelpie model
-    kelpie_model = KelpieComplEx(model=original_model, dataset=kelpie_dataset, init_size=1e-3)
+    kelpie_model = KelpieComplEx(model=original_model, dataset=kelpie_dataset, init_size=1e-3) # type: KelpieComplEx
     kelpie_model.to('cuda')
 
     ###########  BUILD THE OPTIMIZER AND RUN POST-TRAINING
@@ -173,7 +175,7 @@ def run_kelpie(train_samples):
     ### Evaluation on original entity
 
     # Kelpie model model on original fact
-    scores, ranks, predictions = kelpie_model.predict_sample(original_sample)
+    scores, ranks, predictions = kelpie_model.predict_sample(sample=original_sample, original_mode=True)
     print("\nKelpie model on original test fact: <%s, %s, %s>" % original_triple)
     print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
     print("\tHead Rank: %f" % ranks[0])
@@ -181,14 +183,14 @@ def run_kelpie(train_samples):
 
     # Kelpie model on all facts containing the original entity
     print("\nKelpie model on all test facts containing the original entity:")
-    mrr, h1 = ComplExEvaluator(kelpie_model).eval(original_test_samples)
+    mrr, h1 = KelpieEvaluator(kelpie_model).eval(samples=original_test_samples, original_mode=True)
     print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 
     ### Evaluation on kelpie entity
 
     # results on kelpie fact
-    scores, ranks, _ = kelpie_model.predict_sample(kelpie_sample)
+    scores, ranks, _ = kelpie_model.predict_sample(sample=kelpie_sample, original_mode=False)
     print("\nKelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
     print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
     print("\tHead Rank: %f" % ranks[0])
@@ -196,7 +198,7 @@ def run_kelpie(train_samples):
 
     # results on all facts containing the kelpie entity
     print("\nKelpie model on all test facts containing the Kelpie entity:")
-    mrr, h1 = ComplExEvaluator(kelpie_model).eval(kelpie_test_samples)
+    mrr, h1 = KelpieEvaluator(kelpie_model).eval(samples=kelpie_test_samples, original_mode=False)
     print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 

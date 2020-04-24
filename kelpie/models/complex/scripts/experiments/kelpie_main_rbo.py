@@ -1,12 +1,16 @@
+"""
+This module does explanation for ComplEx model
+"""
 import argparse
 import torch
 import numpy
 
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
+from kelpie.evaluation import Evaluator, KelpieEvaluator
 from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.models.complex.model import ComplEx, KelpieComplEx
-from kelpie.evaluation import Evaluator, KelpieEvaluator
 from kelpie.models.complex.optimizer import KelpieComplExOptimizer
+from kelpie import ranking_similarity
 
 datasets = ALL_DATASET_NAMES
 
@@ -100,9 +104,7 @@ entity_to_explain = head if args.perspective.lower() == "head" else tail
 
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
-original_dataset = Dataset(name=args.dataset,
-                           separator="\t",
-                           load=True)
+original_dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 # get the ids of the elements of the fact to explain and the perspective entity
 head_id, relation_id, tail_id = original_dataset.get_id_for_entity_name(head), \
@@ -161,15 +163,13 @@ optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
 
 print("\nExtracting results...")
 kelpie_entity_id = kelpie_dataset.kelpie_entity_id
-kelpie_sample_head = kelpie_entity_id if head_id == original_entity_id else head_id
-kelpie_sample_tail = kelpie_entity_id if tail_id == original_entity_id else tail_id
-kelpie_sample_tuple = (kelpie_sample_head, relation_id, kelpie_sample_tail)
+kelpie_sample_tuple = (kelpie_entity_id, relation_id, tail_id) if args.perspective == "head" else (head_id, relation_id, kelpie_entity_id)
 kelpie_sample = numpy.array(kelpie_sample_tuple)
 
 ### Evaluation on original entity
 
 # Original model on original fact
-scores, ranks, _ = original_model.predict_sample(sample=original_sample)
+scores, ranks, predictions = original_model.predict_sample(sample=original_sample)
 print("\nOriginal model on original test fact: <%s, %s, %s>" % original_sample_tuple)
 print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
 print("\tHead Rank: %f" % ranks[0])
@@ -181,7 +181,7 @@ mrr, h1 = Evaluator(original_model).eval(samples=original_entity_test_samples)
 print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
 # Kelpie model model on original fact
-scores, ranks, _ = kelpie_model.predict_sample(sample=original_sample, original_mode=True)
+scores, ranks, predictions = kelpie_model.predict_sample(sample=original_sample, original_mode=True)
 print("\nKelpie model on original test fact: <%s, %s, %s>" % original_sample_tuple)
 print("\tDirect fact score: %f; Inverse fact score: %f" % (scores[0], scores[1]))
 print("\tHead Rank: %f" % ranks[0])
@@ -206,6 +206,57 @@ print("\tTail Rank: %f" % ranks[1])
 print("\nKelpie model on all test facts containing the Kelpie entity:")
 mrr, h1 = KelpieEvaluator(kelpie_model).eval(samples=kelpie_test_samples, original_mode=False)
 print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
+
+
+print("\n\nComputing RBO between original model predictions and Kelpie model predictions...")
+rbos = []
+_, original_ranks, original_predictions = original_model.predict_samples(original_entity_test_samples)
+_, kelpie_ranks, kelpie_predictions = kelpie_model.predict_samples(samples=kelpie_test_samples, original_mode=False)
+
+
+for i in range(len(original_entity_test_samples)):
+
+    original_sample = original_entity_test_samples[i]
+    kelpie_sample = kelpie_test_samples[i]
+
+    original_target_head, _, original_target_tail = original_sample
+    kelpie_target_head, _, kelpie_target_tail = kelpie_sample
+
+    original_target_head_index, original_target_tail_index = int(original_ranks[i][0]-1), int(original_ranks[i][1]-1)
+    kelpie_target_head_index, kelpie_target_tail_index= int(kelpie_ranks[i][0]-1), int(kelpie_ranks[i][1]-1)
+
+    # get head and tail predictions
+    original_head_predictions = original_predictions[i][0]
+    kelpie_head_predictions = kelpie_predictions[i][0]
+    original_tail_predictions = original_predictions[i][1]
+    kelpie_tail_predictions = kelpie_predictions[i][1]
+
+    assert original_head_predictions[original_target_head_index] == original_target_head
+    assert kelpie_head_predictions[kelpie_target_head_index] == kelpie_target_head
+    assert original_tail_predictions[original_target_tail_index] == original_target_tail
+    assert kelpie_tail_predictions[kelpie_target_tail_index] == kelpie_target_tail
+
+    # replace the target head id with the same value (-1 in this case)
+    original_head_predictions[original_target_head_index] = -1
+    kelpie_head_predictions[kelpie_target_head_index] = -1
+    # cut both lists at the max rank that the target head obtained, between original and kelpie model
+    max_target_head_index = max(original_target_head_index, kelpie_target_head_index)
+    original_head_predictions = original_head_predictions[:max_target_head_index+1]
+    kelpie_head_predictions = kelpie_head_predictions[:max_target_head_index+1]
+
+    # replace the target tail id with the same value (-1 in this case)
+    original_tail_predictions[original_target_tail_index] = -1
+    kelpie_tail_predictions[kelpie_target_tail_index] = -1
+    # cut both lists at the max rank that the target tail obtained, between original and kelpie model
+    max_target_tail_index = max(original_target_tail_index, kelpie_target_tail_index)
+    original_tail_predictions = original_tail_predictions[:max_target_tail_index+1]
+    kelpie_tail_predictions = kelpie_tail_predictions[:max_target_tail_index+1]
+
+    rbos.append(ranking_similarity.rank_biased_overlap(original_head_predictions, kelpie_head_predictions))
+    rbos.append(ranking_similarity.rank_biased_overlap(original_tail_predictions, kelpie_tail_predictions))
+
+avg_rbo = float(sum(rbos))/float(len(rbos))
+print("\tTEST FACTS: Average Rank-based overlap: %f" % avg_rbo)
 
 #print("\n\nComputing embedding distances...")
 #with torch.no_grad():
