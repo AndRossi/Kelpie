@@ -4,22 +4,29 @@ from torch import nn
 import numpy as np
 from torch.nn import Parameter
 
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
+from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
 
 
 class ComplEx(nn.Module, ABC):
     """
-        This class provides the implementation for the ComplEx model.
-        The implementation follows paper "Canonical Tensor Decomposition for Knowledge Base Completion",
+        The ComplEx class provides a PyTorch implementation for the ComplEx model.
+        This implementation adheres to paper "Canonical Tensor Decomposition for Knowledge Base Completion",
         and is largely inspired by the official implementation provided by the authors Lacroix, Usunier and Obozinski
-        at https://github.com/facebookresearch/kbc/tree/master/kbc
+        at https://github.com/facebookresearch/kbc/tree/master/kbc.
+
+        In training or evaluation, our ComplEx class requires samples to be passed as 2-dimensional np.arrays.
+        Each row corresponds to a sample and contains the integer ids of its head, relation and tail.
+        Only *direct* samples should be passed to the model.
+
+        TODO: add documentation about inverse facts and relations
+        TODO: explain that the input must always be direct facts only
     """
 
-    # (takes in input np.arrays and, when necessary, converts them into torch.tensors)
 
     def __init__(
             self,
-            dataset: ComplExDataset,
+            dataset: Dataset,
             dimension: int,
             init_random = True,
             init_size: float = 1e-3
@@ -174,41 +181,37 @@ class ComplEx(nn.Module, ABC):
         ], 1)
 
 
-    def temporary_test(self, samples):
+    # def temporary_test(self, samples):
+    #
+    #     result = dict()
+    #     with torch.no_grad():
+    #
+    #         # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
+    #         # and compute the scores using any possible entity as a tail
+    #         q = self._get_queries(samples)
+    #         rhs = self._get_rhs()
+    #         all_scores = q @ rhs
+    #
+    #     all_scores = all_scores.cpu().numpy()
+    #     for i, (head_id, rel_id, tail_id) in enumerate(samples):
+    #
+    #         result[(head_id, rel_id, tail_id)] = dict()
+    #         sample_scores = all_scores[i]
+    #
+    #         for entity_id in range(self.num_entities):
+    #             result[(head_id, rel_id, tail_id)][entity_id] = sample_scores[entity_id]
+    #
+    #     return result
 
-        result = dict()
-        with torch.no_grad():
+    def predict_sample(self, sample: np.array):
+        """
+            :param sample: the DIRECT sample
+            :return:
+        """
+        scores, ranks, predictions = self.predict_samples(np.array([sample]))
+        return scores[0], ranks[0], predictions[0]
 
-            # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
-            # and compute the scores using any possible entity as a tail
-            q = self._get_queries(samples)
-            rhs = self._get_rhs()
-            all_scores = q @ rhs
-
-        all_scores = all_scores.cpu().numpy()
-        for i, (head_id, rel_id, tail_id) in enumerate(samples):
-
-            result[(head_id, rel_id, tail_id)] = dict()
-            sample_scores = all_scores[i]
-
-            for entity_id in range(self.num_entities):
-                result[(head_id, rel_id, tail_id)][entity_id] = sample_scores[entity_id]
-
-        return result
-
-
-
-    def predict_sample(self, direct_sample: np.array):
-        sample_tuple = (direct_sample[0], direct_sample[1], direct_sample[2])
-        sample_2_scores, sample_2_ranks, sample_2_predictions = self.predict_samples(np.array([direct_sample]))
-
-        scores = sample_2_scores[sample_tuple]
-        ranks = sample_2_ranks[sample_tuple]
-        predictions = sample_2_predictions[sample_tuple]
-
-        return scores, ranks, predictions
-
-    def predict_samples(self, direct_samples: np.array):
+    def predict_samples(self, samples: np.array):
         """
             This method takes as an input a tensor of 'direct' samples,
             runs head and tail prediction on each of them
@@ -216,39 +219,41 @@ class ComplEx(nn.Module, ABC):
                 - the obtained scores for direct and inverse version of each sample,
                 - the obtained head and tail ranks for each sample
                 - the list of predicted entities for each sample
-            :param direct_samples: a torch.Tensor containing all the samples to predict
+            :param samples: a torch.Tensor containing all the DIRECT samples to predict.
+                            They will be automatically inverted to perform head prediction
 
             :return: three dicts mapping each passed direct sample (in Tuple format) respectively to
                         - the scores of that direct sample and of the corresponding inverse sample;
                         - the head and tail rank for that sample;
-                        - the head and tail predictions for that sample (up to the target entities)
+                        - the head and tail predictions for that sample
         """
 
+        direct_samples = samples
+
         # make sure that all the passed samples are "direct" samples
-        assert np.all(direct_samples[:, 1] < self.dataset.num_original_relations)
+        assert np.all(direct_samples[:, 1] < self.dataset.num_direct_relations)
 
         # output data structures
-        sample_2_out_scores, sample_2_out_ranks, sample_2_out_predictions = dict(), dict(), dict()
+        scores, ranks, predictions = [], [], []
 
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
         #obtain scores, ranks and predictions both for direct and inverse samples
-        direct_sample_2_score, direct_sample_2_rank, direct_sample_2_predictions = self.predict_tails(direct_samples)
-        inverse_sample_2_score, inverse_sample_2_rank, inverse_sample_2_predictions = self.predict_tails(inverse_samples)
+        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
         for i in range(direct_samples.shape[0]):
-            h, r, t = direct_samples[i]
-            i_h, i_r, i_t = inverse_samples[i]
+            # add to the scores list a couple containing the scores of the direct and of the inverse sample
+            scores.append((direct_scores[i], inverse_scores[i]))
 
-            # map each (direct) sample to a couple containing both the score of the direct and of the inverse sample
-            sample_2_out_scores[(h, r, t)] = (direct_sample_2_score[(h, r, t)], inverse_sample_2_score[(i_h, i_r, i_t)])
-            # map each (direct) sample to a couple containing both the rank of the head and of the tail
-            sample_2_out_ranks[(h, r, t)] = (inverse_sample_2_rank[(i_h, i_r, i_t)], direct_sample_2_rank[(h, r, t)], )
-            # map each (direct) sample to a couple containing both the predictions for the head and for the tail
-            sample_2_out_predictions[(h, r, t)] = (inverse_sample_2_predictions[(i_h, i_r, i_t)], direct_sample_2_predictions[(h, r, t)])
+            # add to the ranks list a couple containing the ranks of the head and of the tail
+            ranks.append((head_ranks[i], tail_ranks[i]))
 
-        return sample_2_out_scores, sample_2_out_ranks, sample_2_out_predictions
+            # add to the prediction list a couple containing the lists of predictions
+            predictions.append((head_predictions[i], tail_predictions[i]))
+
+        return scores, ranks, predictions
 
 
     def predict_tails(self, samples: np.array):
@@ -260,7 +265,6 @@ class ComplEx(nn.Module, ABC):
         """
 
         ranks = torch.ones(len(samples))    # initialize with ONES
-        sample_2_score, sample_2_rank, sample_2_predictions = dict(), dict(), dict()  # output data structures
 
         with torch.no_grad():
 
@@ -268,12 +272,12 @@ class ComplEx(nn.Module, ABC):
             # and compute the scores using any possible entity as a tail
             q = self._get_queries(samples)
             rhs = self._get_rhs()
-            scores = q @ rhs
+            all_scores = q @ rhs    # 2d matrix: each row corresponds to a sample and has the scores for all entities
 
             # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
             targets = torch.zeros(size=(len(samples), 1)).cuda()
             for i, (_, _, tail_id) in enumerate(samples):
-                targets[i, 0] = scores[i, tail_id].item()
+                targets[i, 0] = all_scores[i, tail_id].item()
 
             # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
             # In this way, those entities will be ignored in rankings
@@ -284,40 +288,67 @@ class ComplEx(nn.Module, ABC):
                 if tail_id not in filter_out:
                     filter_out.append(tail_id)
 
-                scores[i, torch.LongTensor(filter_out)] = -1e6
+                all_scores[i, torch.LongTensor(filter_out)] = -1e6
 
-            ranks += torch.sum((scores >= targets).float(), dim=1).cpu()    #ranks was initialized with ONES
+            # fill the ranks data structure and convert it to a Python list
+            ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()    #ranks was initialized with ONES
+            ranks = ranks.cpu().numpy().tolist()
 
-            mistakes = (scores >= targets).cpu().numpy()
+            all_scores = all_scores.cpu().numpy()
+            targets = targets.cpu().numpy()
 
-            scores = scores.cpu().numpy()
-            ranks = ranks.cpu().numpy()
+            # save the list of all obtained scores
+            scores = [targets[i, 0] for i in range(len(samples))]
+
+            predictions = []
             for i, (head_id, rel_id, tail_id) in enumerate(samples):
-                query_mistakes = mistakes[i]
-                predicted_tails = np.array(np.where(query_mistakes==1))[0]
+                filter_out = self.dataset.to_filter[(head_id, rel_id)]
+                if tail_id not in filter_out:
+                    filter_out.append(tail_id)
 
-                if len(predicted_tails) > 0:
-                    predicted_tails_scores = np.array([scores[i, cur_tail] for cur_tail in predicted_tails])
-                    permutation = np.argsort(-predicted_tails_scores)
-                    predicted_tails = predicted_tails[permutation]
+                predicted_tails = np.where(all_scores[i] > -1e6)[0]
 
-                predicted_tails = predicted_tails.tolist()
-                predicted_tails.append(tail_id)
+                # get all not filtered tails and corresponding scores for current fact
+                #predicted_tails = np.where(all_scores[i] != -1e6)
+                predicted_tails_scores = all_scores[i, predicted_tails] #for cur_tail in predicted_tails]
 
-                sample_2_predictions[(head_id, rel_id, tail_id)] = predicted_tails
-                sample_2_rank[(head_id, rel_id, tail_id)] = ranks[i]
-                sample_2_score[(head_id, rel_id, tail_id)] = targets[i, 0]
+                # note: the target tail score and the tail id are in the same position in their respective lists!
+                #predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
+                #predicted_tails = np.append(predicted_tails, [tail_id])
 
-        return sample_2_score, sample_2_rank, sample_2_predictions
+                # sort the scores and predicted tails list in the same way
+                permutation = np.argsort(-predicted_tails_scores)
+
+                predicted_tails_scores = predicted_tails_scores[permutation]
+                predicted_tails = predicted_tails[permutation]
+
+                # include the score of the target tail in the predictions list
+                # after ALL entities with greater or equal scores (MIN policy)
+                j = 0
+                while j < len(predicted_tails_scores) and predicted_tails_scores[j] >= scores[i]:
+                    j += 1
+
+                predicted_tails_scores = np.concatenate((predicted_tails_scores[:j],
+                                                         np.array([scores[i]]),
+                                                         predicted_tails_scores[j:]))
+                predicted_tails = np.concatenate((predicted_tails[:j],
+                                                  np.array([tail_id]),
+                                                  predicted_tails[j:]))
+
+
+
+                # add to the results data structure
+                predictions.append(predicted_tails)     # as a np array!
+
+        return scores, ranks, predictions
 
 
 class KelpieComplEx(ComplEx):
     def __init__(
             self,
-            dataset: KelpieComplExDataset,
+            dataset: KelpieDataset,
             model: ComplEx,
-            init_size: float = 1e-3
-    ):
+            init_size: float = 1e-3):
 
         super(KelpieComplEx, self).__init__(dataset=dataset,
                                             dimension=model.dimension,
@@ -347,6 +378,74 @@ class KelpieComplEx(ComplEx):
 
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
+
+    # Override
+    def predict_sample(self,
+                       sample: np.array,
+                       original_mode: bool = False):
+        """
+        :param sample: the DIRECT sample. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
+        return scores[0], ranks[0], predictions[0]
+
+    # Override
+    def predict_samples(self,
+                        samples: np.array,
+                        original_mode: bool = False):
+        """
+        :param samples: the DIRECT samples. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        # if we are in original_mode, make sure that the kelpie entity is not featured in the samples to predict
+        # otherwise, make sure that the original entity is not featured in the samples to predict
+        forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
+        assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
+
+        # use the superclass method to obtain scores, ranks and prediction results.
+        # these WILL feature the forbidden entity, so we now need to filter them
+        scores, ranks, predictions = super(KelpieComplEx, self).predict_samples(direct_samples)
+
+        # remove any reference to the forbidden entity id
+        # (that may have been included in the predicted entities)
+        for i in range(len(direct_samples)):
+            head_predictions, tail_predictions = predictions[i]
+            head_rank, tail_rank = ranks[i]
+
+            # remove the forbidden entity id from the head predictions (note: it could be absent due to filtering)
+            # and if it was before the head target decrease the head rank by 1
+            forbidden_indices = np.where(head_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                head_predictions = np.concatenate([head_predictions[:index], head_predictions[index + 1:]], axis=0)
+                if index < head_rank:
+                    head_rank -= 1
+
+            # remove the kelpie entity id from the tail predictions  (note: it could be absent due to filtering)
+            # and if it was before the tail target decrease the head rank by 1
+            forbidden_indices = np.where(tail_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                tail_predictions = np.concatenate([tail_predictions[:index], tail_predictions[index + 1:]], axis=0)
+                if index < tail_rank:
+                    tail_rank -= 1
+
+            predictions[i] = (head_predictions, tail_predictions)
+            ranks[i] = (head_rank, tail_rank)
+
+        return scores, ranks, predictions
 
     def update_embeddings(self):
         with torch.no_grad():
