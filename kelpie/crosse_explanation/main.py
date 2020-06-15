@@ -5,12 +5,9 @@ import argparse
 import torch
 import numpy
 
-from kelpie.crosse_explanation.dataset import PathDataset
-from kelpie.dataset import ALL_DATASET_NAMES
-from kelpie.models.complex.model import ComplEx, KelpieComplEx
-from kelpie.models.complex.dataset import ComplExDataset, KelpieComplExDataset
-from kelpie.models.complex.evaluators import ComplExEvaluator, KelpieComplExEvaluator
-from kelpie.models.complex.optimizer import KelpieComplExOptimizer
+from kelpie.crosse_explanation.explanation import CrossEExplanator
+from kelpie.dataset import ALL_DATASET_NAMES, Dataset
+from kelpie.models.complex.model import ComplEx
 
 datasets = ALL_DATASET_NAMES
 
@@ -64,19 +61,15 @@ args = parser.parse_args()
 
 # get the fact to explain and its perspective entity
 head, relation, tail = args.head, args.relation, args.tail
-entity_to_explain = head if args.perspective.lower() == "head" else tail
 
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
-original_dataset = ComplExDataset(name=args.dataset,
-                                  separator="\t",
-                                  load=True)
+original_dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 # get the ids of the elements of the fact to explain and the perspective entity
 head_id, relation_id, tail_id = original_dataset.get_id_for_entity_name(head), \
                                 original_dataset.get_id_for_relation_name(relation), \
                                 original_dataset.get_id_for_entity_name(tail)
-original_entity_id = head_id if args.perspective == "head" else tail_id
 
 # create the fact to explain as a numpy array of its ids
 original_sample_tuple = (head_id, relation_id, tail_id)
@@ -93,8 +86,11 @@ original_model = ComplEx(dataset=original_dataset, dimension=args.dimension, ini
 original_model.load_state_dict(torch.load(args.model_path))
 
 
-print("Loading paths dataset %s..." % args.dataset)
-explaination_dataset = PathDataset(name=args.dataset,
-                                  separator="\t",
-                                  load=True)
+explanator = CrossEExplanator(original_dataset, original_model)
+
+one_step_path_supports, two_step_path_supports = explanator.run(head, relation, tail)
+
+print(one_step_path_supports)
+print(two_step_path_supports)
+
 
