@@ -98,7 +98,7 @@ parser.add_argument('--load',
 
 args = parser.parse_args()
 
-model_path = "./models/" + "_".join([args.model, args.dataset]) + ".pt"
+model_path = "./models/" + "_".join(["ComplEx", args.dataset]) + ".pt"
 if args.load is not None:
     model_path = args.load
 
@@ -106,7 +106,7 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)
+model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)   # type: ComplEx
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))

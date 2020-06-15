@@ -75,6 +75,12 @@ class ComplExOptimizer:
                     torch.save(self.model.state_dict(), save_path)
                 print("\t done.")
 
+        if save_path is not None:
+            print("\t saving model...")
+            torch.save(self.model.state_dict(), save_path)
+            print("\t done.")
+
+
     def epoch(self,
               batch_size: int,
               training_samples: np.array):

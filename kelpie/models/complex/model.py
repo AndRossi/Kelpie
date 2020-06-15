@@ -191,28 +191,6 @@ class ComplEx(Model, nn.Module):
         ], 1)
 
 
-    # def temporary_test(self, samples):
-    #
-    #     result = dict()
-    #     with torch.no_grad():
-    #
-    #         # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
-    #         # and compute the scores using any possible entity as a tail
-    #         q = self._get_queries(samples)
-    #         rhs = self._get_rhs()
-    #         all_scores = q @ rhs
-    #
-    #     all_scores = all_scores.cpu().numpy()
-    #     for i, (head_id, rel_id, tail_id) in enumerate(samples):
-    #
-    #         result[(head_id, rel_id, tail_id)] = dict()
-    #         sample_scores = all_scores[i]
-    #
-    #         for entity_id in range(self.num_entities):
-    #             result[(head_id, rel_id, tail_id)][entity_id] = sample_scores[entity_id]
-    #
-    #     return result
-
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             This method takes as an input a tensor of 'direct' samples,
@@ -250,7 +228,7 @@ class ComplEx(Model, nn.Module):
             scores.append((direct_scores[i], inverse_scores[i]))
 
             # add to the ranks list a couple containing the ranks of the head and of the tail
-            ranks.append((head_ranks[i], tail_ranks[i]))
+            ranks.append((int(head_ranks[i]), int(tail_ranks[i])))
 
             # add to the prediction list a couple containing the lists of predictions
             predictions.append((head_predictions[i], tail_predictions[i]))
