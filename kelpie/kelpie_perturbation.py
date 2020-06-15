@@ -5,6 +5,18 @@ def perturbate_samples(samples):
     output = []
     skipped = []
 
+    for i in range(len(samples)):
+        sample_to_skip = samples[i]
+        skipped.append([sample_to_skip])
+        output.append(numpy.vstack((samples[:i], samples[i+1:])))
+
+    return output, skipped
+
+def perturbate_samples_group(samples):
+
+    output = []
+    skipped = []
+
     start_skip = 0
     skip_size = 10
     end_skip = start_skip + skip_size
