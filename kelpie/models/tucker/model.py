@@ -92,26 +92,3 @@ class TuckER(Model, nn.Module):
         predictions = torch.sigmoid(result)
 
         return predictions
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-                
