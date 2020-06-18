@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from torch import nn
 from torch import optim
-import defaultdict
+from collections import defaultdict
 
 from kelpie.models.tucker.model import TuckER # , KelpieTuckER
 from kelpie.evaluation import Evaluator
@@ -82,7 +82,6 @@ class TuckEROptimizer:
               batch_size: int,
               training_samples: np.array):
         
-        # Build a dictionary which maps (head, relation) -> [tails]
         er_vocab = self._get_er_vocab(training_samples)
         
         training_samples = torch.from_numpy(training_samples).cuda()
@@ -108,12 +107,7 @@ class TuckEROptimizer:
         
         predictions = self.model.forward(batch)
         
-        truth = np.zeros((batch.shape[0], self.model.dataset.num_entities))
-        for i, sample in enumerate(batch):
-            head_relation_pair = (sample[0], sample[1])
-            tails = er_vocab[head_relation_pair]
-            truth[i, tails] = 1.
-        truth = torch.FloatTensor(truth).cuda()
+        truth = self._get_truth(batch, er_vocab)
         truth = ((1.0-self.label_smoothing)*truth) + (1.0/truth.size(1))
 
         # compute loss
@@ -128,8 +122,26 @@ class TuckEROptimizer:
         # return loss
         return l
 
+    # Build a dictionary which maps (head, relation) -> [tails]
     def _get_er_vocab(self, data):
+        
         er_vocab = defaultdict(list)
         for triple in data:
             er_vocab[(triple[0], triple[1])].append(triple[2])
+            
         return er_vocab
+    
+    # Get a one-hot vector for each (head, relation) pair in batch.
+    # The vector has 1.0 in indexes corresponding to the tails, and 0.0
+    # elsewhere.
+    def _get_truth(self, batch, er_vocab):
+        
+        truth = np.zeros((batch.shape[0], self.model.dataset.num_entities))
+        for i, sample in enumerate(batch):
+            head_relation_pair = (sample[0], sample[1])
+            tails = er_vocab[head_relation_pair]
+            truth[i, tails] = 1.
+            
+        truth = torch.FloatTensor(truth).cuda()
+        
+        return truth
