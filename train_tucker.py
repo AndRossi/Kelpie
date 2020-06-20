@@ -25,13 +25,6 @@ parser.add_argument('--model',
                     help="Model in {}".format(ALL_MODEL_NAMES)
 )
 
-# regularizers = ['N3', 'N2']
-# parser.add_argument('--regularizer',
-#                     choices=regularizers,
-#                     default='N3',
-#                     help="Regularizer in {}".format(regularizers)
-# )
-
 optimizers = ['Adam']
 parser.add_argument('--optimizer',
                     choices=optimizers,
@@ -75,18 +68,6 @@ parser.add_argument('--batch_size',
                     type=int,
                     help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
 )
-
-# parser.add_argument('--reg',
-#                     default=0,
-#                     type=float,
-#                     help="Regularization weight"
-# )
-
-# parser.add_argument('--init',
-#                     default=1e-3,
-#                     type=float,
-#                     help="Initial scale"
-# )
 
 parser.add_argument('--learning_rate',
                     default=1e-1,
