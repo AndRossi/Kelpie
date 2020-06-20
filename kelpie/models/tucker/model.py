@@ -80,7 +80,37 @@ class TuckER(Model, nn.Module):
 
     def score(self, samples: np.array) -> np.array:
         """
+            Compute scores for the passed samples
+            :param samples: a 2-dimensional numpy array containing the samples to score, one per row
+            :return: a numpy array containing the scores of the passed samples
         """
+        head_indexes = samples[:, 0]
+        head_embeddings = self.entity_embeddings[head_indexes]
+        relation_indexes = samples[:, 1]
+        relation_embeddings = self.relation_embeddings[relation_indexes]
+        tail_indexes = samples[:, 2]
+        tail_embeddings = self.entity_embeddings[tail_indexes]
+        core_tensor_reshaped = self.core_tensor.view(self.relation_dimension, -1)
+
+        first_multiplication = torch.mm(relation_embeddings, core_tensor_reshaped)
+        first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
+        first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+
+        head_embeddings = self.batch_norm1(head_embeddings)
+        head_embeddings = self.input_dropout(head_embeddings)
+        head_embeddings_reshaped = head_embeddings.view(-1, 1, self.entity_dimension)
+
+        second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped) 
+        second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)      
+        second_multiplication_reshaped = self.batch_norm2(second_multiplication_reshaped)
+        second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
+        
+        tail_embeddings_transposed = tail_embeddings.transpose(1,0)
+
+        result = torch.mm(second_multiplication_reshaped, tail_embeddings_transposed)
+        predictions = torch.sigmoid(result)
+
+        return predictions
 
     def forward(self, samples: np.array):
         """
