@@ -144,3 +144,74 @@ class TuckER(Model, nn.Module):
         predictions = torch.sigmoid(result)
 
         return predictions
+
+    def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
+        """
+            This method performs prediction on a collection of samples, and returns the corresponding
+            scores, ranks and prediction lists.
+
+            All the passed samples must be DIRECT samples in the original dataset.
+            (if the Model supports inverse samples as well,
+            it should invert the passed samples while running this method)
+
+            :param samples: the direct samples to predict, in numpy array format
+            :return: this method returns three lists:
+                        - the list of scores for the passed samples,
+                                    OR IF THE MODEL SUPPORTS INVERSE FACTS
+                            the list of couples <direct sample score, inverse sample score>,
+                            where the i-th score refers to the i-th sample in the input samples.
+
+                        - the list of couples (head rank, tail rank)
+                            where the i-th couple refers to the i-th sample in the input samples.
+
+                        - the list of couples (head_predictions, tail_predictions)
+                            where the i-th couple refers to the i-th sample in the input samples.
+                            The head_predictions and tail_predictions for each sample
+                            are numpy arrays containing all the predicted heads and tails respectively for that sample.
+        """
+
+        scores, ranks = [], []
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        with torch.no_grad:
+            predictions = self.forward(direct_samples)
+            output_predictions = predictions.clone().detach()
+
+        # dictionary with Head-Relation couples of sample as keys
+        # and a list of all correct Tails for that couple as values
+        entity_relation_dict = self._get_er_vocab(self) #TODO
+
+        head_indexes = torch.tensor(direct_samples[:, 0]).cuda()      # heads of all direct_samples
+        relation_indexes = torch.tensor(direct_samples[:, 1]).cuda()  # relation of all direct_samples
+        tail_indexes = torch.tensor(direct_samples[:, 2]).cuda()      # tails of all direct_samples
+
+        # for every triple in the samples
+        for row in direct_samples.shape[0]:
+            entities_to_filter = entity_relation_dict[(direct_samples[row][0], direct_samples[row][1])]
+
+            # predicted value for the correct tail of that triple
+            predicted_value = predictions[row, tail_indexes[row]].item()
+
+            scores.append(predicted_value)
+
+            # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
+            predictions[row, entities_to_filter] = 0.0
+
+            # re-set the predicted value for that tail to the original value
+            predictions[row, tail_indexes[row]] = predicted_value
+
+        sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
+
+        sorted_indexes = sorted_indexes.cpu().numpy()
+
+        for row in direct_samples.shape[0]:
+
+            # rank of the correct target
+            rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
+            ranks.append(rank + 1)
+
+        return scores, ranks, output_predictions
