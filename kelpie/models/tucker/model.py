@@ -215,3 +215,136 @@ class TuckER(Model, nn.Module):
             ranks.append(rank + 1)
 
         return scores, ranks, output_predictions
+
+################
+
+class KelpieTuckER(TuckER):
+    def __init__( #default parameters for FB15k can be found in a repo above TODO: parameters for every dataset
+            self,
+            dataset: KelpieDataset,
+            model: TuckER,
+            ent_dim: float = 200,
+            rel_dim: float = 200,
+            input_dout: float = 0.2,
+            hidden_d1: float = 0.2,
+            hidden_d2: float = 0.3
+            ):
+        TuckER.__init__(self,
+                        dataset=dataset,
+                        entity_dimension=ent_dim,
+                        relation_dimension=rel_dim,
+                        input_dropout=input_dout,
+                        hidden_dropout1=hidden_d1,
+                        hidden_dropout2=hidden_d2,
+                        init_random=True)
+
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
+
+        # extract the values of the trained embeddings for entities and relations and freeze them.
+        frozen_entity_embeddings = model.entity_embeddings.clone().detach()
+        frozen_relation_embeddings = model.relation_embeddings.clone().detach()
+
+        # It is *extremely* important that entity_to_explain_embedding is both a Parameter and an instance variable
+        # because the whole approach of the project is to obtain the parameters model params with parameters() method
+        # and to pass them to the Optimizer for optimization.
+        #
+        # If I used .cuda() outside the Parameter, like
+        #       self.entity_to_explain_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
+        # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
+
+        # Therefore entity_to_explain_embedding would not be a Parameter anymore.
+
+        self.keplie_entity_embeddings = Parameter(torch.empty(self.num_entities, self.entity_dimension).cuda(),
+                                           requires_grad=True)
+        self.kelpie_relation_embeddings = Parameter(torch.empty(self.num_relations, self.relation_dimension).cuda(),
+                                             requires_grad=True)
+        #not sure if we need this, but I suspect so1
+        '''self.core_tensor = Parameter(torch.tensor(
+            np.random.uniform(-1, 1, (self.relation_dimension, self.entity_dimension, self.entity_dimension)),
+            dtype=torch.float, device="cuda", requires_grad=True))'''
+
+        xavier_normal_(self.entity_embeddings)
+        xavier_normal_(self.relation_embeddings)
+
+        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        self.relation_embeddings = frozen_relation_embeddings
+
+
+# Override
+    def predict_samples(self,
+                        samples: np.array,
+                        original_mode: bool = False):
+        """
+        This method overrides the Model predict_samples method
+        by adding the possibility to run predictions in original_mode
+        which means,
+        :param samples: the DIRECT samples. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        # if we are in original_mode, make sure that the kelpie entity is not featured in the samples to predict
+        # otherwise, make sure that the original entity is not featured in the samples to predict
+        forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
+        assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
+
+        # use the Model implementation method to obtain scores, ranks and prediction results.
+        # these WILL feature the forbidden entity, so we now need to filter them
+        scores, ranks, predictions = super().predict_samples(direct_samples)
+
+        # remove any reference to the forbidden entity id
+        # (that may have been included in the predicted entities)
+        for i in range(len(direct_samples)):
+            head_predictions, tail_predictions = predictions[i]
+            head_rank, tail_rank = ranks[i]
+
+            # remove the forbidden entity id from the head predictions (note: it could be absent due to filtering)
+            # and if it was before the head target decrease the head rank by 1
+            forbidden_indices = np.where(head_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                head_predictions = np.concatenate([head_predictions[:index], head_predictions[index + 1:]], axis=0)
+                if index < head_rank:
+                    head_rank -= 1
+
+            # remove the kelpie entity id from the tail predictions  (note: it could be absent due to filtering)
+            # and if it was before the tail target decrease the head rank by 1
+            forbidden_indices = np.where(tail_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                tail_predictions = np.concatenate([tail_predictions[:index], tail_predictions[index + 1:]], axis=0)
+                if index < tail_rank:
+                    tail_rank -= 1
+
+            predictions[i] = (head_predictions, tail_predictions)
+            ranks[i] = (head_rank, tail_rank)
+
+        return scores, ranks, predictions
+
+
+# Override
+    def predict_sample(self,
+                       sample: np.array,
+                       original_mode: bool = False):
+        """
+        Override the
+        :param sample: the DIRECT sample. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
+        return scores[0], ranks[0], predictions[0]
+
+    def update_embeddings(self):
+        with torch.no_grad():
+            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
