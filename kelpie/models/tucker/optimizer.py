@@ -5,7 +5,7 @@ from torch import nn
 from torch import optim
 from collections import defaultdict
 
-from kelpie.models.tucker.model import TuckER # , KelpieTuckER
+from kelpie.models.tucker.model import TuckER, KelpieTuckER
 from kelpie.evaluation import Evaluator
 
 class TuckEROptimizer:
@@ -145,3 +145,48 @@ class TuckEROptimizer:
         truth = torch.FloatTensor(truth).cuda()
         
         return truth
+
+class KelpieTuckEROptimizer(TuckEROptimizer):
+    def __init__(self,
+                 model:KelpieTuckER,
+                 optimizer_name: str = "Adam",
+                 scheduler_name: str = "ExponentialLR",
+                 batch_size: int = 128,
+                 learning_rate: float = 0.0005,
+                 decay: float = 1.0,
+                 label_smoothing: float = 0.1,
+                 verbose: bool = True):
+
+        super(KelpieTuckEROptimizer, self).__init__(model=model,
+                                                    optimizer_name=optimizer_name,
+                                                    scheduler_name=scheduler_name,
+                                                    batch_size=batch_size,
+                                                    learning_rate=learning_rate,
+                                                    decay=decay,
+                                                    label_smoothing=label_smoothing,
+                                                    verbose=verbose)
+# Override
+    def epoch(self,
+              batch_size: int,
+              training_samples: np.array):
+        training_samples = torch.from_numpy(training_samples).cuda()
+        # at the beginning of the epoch, shuffle all samples randomly
+        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+        loss = torch.nn.BCELoss()
+
+        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
+            bar.set_description(f'train loss')
+
+            batch_start = 0
+            while batch_start < training_samples.shape[0]:
+                batch = actual_samples[batch_start: batch_start + batch_size].cuda()
+                l = self.step_on_batch(loss, batch)
+
+                # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
+                # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
+                # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
+                self.model.update_embeddings()
+
+                batch_start += self.batch_size
+                bar.update(batch.shape[0])
+                bar.set_postfix(loss=f'{l.item():.0f}')
