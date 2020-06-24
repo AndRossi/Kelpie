@@ -243,23 +243,23 @@ class TuckER(Model, nn.Module):
 ################
 
 class KelpieTuckER(TuckER):
-    def __init__( #default parameters for FB15k can be found in a repo above TODO: parameters for every dataset
+    def __init__( # suggested parameters for every dataset can be found in the tuckER repo: https://github.com/ibalazevic/TuckER
             self,
             dataset: KelpieDataset,
             model: TuckER,
-            ent_dim: float = 200,
-            rel_dim: float = 200,
-            input_dout: float = 0.2,
-            hidden_d1: float = 0.2,
-            hidden_d2: float = 0.3
+            entity_dimension: float,
+            relation_dimension: float,
+            input_dropout: float,
+            hidden_dropout1: float,
+            hidden_dropout2: float
             ):
         TuckER.__init__(self,
                         dataset=dataset,
-                        entity_dimension=ent_dim,
-                        relation_dimension=rel_dim,
-                        input_dropout=input_dout,
-                        hidden_dropout1=hidden_d1,
-                        hidden_dropout2=hidden_d2,
+                        entity_dimension=entity_dimension,
+                        relation_dimension=relation_dimension,
+                        input_dropout=input_dropout,
+                        hidden_dropout1=hidden_dropout1,
+                        hidden_dropout2=hidden_dropout2,
                         init_random=True)
 
         self.model = model
