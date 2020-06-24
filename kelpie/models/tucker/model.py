@@ -169,29 +169,57 @@ class TuckER(Model, nn.Module):
                             The head_predictions and tail_predictions for each sample
                             are numpy arrays containing all the predicted heads and tails respectively for that sample.
         """
-
-        scores, ranks = [], []
+        scores, ranks, predictions = [], [], []
 
         direct_samples = samples
 
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
 
-        with torch.no_grad:
-            predictions = self.forward(direct_samples)
-            output_predictions = predictions.clone().detach()
+        inverse_samples = self.dataset.invert_samples(samples)
 
+        head_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+        tail_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+
+        for i in samples.shape[0]:
+            scores[i] = (head_scores[i], tail_scores[i])
+            ranks[i] = (head_ranks[i], tail_ranks[i])
+            predictions[i] = (head_predictions[i].numpy(), tail_predictions[i].numpy())
+
+        return scores, ranks, predictions
+
+    def predict_tails(self, samples):
+        """
+        This method receives in input a batch of samples
+        and returns the corresponding tail scores, tail ranks and tail predictions
+        :param samples: the direct samples to predict, in numpy array format
+        :return: this method returns three lists:
+                        - the list of tails scores for the passed samples,
+                            where the i-th score refers to the i-th sample in the input samples.
+
+                        - the list of tail ranks
+                            where the i-th rank refers to the i-th sample in the input samples.
+
+                        - the list of tail predictions
+                            where the i-th prediction refers to the i-th sample in the input samples.
+                            The tail_predictions for each sample
+                            are numpy arrays containing all the predicted tails respectively for that sample.
+        """
+
+        scores, ranks = [], []
+
+        with torch.no_grad:
+            predictions = self.forward(samples)
+            output_predictions = predictions.clone().detach()
         # dictionary with Head-Relation couples of sample as keys
         # and a list of all correct Tails for that couple as values
-        entity_relation_dict = self._get_er_vocab(self) #TODO
-
-        head_indexes = torch.tensor(direct_samples[:, 0]).cuda()      # heads of all direct_samples
-        relation_indexes = torch.tensor(direct_samples[:, 1]).cuda()  # relation of all direct_samples
-        tail_indexes = torch.tensor(direct_samples[:, 2]).cuda()      # tails of all direct_samples
-
+        entity_relation_dict = self._get_er_vocab(self)  # TODO
+        head_indexes = torch.tensor(samples[:, 0]).cuda()  # heads of all direct_samples
+        relation_indexes = torch.tensor(samples[:, 1]).cuda()  # relation of all direct_samples
+        tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all direct_samples
         # for every triple in the samples
-        for row in direct_samples.shape[0]:
-            entities_to_filter = entity_relation_dict[(direct_samples[row][0], direct_samples[row][1])]
+        for row in samples.shape[0]:
+            entities_to_filter = entity_relation_dict[(samples[row][0], samples[row][1])]
 
             # predicted value for the correct tail of that triple
             predicted_value = predictions[row, tail_indexes[row]].item()
@@ -203,18 +231,14 @@ class TuckER(Model, nn.Module):
 
             # re-set the predicted value for that tail to the original value
             predictions[row, tail_indexes[row]] = predicted_value
-
         sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
-
         sorted_indexes = sorted_indexes.cpu().numpy()
-
-        for row in direct_samples.shape[0]:
-
+        for row in samples.shape[0]:
             # rank of the correct target
             rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
             ranks.append(rank + 1)
-
         return scores, ranks, output_predictions
+
 
 ################
 
