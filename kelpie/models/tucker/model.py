@@ -256,17 +256,7 @@ class KelpieTuckER(TuckER):
 
         # Therefore entity_to_explain_embedding would not be a Parameter anymore.
 
-        self.keplie_entity_embeddings = Parameter(torch.empty(self.num_entities, self.entity_dimension).cuda(),
-                                           requires_grad=True)
-        self.kelpie_relation_embeddings = Parameter(torch.empty(self.num_relations, self.relation_dimension).cuda(),
-                                             requires_grad=True)
-        #not sure if we need this, but I suspect so1
-        '''self.core_tensor = Parameter(torch.tensor(
-            np.random.uniform(-1, 1, (self.relation_dimension, self.entity_dimension, self.entity_dimension)),
-            dtype=torch.float, device="cuda", requires_grad=True))'''
-
-        xavier_normal_(self.entity_embeddings)
-        xavier_normal_(self.relation_embeddings)
+        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.entity_dimension).cuda(), requires_grad=True)
 
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings

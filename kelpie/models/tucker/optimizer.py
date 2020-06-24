@@ -174,13 +174,15 @@ class KelpieTuckEROptimizer(TuckEROptimizer):
         actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
         loss = torch.nn.BCELoss()
 
+        er_vocab = self._get_er_vocab(training_samples)
+
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
                 batch = actual_samples[batch_start: batch_start + batch_size].cuda()
-                l = self.step_on_batch(loss, batch)
+                l = self.step_on_batch(loss, batch, er_vocab)
 
                 # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
                 # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
