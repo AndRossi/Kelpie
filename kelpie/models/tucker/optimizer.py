@@ -83,11 +83,15 @@ class TuckEROptimizer:
               training_samples: np.array):
         
         er_vocab = self._get_er_vocab(training_samples)
+        er_vocab_pairs = np.array(list(er_vocab.keys()))
         
-        training_samples = torch.from_numpy(training_samples).cuda()
+        # We need to have er_vobab_pairs as actual samples, otherwise
+        # using training_samples will have duplicate head-relation pairs.
+        # Instead, we only want to see one time a head-relation pair in the training set.
+        actual_samples = torch.from_numpy(er_vocab_pairs).cuda()
 
         # at the beginning of the epoch, shuffle all samples randomly
-        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+        actual_samples = actual_samples[torch.randperm(actual_samples.shape[0]), :]
         loss = nn.BCELoss()
 
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
@@ -123,6 +127,8 @@ class TuckEROptimizer:
         return l
 
     # Build a dictionary which maps (head, relation) -> [tails]
+    # dataset.to_filter can't be used because it refers to all the dataset
+    # (train, val and test)
     def _get_er_vocab(self, data):
         
         er_vocab = defaultdict(list)
@@ -165,16 +171,22 @@ class KelpieTuckEROptimizer(TuckEROptimizer):
                                                     decay=decay,
                                                     label_smoothing=label_smoothing,
                                                     verbose=verbose)
-# Override
+    # Override
     def epoch(self,
               batch_size: int,
               training_samples: np.array):
-        training_samples = torch.from_numpy(training_samples).cuda()
-        # at the beginning of the epoch, shuffle all samples randomly
-        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
-        loss = torch.nn.BCELoss()
-
+        
         er_vocab = self._get_er_vocab(training_samples)
+        er_vocab_pairs = np.array(list(er_vocab.keys()))
+        
+        # We need to have er_vobab_pairs as actual samples, otherwise
+        # using training_samples will have duplicate head-relation pairs.
+        # Instead, we only want to see one time a head-relation pair in the training set.
+        actual_samples = torch.from_numpy(er_vocab_pairs).cuda()
+
+        # at the beginning of the epoch, shuffle all samples randomly
+        actual_samples = actual_samples[torch.randperm(actual_samples.shape[0]), :]
+        loss = torch.nn.BCELoss()
 
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
