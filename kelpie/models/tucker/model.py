@@ -94,16 +94,17 @@ class TuckER(Model, nn.Module):
 
         first_multiplication = torch.mm(relation_embeddings, core_tensor_reshaped)
         first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
-        first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+        # Dropout is not needed in score because it is only used in inference, so I commented it.
+        # first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
 
         head_embeddings = self.batch_norm1(head_embeddings)
-        head_embeddings = self.input_dropout(head_embeddings)
+        # head_embeddings = self.input_dropout(head_embeddings)
         head_embeddings_reshaped = head_embeddings.view(-1, 1, self.entity_dimension)
 
         second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped) 
         second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)      
         second_multiplication_reshaped = self.batch_norm2(second_multiplication_reshaped)
-        second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
+        # second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
         
         tail_embeddings_transposed = tail_embeddings.transpose(1,0)
 
