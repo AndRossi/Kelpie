@@ -57,7 +57,7 @@ model = TuckER(dataset=dataset,
                init_random=True)
 model.to('cuda')
 model.load_state_dict(torch.load(model_path))
-model.eval()
+model.cpu().eval()
 
 print("\nEvaluating model...")
 mrr, h1 = Evaluator(model=model).eval(samples=dataset.test_samples, write_output=True)
