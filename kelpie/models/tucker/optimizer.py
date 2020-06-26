@@ -94,11 +94,11 @@ class TuckEROptimizer:
         actual_samples = actual_samples[torch.randperm(actual_samples.shape[0]), :]
         loss = nn.BCELoss()
 
-        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
+        with tqdm.tqdm(total=actual_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
             batch_start = 0
-            while batch_start < training_samples.shape[0]:
+            while batch_start < actual_samples.shape[0]:
                 batch = actual_samples[batch_start : batch_start + batch_size].cuda()
                 l = self.step_on_batch(loss, batch, er_vocab)
 
@@ -188,11 +188,11 @@ class KelpieTuckEROptimizer(TuckEROptimizer):
         actual_samples = actual_samples[torch.randperm(actual_samples.shape[0]), :]
         loss = torch.nn.BCELoss()
 
-        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
+        with tqdm.tqdm(total=actual_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
             batch_start = 0
-            while batch_start < training_samples.shape[0]:
+            while batch_start < actual_samples.shape[0]:
                 batch = actual_samples[batch_start: batch_start + batch_size].cuda()
                 l = self.step_on_batch(loss, batch, er_vocab)
 
