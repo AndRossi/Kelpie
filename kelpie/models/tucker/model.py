@@ -182,10 +182,10 @@ class TuckER(Model, nn.Module):
         head_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
         tail_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
 
-        for i in samples.shape[0]:
-            scores[i] = (head_scores[i], tail_scores[i])
-            ranks[i] = (head_ranks[i], tail_ranks[i])
-            predictions[i] = (head_predictions[i].numpy(), tail_predictions[i].numpy())
+        for i in range(samples.shape[0]):
+            scores += [(head_scores[i], tail_scores[i])]
+            ranks += [(head_ranks[i], tail_ranks[i])]
+            predictions += [(head_predictions[i], tail_predictions[i])]
 
         return scores, ranks, predictions
 
@@ -209,8 +209,7 @@ class TuckER(Model, nn.Module):
 
         scores, ranks = [], []
 
-        with torch.no_grad:
-            predictions = self.forward(samples)
+        predictions = self.forward(samples)
         # dictionary with Head-Relation couples of sample as keys
         # and a list of all correct Tails for that couple as values
         entity_relation_dict = self.dataset.to_filter
@@ -218,7 +217,7 @@ class TuckER(Model, nn.Module):
         relation_indexes = torch.tensor(samples[:, 1]).cuda()  # relation of all direct_samples
         tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all direct_samples
         # for every triple in the samples
-        for row in samples.shape[0]:
+        for row in range(samples.shape[0]):
             entities_to_filter = entity_relation_dict[(samples[row][0], samples[row][1])]
 
             # predicted value for the correct tail of that triple
@@ -232,8 +231,8 @@ class TuckER(Model, nn.Module):
             # re-set the predicted value for that tail to the original value
             predictions[row, tail_indexes[row]] = predicted_value
         sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
-        sorted_indexes = sorted_indexes.cpu().numpy()
-        for row in samples.shape[0]:
+        sorted_indexes = sorted_indexes.numpy()
+        for row in range(samples.shape[0]):
             # rank of the correct target
             rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
             ranks.append(rank + 1)
