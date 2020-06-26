@@ -211,10 +211,9 @@ class TuckER(Model, nn.Module):
 
         with torch.no_grad:
             predictions = self.forward(samples)
-            output_predictions = predictions.clone().detach()
         # dictionary with Head-Relation couples of sample as keys
         # and a list of all correct Tails for that couple as values
-        entity_relation_dict = self._get_er_vocab(self)  # TODO
+        entity_relation_dict = self.dataset.to_filter
         head_indexes = torch.tensor(samples[:, 0]).cuda()  # heads of all direct_samples
         relation_indexes = torch.tensor(samples[:, 1]).cuda()  # relation of all direct_samples
         tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all direct_samples
@@ -238,7 +237,7 @@ class TuckER(Model, nn.Module):
             # rank of the correct target
             rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
             ranks.append(rank + 1)
-        return scores, ranks, output_predictions
+        return scores, ranks, sorted_indexes
 
 
 ################
