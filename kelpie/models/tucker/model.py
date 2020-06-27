@@ -177,13 +177,13 @@ class TuckER(Model, nn.Module):
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
 
-        inverse_samples = self.dataset.invert_samples(samples)
+        inverse_samples = self.dataset.invert_samples(direct_samples)
 
-        head_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
-        tail_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
 
-        for i in range(samples.shape[0]):
-            scores += [(head_scores[i], tail_scores[i])]
+        for i in range(direct_samples.shape[0]):
+            scores += [(direct_scores[i], inverse_scores[i])]
             ranks += [(head_ranks[i], tail_ranks[i])]
             predictions += [(head_predictions[i], tail_predictions[i])]
 
