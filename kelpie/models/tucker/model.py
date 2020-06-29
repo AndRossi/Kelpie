@@ -207,36 +207,48 @@ class TuckER(Model, nn.Module):
                             are numpy arrays containing all the predicted tails respectively for that sample.
         """
 
-        scores, ranks = [], []
+        scores, ranks, pred_out = [], [], []
+        
+        batch_size = 128
+        for i in range(0, samples.shape[0], batch_size):
+            batch = samples[i : i + batch_size]
 
-        predictions = self.forward(samples)
-        # dictionary with Head-Relation couples of sample as keys
-        # and a list of all correct Tails for that couple as values
-        entity_relation_dict = self.dataset.to_filter
-        head_indexes = torch.tensor(samples[:, 0]).cuda()  # heads of all direct_samples
-        relation_indexes = torch.tensor(samples[:, 1]).cuda()  # relation of all direct_samples
-        tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all direct_samples
-        # for every triple in the samples
-        for row in range(samples.shape[0]):
-            entities_to_filter = entity_relation_dict[(samples[row][0], samples[row][1])]
-
-            # predicted value for the correct tail of that triple
-            predicted_value = predictions[row, tail_indexes[row]].item()
-
-            scores.append(predicted_value)
-
-            # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
-            predictions[row, entities_to_filter] = 0.0
-
-            # re-set the predicted value for that tail to the original value
-            predictions[row, tail_indexes[row]] = predicted_value
-        sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
-        sorted_indexes = sorted_indexes.numpy()
-        for row in range(samples.shape[0]):
-            # rank of the correct target
-            rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
-            ranks.append(rank + 1)
-        return scores, ranks, sorted_indexes
+            predictions = self.forward(batch)
+            
+            # dictionary with Head-Relation couples of sample as keys
+            # and a list of all correct Tails for that couple as values
+            entity_relation_dict = self.dataset.to_filter
+            head_indexes = torch.tensor(batch[:, 0]).cuda()  # heads of all direct_samples
+            relation_indexes = torch.tensor(batch[:, 1]).cuda()  # relation of all direct_samples
+            tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all direct_samples
+            
+            # for every triple in the samples
+            for row in range(batch.shape[0]):
+                entities_to_filter = entity_relation_dict[(batch[row][0], batch[row][1])]
+    
+                # predicted value for the correct tail of that triple
+                predicted_value = predictions[row, tail_indexes[row]].item()
+    
+                scores.append(predicted_value)
+    
+                # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
+                predictions[row, entities_to_filter] = 0.0
+    
+                # re-set the predicted value for that tail to the original value
+                predictions[row, tail_indexes[row]] = predicted_value
+                
+            sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
+            sorted_indexes = sorted_indexes.cpu().numpy()
+            
+            for row in sorted_indexes:
+                pred_out.append(row)
+            
+            for row in range(batch.shape[0]):
+                # rank of the correct target
+                rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
+                ranks.append(rank + 1)
+                
+        return scores, ranks, pred_out
 
 
 ################
