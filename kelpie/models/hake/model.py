@@ -5,6 +5,7 @@ import torch
 from torch import nn
 
 from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
 from kelpie.models.hake.data import BatchType
 
@@ -26,7 +27,7 @@ class Hake(Model, nn.Module):
         self.num_entities = dataset.num_entities  # number of entities in dataset
         self.num_relations = dataset.num_relations  # number of relations in dataset
 
-        #Hake-specific
+        # Hake-specific
         self.hidden_dim = hidden_dim
         self.epsilon = 2.0
 
@@ -226,3 +227,113 @@ class Hake(Model, nn.Module):
                 predictions.append(predicted_tails)  # as a np array!
 
         return scores, ranks, predictions
+
+
+
+class KelpieHake(Hake):
+    def __init__(
+            self,
+            dataset: KelpieDataset,
+            model: Hake):
+
+        Hake.__init__(self,
+                        dataset=dataset,
+                        hidden_dim=model.hidden_dim,
+                        gamma=model.gamma,
+                        modulus_weight=model.modulus_weight,
+                        phase_weight=model.phase_weight)
+
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
+
+        # extract the values of the trained embeddings for entities and relations and freeze them.
+        frozen_entity_embeddings = model.entity_embeddings.clone().detach()
+        frozen_relation_embeddings = model.relation_embeddings.clone().detach()
+
+        # Therefore entity_to_explain_embedding would not be a Parameter anymore.
+        self.kelpie_entity_embedding = nn.Parameter(torch.zeros(1, self.hidden_dim * 2))
+        nn.init.uniform_(
+            tensor=self.kelpie_entity_embedding,
+            a=-self.embedding_range.item(),
+            b=self.embedding_range.item()
+        )
+
+        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        self.relation_embeddings = frozen_relation_embeddings
+
+
+    def predict_samples(self,
+                        samples: np.array,
+                        original_mode: bool = False):
+        """
+        This method overrides the Model predict_samples method
+        by adding the possibility to run predictions in original_mode
+        which means,
+        :param samples: the DIRECT samples. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        # if we are in original_mode, make sure that the kelpie entity is not featured in the samples to predict
+        # otherwise, make sure that the original entity is not featured in the samples to predict
+        forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
+        assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
+
+        # use the Model implementation method to obtain scores, ranks and prediction results.
+        # these WILL feature the forbidden entity, so we now need to filter them
+        scores, ranks, predictions = super().predict_samples(direct_samples)
+
+        # remove any reference to the forbidden entity id
+        # (that may have been included in the predicted entities)
+        for i in range(len(direct_samples)):
+            head_predictions, tail_predictions = predictions[i]
+            head_rank, tail_rank = ranks[i]
+
+            # remove the forbidden entity id from the head predictions (note: it could be absent due to filtering)
+            # and if it was before the head target decrease the head rank by 1
+            forbidden_indices = np.where(head_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                head_predictions = np.concatenate([head_predictions[:index], head_predictions[index + 1:]], axis=0)
+                if index < head_rank:
+                    head_rank -= 1
+
+            # remove the kelpie entity id from the tail predictions  (note: it could be absent due to filtering)
+            # and if it was before the tail target decrease the head rank by 1
+            forbidden_indices = np.where(tail_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                tail_predictions = np.concatenate([tail_predictions[:index], tail_predictions[index + 1:]], axis=0)
+                if index < tail_rank:
+                    tail_rank -= 1
+
+            predictions[i] = (head_predictions, tail_predictions)
+            ranks[i] = (head_rank, tail_rank)
+
+        return scores, ranks, predictions
+
+
+    def predict_sample(self,
+                       sample: np.array,
+                       original_mode: bool = False):
+        """
+        Override the
+        :param sample: the DIRECT sample. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
+        """
+
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
+        return scores[0], ranks[0], predictions[0]
+
+    def update_embeddings(self):
+        with torch.no_grad():
+            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
