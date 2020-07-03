@@ -1,12 +1,14 @@
-import tqdm
-import numpy as np
 import torch
-from torch import optim, nn
+from torch import optim
 import torch.nn.functional as F
 
-from kelpie.evaluation import Evaluator
-from kelpie.models.hake.data import get_test_step_samples
+# from kelpie.evaluation import Evaluator
+from torch.utils.data import DataLoader
+
+from kelpie.models.hake.data import BatchType, TrainDataset, BidirectionalOneShotIterator
 from kelpie.models.hake.model import Hake
+
+from kelpie.dataset import Dataset as KelpieDataset
 
 
 class HakeOptimizer:
@@ -14,19 +16,23 @@ class HakeOptimizer:
     def __init__(self,
                  model: Hake,
                  optimizer_name: str = "Adam",
-                 batch_size: int = 256,
-                 learning_rate: float = 1e-2,
-                 decay1: float = 0.9,
-                 decay2: float = 0.99,
-                 verbose: bool = True):
+                 learning_rate: float = 0.0001,
+                 no_decay: bool = False,
+                 max_steps: int = 100000,
+                 adversarial_temperature: float = 1.0,
+                 save_path: str = None):
+
         self.model = model
-        self.batch_size = batch_size
-        self.verbose = verbose
+        self.learning_rate = learning_rate
+        self.no_decay = no_decay
+        self.max_steps = max_steps
+        self.adversarial_temperature = adversarial_temperature
+        self.save_path = save_path
 
         # build all the supported optimizers using the passed params (learning rate and decays if Adam)
         supported_optimizers = {
             'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=learning_rate),
-            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, betas=(decay1, decay2)),
+            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate),
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate)
         }
 
@@ -34,9 +40,10 @@ class HakeOptimizer:
         self.optimizer = supported_optimizers[optimizer_name]
 
         # create the evaluator to use between epochs
-        self.evaluator = Evaluator(self.model)
+        # self.evaluator = Evaluator(self.model)
 
 
+    '''
     def _train(self,
               train_samples: np.array,
               max_epochs: int,
@@ -71,9 +78,61 @@ class HakeOptimizer:
             print("\t saving model...")
             torch.save(self.model.state_dict(), save_path)
             print("\t done.")
+    '''
+
+    def get_train_iterator_from_dataset(self,
+                                        kelpieDataset: KelpieDataset,
+                                        cpu_num: int = 10,
+                                        batch_size: int = 1024,
+                                        negative_sample_size: int = 128,
+                                        ):
+        train_dataloader_head = DataLoader(
+            TrainDataset(kelpieDataset, negative_sample_size, BatchType.HEAD_BATCH),
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=max(1, cpu_num // 2),
+            collate_fn=TrainDataset.collate_fn
+        )
+
+        train_dataloader_tail = DataLoader(
+            TrainDataset(kelpieDataset, negative_sample_size, BatchType.TAIL_BATCH),
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=max(1, cpu_num // 2),
+            collate_fn=TrainDataset.collate_fn
+        )
+
+        return BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)
 
 
-    def train_step(self, model: torch.nn.modules.module, triple, args):
+    def train(self,
+            train_iterator,
+            init_step: int = 0):
+
+        warm_up_steps = self.max_steps // 2
+        current_learning_rate = self.learning_rate
+
+        # Training Loop
+        for step in range(init_step, self.max_steps):
+
+            self.train_step(self.model, train_iterator)
+
+            if step >= warm_up_steps:
+                if not self.no_decay:
+                    current_learning_rate = current_learning_rate / 10
+                self.optimizer(
+                    filter(lambda p: p.requires_grad, self.model.parameters()),
+                    lr=current_learning_rate
+                )
+                warm_up_steps = warm_up_steps * 3
+
+        if self.save_path is not None:
+            print("\t saving model...")
+            torch.save(self.model.state_dict(), self.save_path)
+            print("\t done.")
+
+
+    def train_step(self, model: torch.nn.modules.module, train_iterator):
         '''
         A single train step. Apply back-propation and return the loss
         '''
@@ -82,7 +141,7 @@ class HakeOptimizer:
 
         self.optimizer.zero_grad()
 
-        positive_sample, negative_sample, subsampling_weight, batch_type = get_test_step_samples(triple)
+        positive_sample, negative_sample, subsampling_weight, batch_type = next(train_iterator)
 
         positive_sample = positive_sample.cuda()
         negative_sample = negative_sample.cuda()
@@ -93,7 +152,7 @@ class HakeOptimizer:
         negative_score = model((positive_sample, negative_sample), batch_type=batch_type)
 
                         # p(h,r,t)                      # alpha
-        negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim=1).detach()
+        negative_score = (F.softmax(negative_score * self.adversarial_temperature, dim=1).detach()
                             # E log sigma (dr(h, t) - gamma)
                           * F.logsigmoid(-negative_score)).sum(dim=1)
 
@@ -110,45 +169,3 @@ class HakeOptimizer:
         loss.backward()
 
         self.optimizer.step()
-
-    def epoch(self,
-              batch_size: int,
-              training_samples: np.array):
-        training_samples = torch.from_numpy(training_samples).cuda()
-
-        # at the beginning of the epoch, shuffle all samples randomly
-        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
-        #loss = nn.CrossEntropyLoss(reduction='mean')
-        loss = self._loss()
-
-        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
-            bar.set_description(f'train loss')
-
-            batch_start = 0
-            while batch_start < training_samples.shape[0]:
-                batch = actual_samples[batch_start : batch_start + batch_size].cuda()
-                l = self.step_on_batch(loss, batch)
-
-                batch_start += self.batch_size
-                bar.update(batch.shape[0])
-                bar.set_postfix(loss=f'{l.item():.0f}')
-
-
-    def step_on_batch(self, loss, batch):
-        # predictions, factors = self.model.forward(batch)
-        predictions = self.model.forward(batch)
-        truth = batch[:, 2]
-
-        # compute loss
-        # l_fit = loss(predictions, truth)
-        # l_reg = self.regularizer.forward(factors)
-        # l = l_fit + l_reg
-        l = loss(predictions, truth)
-
-        # compute loss gradients, and run optimization step
-        self.optimizer.zero_grad()
-        l.backward()
-        self.optimizer.step()
-
-        # return loss
-        return l
