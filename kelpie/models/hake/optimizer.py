@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import optim
 import torch.nn.functional as F
@@ -5,6 +6,7 @@ import torch.nn.functional as F
 # from kelpie.evaluation import Evaluator
 from torch.utils.data import DataLoader
 
+from kelpie.evaluation import Evaluator
 from kelpie.models.hake.data import BatchType, TrainDataset, BidirectionalOneShotIterator
 from kelpie.models.hake.model import Hake
 
@@ -40,45 +42,8 @@ class HakeOptimizer:
         self.optimizer = supported_optimizers[optimizer_name]
 
         # create the evaluator to use between epochs
-        # self.evaluator = Evaluator(self.model)
+        self.evaluator = Evaluator(self.model)
 
-
-    '''
-    def _train(self,
-              train_samples: np.array,
-              max_epochs: int,
-              save_path: str = None,
-              evaluate_every:int =-1,
-              valid_samples:np.array = None):
-
-        # extract the direct and inverse train facts
-        training_samples = np.vstack((train_samples,
-                                      self.model.dataset.invert_samples(train_samples)))
-
-        # batch size must be the minimum between the passed value and the number of Kelpie training facts
-        batch_size = min(self.batch_size, len(training_samples))
-
-        cur_loss = 0
-        for e in range(max_epochs):
-            cur_loss = self.epoch(batch_size, training_samples)
-
-            if evaluate_every > 0 and valid_samples is not None and \
-                    (e + 1) % evaluate_every == 0:
-                mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
-
-                print("\tValidation Hits@1: %f" % h1)
-                print("\tValidation Mean Reciprocal Rank': %f" % mrr)
-
-                if save_path is not None:
-                    print("\t saving model...")
-                    torch.save(self.model.state_dict(), save_path)
-                print("\t done.")
-
-        if save_path is not None:
-            print("\t saving model...")
-            torch.save(self.model.state_dict(), save_path)
-            print("\t done.")
-    '''
 
     def get_train_iterator_from_dataset(self,
                                         kelpieDataset: KelpieDataset,
@@ -107,7 +72,9 @@ class HakeOptimizer:
 
     def train(self,
             train_iterator,
-            init_step: int = 0):
+            init_step: int = 0,
+            evaluate_every: int = -1,
+            valid_samples: np.array = None):
 
         warm_up_steps = self.max_steps // 2
         current_learning_rate = self.learning_rate
@@ -126,10 +93,16 @@ class HakeOptimizer:
                 )
                 warm_up_steps = warm_up_steps * 3
 
-        if self.save_path is not None:
-            print("\t saving model...")
-            torch.save(self.model.state_dict(), self.save_path)
-            print("\t done.")
+            if evaluate_every > 0 and valid_samples is not None and (step + 1) % evaluate_every == 0:
+                mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
+
+                print("\tValidation Hits@1: %f" % h1)
+                print("\tValidation Mean Reciprocal Rank': %f" % mrr)
+
+                if self.save_path is not None:
+                    print("\t saving model...")
+                    torch.save(self.model.state_dict(), self.save_path)
+                print("\t done.")
 
 
     def train_step(self, model: torch.nn.modules.module, train_iterator):
