@@ -3,11 +3,7 @@ import torch
 from torch import optim
 import torch.nn.functional as F
 
-# from kelpie.evaluation import Evaluator
-from torch.utils.data import DataLoader
-
 from kelpie.evaluation import Evaluator
-from kelpie.models.hake.data import BatchType, TrainDataset, BidirectionalOneShotIterator
 from kelpie.models.hake.model import Hake
 
 from kelpie.dataset import Dataset as KelpieDataset
@@ -43,31 +39,6 @@ class HakeOptimizer:
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
-
-
-    def get_train_iterator_from_dataset(self,
-                                        kelpieDataset: KelpieDataset,
-                                        cpu_num: int = 10,
-                                        batch_size: int = 1024,
-                                        negative_sample_size: int = 128,
-                                        ):
-        train_dataloader_head = DataLoader(
-            TrainDataset(kelpieDataset, negative_sample_size, BatchType.HEAD_BATCH),
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=max(1, cpu_num // 2),
-            collate_fn=TrainDataset.collate_fn
-        )
-
-        train_dataloader_tail = DataLoader(
-            TrainDataset(kelpieDataset, negative_sample_size, BatchType.TAIL_BATCH),
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=max(1, cpu_num // 2),
-            collate_fn=TrainDataset.collate_fn
-        )
-
-        return BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)
 
 
     def train(self,

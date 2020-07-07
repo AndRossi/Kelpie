@@ -3,6 +3,7 @@ from enum import Enum
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 
 from kelpie.dataset import Dataset as KelpieDataset
 
@@ -147,3 +148,27 @@ class BidirectionalOneShotIterator(object):
             for data in dataloader:
                 yield data
 
+
+def get_train_iterator_from_dataset(self,
+                                    kelpieDataset: KelpieDataset,
+                                    cpu_num: int = 10,
+                                    batch_size: int = 1024,
+                                    negative_sample_size: int = 128,
+                                    ):
+    train_dataloader_head = DataLoader(
+        TrainDataset(kelpieDataset, negative_sample_size, BatchType.HEAD_BATCH),
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=max(1, cpu_num // 2),
+        collate_fn=TrainDataset.collate_fn
+    )
+
+    train_dataloader_tail = DataLoader(
+        TrainDataset(kelpieDataset, negative_sample_size, BatchType.TAIL_BATCH),
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=max(1, cpu_num // 2),
+        collate_fn=TrainDataset.collate_fn
+    )
+
+    return BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)
