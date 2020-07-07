@@ -34,6 +34,12 @@ parser.add_argument('--optimizer',
                     help="Optimizer in {}".format(optimizers)
 )
 
+parser.add_argument('--batch_size',
+                    default=1024,
+                    type=int,
+                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
+)
+
 parser.add_argument('--dimension',
                     default=1000,
                     type=int,
@@ -41,7 +47,7 @@ parser.add_argument('--dimension',
 )
 
 parser.add_argument('--max_epochs',
-                    default=100000,
+                    default=50,
                     type=int,
                     help="Number of epochs."
 )
@@ -104,12 +110,6 @@ parser.add_argument('--cpu_num',
                     default=10,
                     type=int,
                     help="Number of (virtual) CPU cores to use"
-)
-
-parser.add_argument('--batch_size',
-                    default=1024,
-                    type=int,
-                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
 )
 
 parser.add_argument('--negative_sample_size',

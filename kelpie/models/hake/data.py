@@ -149,8 +149,7 @@ class BidirectionalOneShotIterator(object):
                 yield data
 
 
-def get_train_iterator_from_dataset(self,
-                                    kelpieDataset: KelpieDataset,
+def get_train_iterator_from_dataset(kelpieDataset: KelpieDataset,
                                     cpu_num: int = 10,
                                     batch_size: int = 1024,
                                     negative_sample_size: int = 128,
