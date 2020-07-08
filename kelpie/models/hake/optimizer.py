@@ -33,7 +33,10 @@ class HakeOptimizer:
         }
 
         # choose the Torch Optimizer object to use, based on the passed name
-        self.optimizer = supported_optimizers[optimizer_name]
+        self.optimizer = torch.optim.Adam(
+            filter(lambda p: p.requires_grad, self.model.parameters()),
+            lr=learning_rate
+        ) #supported_optimizers[optimizer_name]
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
@@ -57,10 +60,9 @@ class HakeOptimizer:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
                 self.optimizer(
-                    filter(lambda p: p.requires_grad, self.model.parameters())#,
-                    #lr=current_learning_rate
+                    filter(lambda p: p.requires_grad, self.model.parameters()),
+                    lr=current_learning_rate
                 )
-                self.optimizer.param_groups[0]['lr'] = current_learning_rate
                 warm_up_steps = warm_up_steps * 3
 
             if evaluate_every > 0 and valid_samples is not None and (step + 1) % evaluate_every == 0:
