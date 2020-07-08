@@ -133,7 +133,7 @@ class Hake(Model, nn.Module):
                     - positive_sample: tensor with shape [batch_size, 3]
                     - negative_sample: tensor with shape [batch_size, negative_sample_size]
         """
-        batch_type = kwargs.get('batch_type', BatchType.TAIL_BATCH);
+        batch_type = kwargs.get('batch_type', BatchType.SINGLE);
 
         if batch_type == BatchType.SINGLE:
             head = torch.index_select(
