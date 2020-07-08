@@ -28,7 +28,7 @@ class HakeOptimizer:
         # build all the supported optimizers using the passed params (learning rate and decays if Adam)
         supported_optimizers = {
             'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=learning_rate),
-            'Adam': optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=learning_rate),
+            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate),
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate)
         }
 
@@ -57,9 +57,10 @@ class HakeOptimizer:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
                 self.optimizer(
-                    filter(lambda p: p.requires_grad, self.model.parameters()),
-                    lr=current_learning_rate
+                    filter(lambda p: p.requires_grad, self.model.parameters())#,
+                    #lr=current_learning_rate
                 )
+                self.optimizer.param_groups[0]['lr'] = current_learning_rate
                 warm_up_steps = warm_up_steps * 3
 
             if evaluate_every > 0 and valid_samples is not None and (step + 1) % evaluate_every == 0:
