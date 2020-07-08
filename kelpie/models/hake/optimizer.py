@@ -28,7 +28,7 @@ class HakeOptimizer:
         # build all the supported optimizers using the passed params (learning rate and decays if Adam)
         supported_optimizers = {
             'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=learning_rate),
-            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate),
+            'Adam': optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=learning_rate),
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate)
         }
 
