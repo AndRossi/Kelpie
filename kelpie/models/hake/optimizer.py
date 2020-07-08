@@ -74,7 +74,7 @@ class HakeOptimizer:
                 print("\t done.")
 
 
-    def train_step(self, model: torch.nn.modules.module, train_iterator):
+    def train_step(self, model, train_iterator):
         '''
         A single train step. Apply back-propation and return the loss
         '''
