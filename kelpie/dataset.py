@@ -5,7 +5,8 @@ from collections import defaultdict
 import numpy
 
 #DATA_PATH = os.path.abspath("/Users/andrea/kelpie/data")
-DATA_PATH = os.path.abspath("/home/nvidia/workspace/dbgroup/andrea/kelpie/data")
+#DATA_PATH = os.path.abspath("/home/nvidia/workspace/dbgroup/andrea/Kelpie/data")
+DATA_PATH = os.path.abspath("/home/nvidia/workspace/dbgroup/agiw/graphers/Kelpie/data")
 FB15K = "FB15k"
 FB15K_237 = "FB15k-237"
 WN18 = "WN18"
