@@ -52,7 +52,7 @@ class Model:
         """
         pass
 
-    def forward(self, samples: numpy.array):
+    def forward(self, samples: numpy.array, *args, **kwargs):
         """
             This method performs forward propagation for a collection of samples.
             This method is only used in training, when an Optimizer calls it passing the current batch of samples.

@@ -105,6 +105,7 @@ class Hake(Model, nn.Module):
         return self._func(head, rel, tail, BatchType.SINGLE).cpu().numpy()
 
 
+    '''
     def forward(self, samples: np.array) -> np.array:
 
         head = self.entity_embedding[samples[:, 0]]  # list of entity embeddings for the heads of the facts
@@ -113,6 +114,95 @@ class Hake(Model, nn.Module):
         # ^ list of entity embeddings for both the heads and the tails of the facts
 
         return self._func(head, rel, tail, BatchType.TAIL_BATCH).cpu().numpy()
+    '''
+
+    def forward(self, sample, *args, **kwargs):
+        """
+        Given the indexes in `sample`, extract the corresponding embeddings,
+        and call func().
+
+        Args:
+            batch_type: {SINGLE, HEAD_BATCH, TAIL_BATCH},
+                - SINGLE: positive samples in training, and all samples in validation / testing,
+                - HEAD_BATCH: (?, r, t) tasks in training,
+                - TAIL_BATCH: (h, r, ?) tasks in training.
+
+            sample: different format for different batch types.
+                - SINGLE: tensor with shape [batch_size, 3]
+                - {HEAD_BATCH, TAIL_BATCH}: (positive_sample, negative_sample)
+                    - positive_sample: tensor with shape [batch_size, 3]
+                    - negative_sample: tensor with shape [batch_size, negative_sample_size]
+        """
+        batch_type = kwargs.get('batch_type', BatchType.TAIL_BATCH);
+
+        if batch_type == BatchType.SINGLE:
+            head = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=sample[:, 0]
+            ).unsqueeze(1)
+
+            relation = torch.index_select(
+                self.relation_embedding,
+                dim=0,
+                index=sample[:, 1]
+            ).unsqueeze(1)
+
+            tail = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=sample[:, 2]
+            ).unsqueeze(1)
+
+        elif batch_type == BatchType.HEAD_BATCH:
+            tail_part, head_part = sample
+            batch_size, negative_sample_size = head_part.size(0), head_part.size(1)
+
+            head = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=head_part.view(-1)
+            ).view(batch_size, negative_sample_size, -1)
+
+            relation = torch.index_select(
+                self.relation_embedding,
+                dim=0,
+                index=tail_part[:, 1]
+            ).unsqueeze(1)
+
+            tail = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=tail_part[:, 2]
+            ).unsqueeze(1)
+
+        elif batch_type == BatchType.TAIL_BATCH:
+            head_part, tail_part = sample
+            batch_size, negative_sample_size = tail_part.size(0), tail_part.size(1)
+
+            head = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=head_part[:, 0]
+            ).unsqueeze(1)
+
+            relation = torch.index_select(
+                self.relation_embedding,
+                dim=0,
+                index=head_part[:, 1]
+            ).unsqueeze(1)
+
+            tail = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=tail_part.view(-1)
+            ).view(batch_size, negative_sample_size, -1)
+
+        else:
+            raise ValueError('batch_type %s not supported!'.format(batch_type))
+
+        # return scores
+        return self._func(head, relation, tail, batch_type).cpu().numpy()
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
