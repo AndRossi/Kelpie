@@ -98,23 +98,32 @@ class Hake(Model, nn.Module):
 
     def score(self, samples: np.array) -> np.array:
 
+        '''
         head = self.entity_embedding[samples[:, 0]]  # list of entity embeddings for the heads of the facts
         rel = self.relation_embedding[samples[:, 1]]  # list of relation embeddings for the relations of the heads
         tail = self.entity_embedding[samples[:, 2]]  # list of entity embeddings for the tails of the facts
+        '''
 
-        return self._func(head, rel, tail, BatchType.SINGLE).cpu().numpy()
+        head = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=samples[:, 0]
+        ).unsqueeze(1)
 
+        relation = torch.index_select(
+            self.relation_embedding,
+            dim=0,
+            index=samples[:, 1]
+        ).unsqueeze(1)
 
-    '''
-    def forward(self, samples: np.array) -> np.array:
+        tail = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=samples[:, 2]
+        ).unsqueeze(1)
 
-        head = self.entity_embedding[samples[:, 0]]  # list of entity embeddings for the heads of the facts
-        rel = self.relation_embedding[samples[:, 1]]  # list of relation embeddings for the relations of the heads
-        tail = torch.cat([self.entity_embedding[samples[:, 0]], self.entity_embedding[samples[:, 2]]])
-        # ^ list of entity embeddings for both the heads and the tails of the facts
+        return self._func(head, relation, tail, BatchType.SINGLE)#.cpu().numpy()
 
-        return self._func(head, rel, tail, BatchType.TAIL_BATCH).cpu().numpy()
-    '''
 
     def forward(self, sample, *args, **kwargs):
         """
@@ -133,7 +142,7 @@ class Hake(Model, nn.Module):
                     - positive_sample: tensor with shape [batch_size, 3]
                     - negative_sample: tensor with shape [batch_size, negative_sample_size]
         """
-        batch_type = kwargs.get('batch_type', BatchType.SINGLE);
+        batch_type = kwargs.get('batch_type', BatchType.SINGLE)
 
         if batch_type == BatchType.SINGLE:
             head = torch.index_select(

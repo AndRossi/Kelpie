@@ -33,10 +33,7 @@ class HakeOptimizer:
         }
 
         # choose the Torch Optimizer object to use, based on the passed name
-        self.optimizer = torch.optim.Adam(
-            filter(lambda p: p.requires_grad, self.model.parameters()),
-            lr=learning_rate
-        ) #supported_optimizers[optimizer_name]
+        self.optimizer = supported_optimizers[optimizer_name]
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
