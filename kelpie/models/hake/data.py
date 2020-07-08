@@ -5,8 +5,6 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from kelpie.dataset import Dataset as KelpieDataset
-
 
 class BatchType(Enum):
     HEAD_BATCH = 0
@@ -15,18 +13,12 @@ class BatchType(Enum):
 
 
 class TrainDataset(Dataset):
-    def __init__(self, kelpieDataset: KelpieDataset, neg_size: int, batch_type: BatchType):
-        """
-        Dataset for training, inherits `torch.utils.data.Dataset`.
-        Args:
-            kelpieDataset: KeplieDataset,
-            neg_size: int, negative sample size.
-        """
+    def __init__(self, triples, num_entities, num_relations, neg_size: int, batch_type: BatchType):
 
-        self.triples = kelpieDataset.train_triples
+        self.triples = triples
         self.len = len(self.triples)
-        self.num_entity = kelpieDataset.num_entities
-        self.num_relation = kelpieDataset.num_relations
+        self.num_entity = num_entities
+        self.num_relation = num_relations
         self.neg_size = neg_size
         self.batch_type = batch_type
 
@@ -149,13 +141,15 @@ class BidirectionalOneShotIterator(object):
                 yield data
 
 
-def get_train_iterator_from_dataset(kelpieDataset: KelpieDataset,
+def get_train_iterator_from_dataset(triples,
+                                    num_entities,
+                                    num_relations,
                                     cpu_num: int = 10,
                                     batch_size: int = 1024,
                                     negative_sample_size: int = 128,
                                     ):
     train_dataloader_head = DataLoader(
-        TrainDataset(kelpieDataset, negative_sample_size, BatchType.HEAD_BATCH),
+        TrainDataset(triples, num_entities, num_relations, negative_sample_size, BatchType.HEAD_BATCH),
         batch_size=batch_size,
         shuffle=True,
         num_workers=max(1, cpu_num // 2),
@@ -163,7 +157,7 @@ def get_train_iterator_from_dataset(kelpieDataset: KelpieDataset,
     )
 
     train_dataloader_tail = DataLoader(
-        TrainDataset(kelpieDataset, negative_sample_size, BatchType.TAIL_BATCH),
+        TrainDataset(triples, num_entities, num_relations, negative_sample_size, BatchType.TAIL_BATCH),
         batch_size=batch_size,
         shuffle=True,
         num_workers=max(1, cpu_num // 2),

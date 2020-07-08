@@ -183,7 +183,9 @@ def run_kelpie(train_samples):
                              max_steps=args.max_epochs,
                              adversarial_temperature=args.adversarial_temperature)
 
-    train_iterator = get_train_iterator_from_dataset(kelpieDataset=kelpie_dataset,
+    train_iterator = get_train_iterator_from_dataset(triples=train_samples,
+                                    num_entities=kelpie_dataset.num_entities,
+                                    num_relations=kelpie_dataset.num_relations,
                                     cpu_num=args.cpu_num,
                                     batch_size=args.batch_size,
                                     negative_sample_size=args.negative_sample_size)

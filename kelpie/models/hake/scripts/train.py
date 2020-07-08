@@ -144,7 +144,9 @@ optimizer = HakeOptimizer(model=model,
                              adversarial_temperature=args.adversarial_temperature,
                              save_path=model_path)
 
-train_iterator = get_train_iterator_from_dataset(kelpieDataset=dataset,
+train_iterator = get_train_iterator_from_dataset(triples=dataset.train_samples,
+                                    num_entities=dataset.num_entities,
+                                    num_relations=dataset.num_relations,
                                     cpu_num=args.cpu_num,
                                     batch_size=args.batch_size,
                                     negative_sample_size=args.negative_sample_size

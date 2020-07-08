@@ -6,8 +6,6 @@ import torch.nn.functional as F
 from kelpie.evaluation import Evaluator
 from kelpie.models.hake.model import Hake
 
-from kelpie.dataset import Dataset as KelpieDataset
-
 
 class HakeOptimizer:
 
