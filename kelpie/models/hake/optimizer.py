@@ -91,7 +91,7 @@ class HakeOptimizer:
 
         # negative scores
                         # gamma - dr(h, t)
-        negative_score = model((positive_sample, negative_sample), batch_type=batch_type)
+        negative_score = model((positive_sample, negative_sample))#, batch_type=batch_type)
 
                         # p(h,r,t)                      # alpha
         negative_score = (F.softmax(negative_score * self.adversarial_temperature, dim=1).detach()
