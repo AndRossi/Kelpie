@@ -98,29 +98,29 @@ class Hake(Model, nn.Module):
 
     def score(self, samples: np.array) -> np.array:
 
+        '''
         head = self.entity_embedding[samples[:, 0]]  # list of entity embeddings for the heads of the facts
         relation = self.relation_embedding[samples[:, 1]]  # list of relation embeddings for the relations of the heads
         tail = self.entity_embedding[samples[:, 2]]  # list of entity embeddings for the tails of the facts
-
         '''
+
         head = torch.index_select(
             self.entity_embedding,
             dim=0,
-            index=samples[:, 0]
+            index=torch.from_numpy(samples[:, 0])
         ).unsqueeze(1)
 
         relation = torch.index_select(
             self.relation_embedding,
             dim=0,
-            index=samples[:, 1]
+            index=torch.from_numpy(samples[:, 1])
         ).unsqueeze(1)
 
         tail = torch.index_select(
             self.entity_embedding,
             dim=0,
-            index=samples[:, 2]
+            index=torch.from_numpy(samples[:, 2])
         ).unsqueeze(1)
-        '''
 
         return self._func(head, relation, tail, BatchType.SINGLE).cpu().numpy()
 
