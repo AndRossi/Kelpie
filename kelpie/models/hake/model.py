@@ -139,11 +139,7 @@ class Hake(Model, nn.Module):
             index=torch.from_numpy(samples[:, 1]).cuda()
         ).unsqueeze(1)'''
 
-        tail = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=self.entity_embedding[:self.num_entities]
-        ).unsqueeze(1)
+        tail = self.entity_embedding[:self.num_entities]
 
         matrix = np.zeros((len(samples),len(tail)))
         for i in range(0, len(samples)-1):
