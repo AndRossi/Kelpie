@@ -122,8 +122,46 @@ class Hake(Model, nn.Module):
             index=torch.from_numpy(samples[:, 2]).cuda()
         ).unsqueeze(1)
 
-        return self._func(head, relation, tail, BatchType.SINGLE)#.cpu().numpy()
+        return self._func(head, relation, tail, BatchType.SINGLE).cpu().numpy()
 
+
+    def _score_all_tails(self, samples: np.array) -> torch.Tensor:
+
+        '''head = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=torch.from_numpy(samples[:, 0]).cuda()
+        ).unsqueeze(1)
+
+        relation = torch.index_select(
+            self.relation_embedding,
+            dim=0,
+            index=torch.from_numpy(samples[:, 1]).cuda()
+        ).unsqueeze(1)'''
+
+        tail = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=torch.from_numpy(self.entity_embedding[:self.num_entities]).cuda()
+        ).unsqueeze(1)
+
+        matrix = np.zeros((len(samples),len(tail)))
+        for i in range(0, len(samples)-1):
+            head = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=torch.from_numpy(samples[i, 0]).cuda()
+            ).unsqueeze(1)
+            rel = torch.index_select(
+                self.relation_embedding,
+                dim=0,
+                index=torch.from_numpy(samples[i, 1]).cuda()
+            ).unsqueeze(1)
+            #head = samples[i][0]
+            #rel = samples[i][1]
+            matrix[i] = self._func(head, rel, tail, BatchType.SINGLE)#.cpu().numpy()
+
+        return matrix#.cpu().numpy()
 
 
     def forward(self, sample, *args, **kwargs):
@@ -259,14 +297,12 @@ class Hake(Model, nn.Module):
 
             # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
             # and compute the scores using any possible entity as a tail
-            all_scores = self.score(samples)
+            all_scores = self._score_all_tails(samples)
             # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
             # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
             targets = torch.zeros(size=(len(samples), 1)).cuda()
             for i, (_, _, tail_id) in enumerate(samples):
-                print("i="+str(i))
-                print("tail_id="+str(tail_id))
                 targets[i, 0] = all_scores[i, tail_id].item()
 
             # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
