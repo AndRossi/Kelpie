@@ -143,8 +143,16 @@ class Hake(Model, nn.Module):
 
         matrix = np.zeros((len(samples),len(tail)))
         for i in range(0, len(samples)-1):
-            head = self.entity_embedding[samples[i][0]].unsqueeze(1)
-            rel = self.relation_embedding[samples[i][1]].unsqueeze(1)
+            head = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=torch.from_numpy(samples[i, 0]).cuda()
+            ).unsqueeze(1)
+            rel = torch.index_select(
+                self.entity_embedding,
+                dim=0,
+                index=torch.from_numpy(samples[i, 1]).cuda()
+            ).unsqueeze(1)
             print(head)
             print(rel)
             matrix[i] = self._func(head, rel, tail, BatchType.TAIL_BATCH)#.cpu().numpy()
