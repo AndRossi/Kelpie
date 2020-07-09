@@ -265,8 +265,8 @@ class Hake(Model, nn.Module):
             # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
             targets = torch.zeros(size=(len(samples), 1)).cuda()
             for i, (_, _, tail_id) in enumerate(samples):
-                print("i="+i)
-                print("tail_id="+tail_id)
+                print("i="+str(i))
+                print("tail_id="+str(tail_id))
                 targets[i, 0] = all_scores[i, tail_id].item()
 
             # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
