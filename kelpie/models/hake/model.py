@@ -145,7 +145,9 @@ class Hake(Model, nn.Module):
         for i in range(0, len(samples)-1):
             head = self.entity_embedding[samples[i, 0]]
             rel = self.relation_embedding[samples[i, 1]]
-            matrix[i] = self._func(head, rel, tail, BatchType.SINGLE)#.cpu().numpy()
+            print(head)
+            print(rel)
+            matrix[i] = self._func(head, rel, tail, BatchType.TAIL_BATCH)#.cpu().numpy()
 
         return matrix#.cpu().numpy()
 
