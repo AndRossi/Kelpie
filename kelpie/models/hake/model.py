@@ -142,7 +142,7 @@ class Hake(Model, nn.Module):
         tail = torch.index_select(
             self.entity_embedding,
             dim=0,
-            index=torch.from_numpy(self.entity_embedding[:self.num_entities]).cuda()
+            index=self.entity_embedding[:self.num_entities]
         ).unsqueeze(1)
 
         matrix = np.zeros((len(samples),len(tail)))
