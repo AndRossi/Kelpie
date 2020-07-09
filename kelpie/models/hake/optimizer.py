@@ -56,10 +56,10 @@ class HakeOptimizer:
             if step >= warm_up_steps:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
-                self.optimizer(
-                    filter(lambda p: p.requires_grad, self.model.parameters()),
-                    lr=current_learning_rate
-                )
+                    self.optimizer(
+                        filter(lambda p: p.requires_grad, self.model.parameters()),
+                        lr=current_learning_rate
+                    )
                 warm_up_steps = warm_up_steps * 3
 
             if evaluate_every > 0 and valid_samples is not None and (step + 1) % evaluate_every == 0:
