@@ -146,12 +146,12 @@ class Hake(Model, nn.Module):
             head = torch.index_select(
                 self.entity_embedding,
                 dim=0,
-                index=torch.from_numpy(samples[i, 0]).cuda()
+                index=torch.from_numpy([samples[i, 0]]).cuda()
             ).unsqueeze(1)
             rel = torch.index_select(
                 self.entity_embedding,
                 dim=0,
-                index=torch.from_numpy(samples[i, 1]).cuda()
+                index=torch.from_numpy([samples[i, 1]]).cuda()
             ).unsqueeze(1)
             print(head)
             print(rel)
