@@ -267,8 +267,6 @@ class Hake(Model, nn.Module):
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
-        #TODO: Hake iterators
-
         # obtain scores, ranks and predictions both for direct and inverse samples
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
@@ -310,6 +308,8 @@ class Hake(Model, nn.Module):
 
         i = 0
         all_scores = []
+        print("number of samples: "+str(len(test_dataset)))
+
         with torch.no_grad():
 
             for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
@@ -325,6 +325,7 @@ class Hake(Model, nn.Module):
                 all_scores[i] = scores
 
                 i += 1
+                print(i)
 
         all_scores = np.transpose(np.array(all_scores), (0,2,1))
         all_scores = torch.from_numpy(all_scores).cuda()
