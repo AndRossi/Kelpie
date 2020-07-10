@@ -75,6 +75,8 @@ class Hake(Model, nn.Module):
 
 
     def _func(self, head, rel, tail, batch_type):
+        print("_func")
+
         phase_head, mod_head = torch.chunk(head, 2, dim=2)
         phase_relation, mod_relation, bias_relation = torch.chunk(rel, 3, dim=2)
         phase_tail, mod_tail = torch.chunk(tail, 2, dim=2)
@@ -182,6 +184,8 @@ class Hake(Model, nn.Module):
                     - positive_sample: tensor with shape [batch_size, 3]
                     - negative_sample: tensor with shape [batch_size, negative_sample_size]
         """
+        print("forward")
+
         batch_type = kwargs.get('batch_type', BatchType.SINGLE)
 
         if batch_type == BatchType.SINGLE:
