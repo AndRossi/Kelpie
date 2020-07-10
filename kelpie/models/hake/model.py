@@ -127,7 +127,18 @@ class Hake(Model, nn.Module):
 
     def _score_all_tails(self, samples: np.array) -> torch.Tensor:
 
-        '''head = torch.index_select(
+        '''tail = self.entity_embedding[:self.num_entities]
+
+        matrix = np.zeros((len(samples),len(tail)))
+        for i in range(0, len(samples)-1):
+            head = samples[i, 0]
+            rel = samples[i, 1]
+
+            print(head)
+            print(rel)
+            matrix[i] = self._func(head, rel, tail, BatchType.TAIL_BATCH)#.cpu().numpy()'''
+
+        head = torch.index_select(
             self.entity_embedding,
             dim=0,
             index=torch.from_numpy(samples[:, 0]).cuda()
@@ -137,27 +148,15 @@ class Hake(Model, nn.Module):
             self.relation_embedding,
             dim=0,
             index=torch.from_numpy(samples[:, 1]).cuda()
-        ).unsqueeze(1)'''
+        ).unsqueeze(1)
 
-        tail = self.entity_embedding[:self.num_entities]
+        tail = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=torch.from_numpy(self.dataset.entity_name_2_id.values()[:self.num_entities]).cuda()
+        ).unsqueeze(1)
 
-        matrix = np.zeros((len(samples),len(tail)))
-        for i in range(0, len(samples)-1):
-            head = torch.index_select(
-                self.entity_embedding,
-                dim=0,
-                index=torch.from_numpy(np.array([samples[i, 0]])).cuda()
-            ).unsqueeze(1)
-            rel = torch.index_select(
-                self.entity_embedding,
-                dim=0,
-                index=torch.from_numpy(np.array([samples[i, 1]])).cuda()
-            ).unsqueeze(1)
-            print(head)
-            print(rel)
-            matrix[i] = self._func(head, rel, tail, BatchType.TAIL_BATCH)#.cpu().numpy()
-
-        return matrix#.cpu().numpy()
+        return self._func(head, relation, tail, BatchType.SINGLE)#.cpu().numpy()
 
 
     def forward(self, sample, *args, **kwargs):
@@ -294,6 +293,7 @@ class Hake(Model, nn.Module):
             # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
             # and compute the scores using any possible entity as a tail
             all_scores = self._score_all_tails(samples)
+            print(all_scores)
             # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
             # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
