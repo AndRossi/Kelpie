@@ -130,7 +130,8 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = Hake(dataset=dataset, hidden_dim=args.dimension, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)   # type: Hake
+model = Hake(dataset=dataset, hidden_dim=args.dimension, batch_size=args.batch_size, cpu_num=args.cpu_num,
+             gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)   # type: Hake
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))

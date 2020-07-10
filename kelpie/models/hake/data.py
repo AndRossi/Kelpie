@@ -117,6 +117,50 @@ class TrainDataset(Dataset):
         return hr_map, tr_map, hr_freq, tr_freq
 
 
+class TestDataset(Dataset):
+    def __init__(self, triples, num_entities, num_relations, batch_type: BatchType):
+        self.triples = triples
+
+        self.len = len(self.triples)
+
+        self.num_entity = num_entities
+        self.num_relation = num_relations
+
+        self.batch_type = batch_type
+
+    def __len__(self):
+        return self.len
+
+    def __getitem__(self, idx):
+        head, relation, tail = self.triples[idx]
+
+        if self.batch_type == BatchType.HEAD_BATCH:
+            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.triples
+                   else (-1, head) for rand_head in range(self.num_entity)]
+            tmp[head] = (0, head)
+        elif self.batch_type == BatchType.TAIL_BATCH:
+            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.triples
+                   else (-1, tail) for rand_tail in range(self.num_entity)]
+            tmp[tail] = (0, tail)
+
+        tmp = torch.LongTensor(tmp)
+        filter_bias = tmp[:, 0].float()
+        negative_sample = tmp[:, 1]
+
+        positive_sample = torch.LongTensor((head, relation, tail))
+
+        return positive_sample, negative_sample, filter_bias, self.batch_type
+
+    @staticmethod
+    def collate_fn(data):
+        positive_sample = torch.stack([_[0] for _ in data], dim=0)
+        negative_sample = torch.stack([_[1] for _ in data], dim=0)
+        filter_bias = torch.stack([_[2] for _ in data], dim=0)
+        batch_type = data[0][3]
+        return positive_sample, negative_sample, filter_bias, batch_type
+
+
+
 class BidirectionalOneShotIterator(object):
     def __init__(self, dataloader_head, dataloader_tail):
         self.iterator_head = self.one_shot_iterator(dataloader_head)

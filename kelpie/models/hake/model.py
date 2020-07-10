@@ -3,11 +3,12 @@ from typing import Tuple, Any
 import numpy as np
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
-from kelpie.models.hake.data import BatchType
+from kelpie.models.hake.data import BatchType, TestDataset
 
 
 class Hake(Model, nn.Module):
@@ -16,6 +17,8 @@ class Hake(Model, nn.Module):
                  dataset: Dataset,
                  hidden_dim: int,
                  gamma: float,
+                 batch_size=1024,
+                 cpu_num=10,
                  modulus_weight=1.0,
                  phase_weight=0.5):
 
@@ -29,6 +32,8 @@ class Hake(Model, nn.Module):
 
         # Hake-specific
         self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.cpu_num = cpu_num
         self.epsilon = 2.0
 
         self.gamma = nn.Parameter(
@@ -157,7 +162,7 @@ class Hake(Model, nn.Module):
             index=torch.from_numpy(all_entities_ids[:self.num_entities]).cuda()
         ).unsqueeze(1)
 
-        return self._func(head, relation, tail, BatchType.SINGLE)#.cpu().numpy()
+        return self._func(head, relation, tail, BatchType.TAIL_BATCH)#.cpu().numpy()
 
 
     def forward(self, sample, *args, **kwargs):
@@ -262,6 +267,8 @@ class Hake(Model, nn.Module):
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
+        #TODO: Hake iterators
+
         # obtain scores, ranks and predictions both for direct and inverse samples
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
@@ -289,77 +296,104 @@ class Hake(Model, nn.Module):
 
         ranks = torch.ones(len(samples))  # initialize with ONES
 
+        test_dataset = DataLoader(
+            TestDataset(
+                samples,
+                self.dataset.num_entities,
+                self.dataset.num_relations,
+                BatchType.TAIL_BATCH
+            ),
+            batch_size=self.batch_size,
+            num_workers=max(1, self.cpu_num // 2),
+            collate_fn=TestDataset.collate_fn
+        )
+
+        i = 0
+        all_scores = []
         with torch.no_grad():
 
-            # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
-            # and compute the scores using any possible entity as a tail
-            all_scores = self._score_all_tails(samples)
-            print(all_scores)
-            # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
+            for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
+                positive_sample = positive_sample.cuda()
+                negative_sample = negative_sample.cuda()
+                filter_bias = filter_bias.cuda()
 
-            # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
-            targets = torch.zeros(size=(len(samples), 1)).cuda()
-            for i, (_, _, tail_id) in enumerate(samples):
-                targets[i, 0] = all_scores[i, tail_id].item()
+                batch_size = positive_sample.size(0)
 
-            # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
-            # In this way, those entities will be ignored in rankings
-            for i, (head_id, rel_id, tail_id) in enumerate(samples):
-                # get the list of tails to filter out; include the actual target tail entity too
-                filter_out = self.dataset.to_filter[(head_id, rel_id)]
+                scores = self((positive_sample, negative_sample), batch_type)
+                scores += filter_bias
 
-                if tail_id not in filter_out:
-                    filter_out.append(tail_id)
+                all_scores[i] = scores
 
-                all_scores[i, torch.LongTensor(filter_out)] = -1e6
+                i += 1
 
-            # fill the ranks data structure and convert it to a Python list
-            ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
-            ranks = ranks.cpu().numpy().tolist()
+        all_scores = np.transpose(np.array(all_scores), (0,2,1))
+        all_scores = torch.from_numpy(all_scores).cuda()
+        print(all_scores)
+        # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
-            all_scores = all_scores.cpu().numpy()
-            targets = targets.cpu().numpy()
+        # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
+        targets = torch.zeros(size=(len(samples), 1)).cuda()
+        for i, (_, _, tail_id) in enumerate(samples):
+            targets[i, 0] = all_scores[i, tail_id].item()
 
-            # save the list of all obtained scores
-            scores = [targets[i, 0] for i in range(len(samples))]
+        # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
+        # In this way, those entities will be ignored in rankings
+        for i, (head_id, rel_id, tail_id) in enumerate(samples):
+            # get the list of tails to filter out; include the actual target tail entity too
+            filter_out = self.dataset.to_filter[(head_id, rel_id)]
 
-            predictions = []
-            for i, (head_id, rel_id, tail_id) in enumerate(samples):
-                filter_out = self.dataset.to_filter[(head_id, rel_id)]
-                if tail_id not in filter_out:
-                    filter_out.append(tail_id)
+            if tail_id not in filter_out:
+                filter_out.append(tail_id)
 
-                predicted_tails = np.where(all_scores[i] > -1e6)[0]
+            all_scores[i, torch.LongTensor(filter_out)] = -1e6
 
-                # get all not filtered tails and corresponding scores for current fact
-                # predicted_tails = np.where(all_scores[i] != -1e6)
-                predicted_tails_scores = all_scores[i, predicted_tails]  # for cur_tail in predicted_tails]
+        # fill the ranks data structure and convert it to a Python list
+        ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
+        ranks = ranks.cpu().numpy().tolist()
 
-                # note: the target tail score and the tail id are in the same position in their respective lists!
-                # predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
-                # predicted_tails = np.append(predicted_tails, [tail_id])
+        all_scores = all_scores.cpu().numpy()
+        targets = targets.cpu().numpy()
 
-                # sort the scores and predicted tails list in the same way
-                permutation = np.argsort(-predicted_tails_scores)
+        # save the list of all obtained scores
+        scores = [targets[i, 0] for i in range(len(samples))]
 
-                predicted_tails_scores = predicted_tails_scores[permutation]
-                predicted_tails = predicted_tails[permutation]
+        predictions = []
+        for i, (head_id, rel_id, tail_id) in enumerate(samples):
+            filter_out = self.dataset.to_filter[(head_id, rel_id)]
+            if tail_id not in filter_out:
+                filter_out.append(tail_id)
 
-                # include the score of the target tail in the predictions list
-                # after ALL entities with greater or equal scores (MIN policy)
-                j = 0
-                while j < len(predicted_tails_scores) and predicted_tails_scores[j] >= scores[i]:
-                    j += 1
+            predicted_tails = np.where(all_scores[i] > -1e6)[0]
 
-                predicted_tails_scores = np.concatenate((predicted_tails_scores[:j],
-                                                         np.array([scores[i]]),
-                                                         predicted_tails_scores[j:]))
-                predicted_tails = np.concatenate((predicted_tails[:j],
-                                                  np.array([tail_id]),
-                                                  predicted_tails[j:]))
+            # get all not filtered tails and corresponding scores for current fact
+            # predicted_tails = np.where(all_scores[i] != -1e6)
+            predicted_tails_scores = all_scores[i, predicted_tails]  # for cur_tail in predicted_tails]
 
-                # add to the results data structure
-                predictions.append(predicted_tails)  # as a np array!
+            # note: the target tail score and the tail id are in the same position in their respective lists!
+            # predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
+            # predicted_tails = np.append(predicted_tails, [tail_id])
+
+            # sort the scores and predicted tails list in the same way
+            permutation = np.argsort(-predicted_tails_scores)
+
+            predicted_tails_scores = predicted_tails_scores[permutation]
+            predicted_tails = predicted_tails[permutation]
+
+            # include the score of the target tail in the predictions list
+            # after ALL entities with greater or equal scores (MIN policy)
+            j = 0
+            while j < len(predicted_tails_scores) and predicted_tails_scores[j] >= scores[i]:
+                j += 1
+
+            predicted_tails_scores = np.concatenate((predicted_tails_scores[:j],
+                                                     np.array([scores[i]]),
+                                                     predicted_tails_scores[j:]))
+            predicted_tails = np.concatenate((predicted_tails[:j],
+                                              np.array([tail_id]),
+                                              predicted_tails[j:]))
+
+            # add to the results data structure
+            predictions.append(predicted_tails)  # as a np array!
 
         return scores, ranks, predictions
 
