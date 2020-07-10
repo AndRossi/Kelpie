@@ -321,9 +321,7 @@ class Hake(Model, nn.Module):
                 negative_sample = negative_sample.cuda()
                 filter_bias = filter_bias.cuda()
 
-                batch_size = positive_sample.size(0)
-
-                scores = self((positive_sample, negative_sample), batch_type)
+                scores = self.forward((positive_sample, negative_sample), batch_type=batch_type)
                 scores += filter_bias
 
                 all_scores[i] = scores
