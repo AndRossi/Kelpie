@@ -153,7 +153,7 @@ class Hake(Model, nn.Module):
         tail = torch.index_select(
             self.entity_embedding,
             dim=0,
-            index=torch.from_numpy(self.dataset.entity_name_2_id.values()[:self.num_entities]).cuda()
+            index=torch.from_numpy(list(self.dataset.entity_name_2_id.values())[:self.num_entities]).cuda()
         ).unsqueeze(1)
 
         return self._func(head, relation, tail, BatchType.SINGLE)#.cpu().numpy()
