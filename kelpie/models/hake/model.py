@@ -317,6 +317,9 @@ class Hake(Model, nn.Module):
         with torch.no_grad():
 
             for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
+                i += 1
+                print(i)
+
                 positive_sample = positive_sample.cuda()
                 negative_sample = negative_sample.cuda()
                 filter_bias = filter_bias.cuda()
@@ -325,9 +328,6 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 all_scores[i] = scores
-
-                i += 1
-                print(i)
 
         all_scores = np.transpose(np.array(all_scores), (0,2,1))
         all_scores = torch.from_numpy(all_scores).cuda()
