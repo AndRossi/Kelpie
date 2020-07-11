@@ -309,9 +309,7 @@ class Hake(Model, nn.Module):
         )
 
         i = 0
-        all_scores = []
-        for i in range (0, len(samples)):
-            all_scores[i] = []
+        all_scores = list(range(len(samples)))
         print("number of samples: "+str(len(samples)))
 
         with torch.no_grad():
