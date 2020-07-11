@@ -323,7 +323,7 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    all_scores[i] = scores_row.numpy()
+                    all_scores[i] = scores_row.cpu().numpy()
 
                     i += 1
 
