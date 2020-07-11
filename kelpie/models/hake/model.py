@@ -309,7 +309,7 @@ class Hake(Model, nn.Module):
         )
 
         i = 0
-        all_scores = np.empty(shape=(len(samples),self.dataset.num_entities))
+        all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities)))
         print("number of samples: "+str(len(samples)))
 
         with torch.no_grad():
@@ -323,7 +323,7 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    all_scores[i] = scores_row.cpu().numpy()
+                    all_scores[i] = scores_row
 
                     i += 1
 
