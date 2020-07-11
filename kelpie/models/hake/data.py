@@ -134,6 +134,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
+        print("begin")
         if self.batch_type == BatchType.HEAD_BATCH:
             tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.triples
                    else (-1, head) for rand_head in range(self.num_entity)]
@@ -143,26 +144,23 @@ class TestDataset(Dataset):
                    else (-1, tail) for rand_tail in range(self.num_entity)]
             tmp[tail] = (0, tail)
 
+        print("after_tmp")
         tmp = torch.LongTensor(tmp)
+        print("after_tensor")
         filter_bias = tmp[:, 0].float()
         negative_sample = tmp[:, 1]
 
         positive_sample = torch.LongTensor((head, relation, tail))
 
-        print("hi!")
+        print("end")
         return positive_sample, negative_sample, filter_bias, self.batch_type
 
     @staticmethod
     def collate_fn(data):
-        print("hello!")
         positive_sample = torch.stack([_[0] for _ in data], dim=0)
-        print(positive_sample)
         negative_sample = torch.stack([_[1] for _ in data], dim=0)
-        print(negative_sample)
         filter_bias = torch.stack([_[2] for _ in data], dim=0)
-        print(filter_bias)
         batch_type = data[0][3]
-        print(batch_type)
         return positive_sample, negative_sample, filter_bias, batch_type
 
 

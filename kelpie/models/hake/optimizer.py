@@ -108,6 +108,8 @@ class HakeOptimizer:
 
         loss = (positive_sample_loss + negative_sample_loss) / 2
 
+        print(loss)
+
         loss.backward()
 
         self.optimizer.step()
