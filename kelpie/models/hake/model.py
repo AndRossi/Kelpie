@@ -310,7 +310,7 @@ class Hake(Model, nn.Module):
 
         i = 0
         all_scores = []
-        for i in range (0, samples):
+        for i in range (0, len(samples)):
             all_scores[i] = []
         print("number of samples: "+str(len(samples)))
 
