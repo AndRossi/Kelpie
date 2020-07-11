@@ -322,6 +322,10 @@ class Hake(Model, nn.Module):
                 scores = self((positive_sample, negative_sample), batch_type=batch_type)
                 scores += filter_bias
 
+                print(scores)
+                print(len(scores))
+                print(scores[0])
+
                 all_scores[i] = scores
 
                 i += 1
