@@ -294,8 +294,6 @@ class Hake(Model, nn.Module):
             :return:
         """
 
-        ranks = torch.ones(len(samples))  # initialize with ONES
-
         test_dataset = DataLoader(
             TestDataset(
                 samples,
@@ -319,7 +317,7 @@ class Hake(Model, nn.Module):
                 negative_sample = negative_sample.cuda()
                 filter_bias = filter_bias.cuda()
 
-                scores = self.forward((positive_sample, negative_sample), batch_type=batch_type)
+                scores = self((positive_sample, negative_sample), batch_type=batch_type)
                 scores += filter_bias
 
                 all_scores[i] = scores
@@ -349,6 +347,7 @@ class Hake(Model, nn.Module):
             all_scores[i, torch.LongTensor(filter_out)] = -1e6
 
         # fill the ranks data structure and convert it to a Python list
+        ranks = torch.ones(len(samples))  # initialize with ONES
         ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
         ranks = ranks.cpu().numpy().tolist()
 
