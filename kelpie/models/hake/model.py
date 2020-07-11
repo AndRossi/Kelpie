@@ -309,7 +309,7 @@ class Hake(Model, nn.Module):
         )
 
         i = 0
-        all_scores = list(range(len(samples)))
+        all_scores = np.empty(shape=(len(samples),self.dataset.num_entities))
         print("number of samples: "+str(len(samples)))
 
         with torch.no_grad():
@@ -323,17 +323,14 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    all_scores[i] = scores_row
+                    all_scores[i] = scores_row.numpy()
 
                     i += 1
 
                 print(i)
 
-        all_scores = np.array(all_scores)
         print(all_scores)
-        all_scores = np.transpose(all_scores, (0,2,1))
         all_scores = torch.from_numpy(all_scores).cuda()
-        print(all_scores)
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
