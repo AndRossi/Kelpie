@@ -149,14 +149,20 @@ class TestDataset(Dataset):
 
         positive_sample = torch.LongTensor((head, relation, tail))
 
+        print("hi!")
         return positive_sample, negative_sample, filter_bias, self.batch_type
 
     @staticmethod
     def collate_fn(data):
+        print("hello!")
         positive_sample = torch.stack([_[0] for _ in data], dim=0)
+        print(positive_sample)
         negative_sample = torch.stack([_[1] for _ in data], dim=0)
+        print(negative_sample)
         filter_bias = torch.stack([_[2] for _ in data], dim=0)
+        print(filter_bias)
         batch_type = data[0][3]
+        print(batch_type)
         return positive_sample, negative_sample, filter_bias, batch_type
 
 
