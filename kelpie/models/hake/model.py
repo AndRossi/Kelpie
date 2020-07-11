@@ -18,6 +18,7 @@ class Hake(Model, nn.Module):
                  hidden_dim: int,
                  gamma: float,
                  batch_size=1024,
+                 test_batch_size=4,
                  cpu_num=10,
                  modulus_weight=1.0,
                  phase_weight=0.5):
@@ -33,6 +34,7 @@ class Hake(Model, nn.Module):
         # Hake-specific
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
+        self.test_batch_size = test_batch_size
         self.cpu_num = cpu_num
         self.epsilon = 2.0
 
@@ -301,13 +303,15 @@ class Hake(Model, nn.Module):
                 self.dataset.num_relations,
                 BatchType.TAIL_BATCH
             ),
-            batch_size=self.batch_size,
+            batch_size=self.test_batch_size,
             num_workers=max(1, self.cpu_num // 2),
             collate_fn=TestDataset.collate_fn
         )
 
         i = 0
         all_scores = []
+        for i in range (0, samples):
+            all_scores[i] = []
         print("number of samples: "+str(len(samples)))
 
         with torch.no_grad():

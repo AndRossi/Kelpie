@@ -40,6 +40,12 @@ parser.add_argument('--batch_size',
                     help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
 )
 
+parser.add_argument('--test_batch_size',
+                    default=4,
+                    type=int,
+                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization during evaluation"
+)
+
 parser.add_argument('--dimension',
                     default=1000,
                     type=int,
@@ -130,8 +136,8 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = Hake(dataset=dataset, hidden_dim=args.dimension, batch_size=args.batch_size, cpu_num=args.cpu_num,
-             gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)   # type: Hake
+model = Hake(dataset=dataset, hidden_dim=args.dimension, batch_size=args.batch_size, test_batch_size=args.test_batch_size,
+             cpu_num=args.cpu_num, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))
