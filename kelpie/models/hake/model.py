@@ -330,7 +330,6 @@ class Hake(Model, nn.Module):
                 print(i)
 
         print(all_scores)
-        all_scores = torch.from_numpy(all_scores).cuda()
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
@@ -351,7 +350,8 @@ class Hake(Model, nn.Module):
 
         # fill the ranks data structure and convert it to a Python list
         ranks = torch.ones(len(samples))  # initialize with ONES
-        ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
+        #ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
+        ranks += torch.sum(all_scores >= targets, dim=1).cpu()
         ranks = ranks.cpu().numpy().tolist()
 
         all_scores = all_scores.cpu().numpy()
