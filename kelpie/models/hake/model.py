@@ -309,7 +309,7 @@ class Hake(Model, nn.Module):
         )
 
         i = 0
-        all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities)))
+        all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities))).cuda()
         print("number of samples: "+str(len(samples)))
 
         with torch.no_grad():
