@@ -327,7 +327,9 @@ class Hake(Model, nn.Module):
                 i += 1
                 print(i)
 
-        all_scores = np.transpose(np.array(all_scores), (0,2,1))
+        all_scores = np.array(all_scores)
+        print(all_scores.ndim)
+        all_scores = np.transpose(all_scores, (0,2,1))
         all_scores = torch.from_numpy(all_scores).cuda()
         print(all_scores)
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
