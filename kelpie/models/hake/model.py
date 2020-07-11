@@ -313,7 +313,7 @@ class Hake(Model, nn.Module):
         i = 0
         all_scores = []
         print("number of samples: "+str(len(test_dataset)))
-        print("test dataset: "+test_dataset)
+        print(test_dataset)
 
         with torch.no_grad():
 
