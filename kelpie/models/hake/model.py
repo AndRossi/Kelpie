@@ -322,13 +322,11 @@ class Hake(Model, nn.Module):
                 scores = self((positive_sample, negative_sample), batch_type=batch_type)
                 scores += filter_bias
 
-                print(scores)
-                print(len(scores))
-                print(scores[0])
+                for scores_row in scores:
+                    all_scores[i] = scores_row
 
-                all_scores[i] = scores
+                    i += 1
 
-                i += 1
                 print(i)
 
         all_scores = np.array(all_scores)
