@@ -306,14 +306,14 @@ class Hake(Model, nn.Module):
                 BatchType.TAIL_BATCH
             ),
             batch_size=self.batch_size,
-            num_workers=max(1, self.cpu_num // 2),
+            num_workers=0,#max(1, self.cpu_num // 2),
             collate_fn=TestDataset.collate_fn
         )
 
         i = 0
         all_scores = []
         print("number of samples: "+str(len(test_dataset)))
-        print(test_dataset[0])
+        print(test_dataset)
 
         with torch.no_grad():
 
