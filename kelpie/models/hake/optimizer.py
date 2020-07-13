@@ -51,12 +51,14 @@ class HakeOptimizer:
         # Training Loop
         for step in range(init_step, self.max_steps):
 
+            loss = None
             if((self.model.num_entities * 2)%self.model.batch_size == 0):
                 actual_steps = (self.model.num_entities * 2) // self.model.batch_size
             else:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
-            for i in range(actual_steps) :
-                self.train_step(train_iterator)
+            for i in range(actual_steps):
+                loss = self.train_step(train_iterator)
+            print(loss)
 
             if step >= warm_up_steps:
                 if not self.no_decay:
@@ -113,8 +115,8 @@ class HakeOptimizer:
 
         loss = (positive_sample_loss + negative_sample_loss) / 2
 
-        print(loss)
-
         loss.backward()
 
         self.optimizer.step()
+
+        return loss
