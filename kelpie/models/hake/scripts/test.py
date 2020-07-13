@@ -54,6 +54,24 @@ parser.add_argument('--phase_weight',
                     help="Phase weight"
 )
 
+parser.add_argument('--cpu_num',
+                    default=10,
+                    type=int,
+                    help="Number of (virtual) CPU cores to use"
+)
+
+parser.add_argument('--batch_size',
+                    default=1024,
+                    type=int,
+                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
+)
+
+parser.add_argument('--test_batch_size',
+                    default=4,
+                    type=int,
+                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization during evaluation"
+)
+
 #
 
 args = parser.parse_args()
@@ -66,7 +84,9 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = Hake(dataset=dataset, hidden_dim=args.dimension, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)   # type: Hake
+model = Hake(dataset=dataset, hidden_dim=args.dimension, batch_size=args.batch_size, test_batch_size=args.test_batch_size,
+             cpu_num=args.cpu_num, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)
+
 model.to('cuda')
 model.load_state_dict(torch.load(model_path))
 model.eval()

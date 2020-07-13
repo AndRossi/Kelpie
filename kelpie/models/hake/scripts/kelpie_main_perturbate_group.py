@@ -42,6 +42,12 @@ parser.add_argument('--max_epochs',
                     type=int,
                     help="Number of epochs to run in post-training")
 
+parser.add_argument('--test_batch_size',
+                    default=4,
+                    type=int,
+                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization during evaluation"
+)
+
 parser.add_argument('--dimension',
                     default=1000,
                     type=int,
@@ -113,6 +119,18 @@ parser.add_argument('--negative_sample_size',
                     help = "Number of negative samples"
 )
 
+parser.add_argument('--init_step',
+                    default=0,
+                    type=int,
+                    help="Initial training step number"
+)
+
+parser.add_argument('--valid',
+                    default=-1,
+                    type=float,
+                    help="Number of epochs before valid."
+)
+
 #
 
 #   E.G.    explain  why  /m/02mjmr (Barack Obama)  is predicted as the head for
@@ -149,7 +167,8 @@ assert(original_sample in original_dataset.test_samples)
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
 print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
-original_model = Hake(dataset=original_dataset, hidden_dim=args.dimension, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)
+original_model = Hake(dataset=original_dataset, hidden_dim=args.dimension, batch_size=args.batch_size, test_batch_size=args.test_batch_size,
+             cpu_num=args.cpu_num, gamma=args.gamma, modulus_weight=args.modulus_weight, phase_weight=args.phase_weight)
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
 
@@ -190,7 +209,10 @@ def run_kelpie(train_samples):
                                     batch_size=args.batch_size,
                                     negative_sample_size=args.negative_sample_size)
 
-    optimizer.train(train_iterator=train_iterator)
+    optimizer.train(train_iterator=train_iterator,
+                init_step=args.init_step,
+                evaluate_every=args.valid,
+                valid_samples=kelpie_dataset.kelpie_valid_samples)
 
     ###########  EXTRACT RESULTS
 
