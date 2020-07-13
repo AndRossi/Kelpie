@@ -255,9 +255,6 @@ class Hake(Model, nn.Module):
         else:
             raise ValueError('batch_type %s not supported!'.format(batch_type))
 
-        if(batch_type == BatchType.SINGLE):
-            print("SINGLE")
-        print(tail)
         # return scores
         return self._func(head, relation, tail, batch_type)#.cpu().numpy()
 
