@@ -232,6 +232,7 @@ class Hake(Model, nn.Module):
         elif batch_type == BatchType.TAIL_BATCH:
             head_part, tail_part = sample
             batch_size, negative_sample_size = tail_part.size(0), tail_part.size(1)
+            print(negative_sample_size)
 
             head = torch.index_select(
                 self.entity_embedding,
@@ -253,7 +254,9 @@ class Hake(Model, nn.Module):
 
         else:
             raise ValueError('batch_type %s not supported!'.format(batch_type))
-        print(tail_part)
+
+        if(batch_type == BatchType.SINGLE):
+            print("SINGLE")
         print(tail)
         # return scores
         return self._func(head, relation, tail, batch_type)#.cpu().numpy()
