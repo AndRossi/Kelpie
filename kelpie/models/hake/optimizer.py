@@ -52,6 +52,7 @@ class HakeOptimizer:
         for step in range(init_step, self.max_steps):
 
             self.train_step(self.model, train_iterator)
+            self.model.update_embeddings()
 
             if step >= warm_up_steps:
                 if not self.no_decay:

@@ -326,7 +326,6 @@ class Hake(Model, nn.Module):
                     all_scores[i] = scores_row
 
                     i += 1
-                print(all_scores)
 
                 print(i)
 
