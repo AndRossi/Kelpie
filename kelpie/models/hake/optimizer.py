@@ -51,8 +51,12 @@ class HakeOptimizer:
         # Training Loop
         for step in range(init_step, self.max_steps):
 
-            self.train_step(self.model, train_iterator)
-            self.model.update_embeddings()
+            if((self.model.num_entities * 2)%self.model.batch_size == 0):
+                actual_steps = (self.model.num_entities * 2) // self.model.batch_size
+            else:
+                actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
+            for i in range(actual_steps) :
+                self.train_step(train_iterator)
 
             if step >= warm_up_steps:
                 if not self.no_decay:
@@ -75,12 +79,12 @@ class HakeOptimizer:
                 print("\t done.")
 
 
-    def train_step(self, model, train_iterator):
+    def train_step(self, train_iterator):
         '''
         A single train step. Apply back-propation and return the loss
         '''
 
-        model.train()
+        self.model.train()
 
         self.optimizer.zero_grad()
 
@@ -92,7 +96,7 @@ class HakeOptimizer:
 
         # negative scores
                         # gamma - dr(h, t)
-        negative_score = model((positive_sample, negative_sample), batch_type=batch_type)
+        negative_score = self.model((positive_sample, negative_sample), batch_type=batch_type)
 
                         # p(h,r,t)                      # alpha
         negative_score = (F.softmax(negative_score * self.adversarial_temperature, dim=1).detach()
@@ -100,7 +104,7 @@ class HakeOptimizer:
                           * F.logsigmoid(-negative_score)).sum(dim=1)
 
         # positive scores
-        positive_score = model(positive_sample)
+        positive_score = self.model(positive_sample)
 
         positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
