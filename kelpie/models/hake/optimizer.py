@@ -120,3 +120,67 @@ class HakeOptimizer:
         self.optimizer.step()
 
         return loss
+
+
+class KelpieHakeOptimizer(HakeOptimizer):
+    def __init__(self,
+                 model: Hake,
+                 optimizer_name: str = "Adam",
+                 learning_rate: float = 0.0001,
+                 no_decay: bool = False,
+                 max_steps: int = 100000,
+                 adversarial_temperature: float = 1.0,
+                 save_path: str = None):
+
+        super(KelpieHakeOptimizer, self).__init__(model=model,
+                                                     optimizer_name=optimizer_name,
+                                                     learning_rate=learning_rate,
+                                                     no_decay=no_decay,
+                                                     max_steps=max_steps,
+                                                     adversarial_temperature=adversarial_temperature,
+                                                     save_path=save_path)
+
+    def train_step(self, train_iterator):
+        '''
+        A single train step. Apply back-propation and return the loss
+        '''
+
+        self.model.train()
+
+        self.optimizer.zero_grad()
+
+        positive_sample, negative_sample, subsampling_weight, batch_type = next(train_iterator)
+
+        positive_sample = positive_sample.cuda()
+        negative_sample = negative_sample.cuda()
+        subsampling_weight = subsampling_weight.cuda()
+
+        # negative scores
+        # gamma - dr(h, t)
+        negative_score = self.model((positive_sample, negative_sample), batch_type=batch_type)
+
+        # p(h,r,t)                      # alpha
+        negative_score = (F.softmax(negative_score * self.adversarial_temperature, dim=1).detach()
+                          # E log sigma (dr(h, t) - gamma)
+                          * F.logsigmoid(-negative_score)).sum(dim=1)
+
+        # positive scores
+        positive_score = self.model(positive_sample)
+
+        positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
+
+        positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
+        negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
+
+        loss = (positive_sample_loss + negative_sample_loss) / 2
+
+        loss.backward()
+
+        self.optimizer.step()
+
+        # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
+        # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
+        # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
+        self.model.update_embeddings()
+
+        return loss
