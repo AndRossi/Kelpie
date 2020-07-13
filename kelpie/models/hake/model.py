@@ -187,6 +187,7 @@ class Hake(Model, nn.Module):
         """
 
         batch_type = kwargs.get('batch_type', BatchType.SINGLE)
+        print(batch_type)
 
         if batch_type == BatchType.SINGLE:
             head = torch.index_select(
@@ -323,7 +324,7 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    all_scores[i] = scores_row
+                    all_scores[i] = scores_row.double()
 
                     i += 1
 
@@ -336,6 +337,8 @@ class Hake(Model, nn.Module):
         targets = torch.zeros(size=(len(samples), 1)).cuda()
         for i, (_, _, tail_id) in enumerate(samples):
             targets[i, 0] = all_scores[i, tail_id].item()
+
+        print(targets)
 
         # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
         # In this way, those entities will be ignored in rankings
@@ -350,8 +353,7 @@ class Hake(Model, nn.Module):
 
         # fill the ranks data structure and convert it to a Python list
         ranks = torch.ones(len(samples))  # initialize with ONES
-        #ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
-        ranks += torch.sum(all_scores >= targets, dim=1).cpu()
+        ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
         ranks = ranks.cpu().numpy().tolist()
 
         all_scores = all_scores.cpu().numpy()
