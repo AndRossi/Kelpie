@@ -232,7 +232,6 @@ class Hake(Model, nn.Module):
         elif batch_type == BatchType.TAIL_BATCH:
             head_part, tail_part = sample
             batch_size, negative_sample_size = tail_part.size(0), tail_part.size(1)
-            print(negative_sample_size)
 
             head = torch.index_select(
                 self.entity_embedding,
@@ -327,6 +326,7 @@ class Hake(Model, nn.Module):
                     all_scores[i] = scores_row
 
                     i += 1
+                print(all_scores)
 
                 print(i)
 
