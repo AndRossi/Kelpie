@@ -253,7 +253,8 @@ class Hake(Model, nn.Module):
 
         else:
             raise ValueError('batch_type %s not supported!'.format(batch_type))
-
+        print(tail_part)
+        print(tail)
         # return scores
         return self._func(head, relation, tail, batch_type)#.cpu().numpy()
 
@@ -323,7 +324,6 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    print(scores_row)
                     all_scores[i] = scores_row
 
                     i += 1
@@ -337,8 +337,6 @@ class Hake(Model, nn.Module):
         targets = torch.zeros(size=(len(samples), 1), dtype=torch.float64).cuda()
         for i, (_, _, tail_id) in enumerate(samples):
             targets[i, 0] = all_scores[i, tail_id].item()
-
-        print(targets)
 
         # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
         # In this way, those entities will be ignored in rankings
