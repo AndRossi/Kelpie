@@ -187,7 +187,6 @@ class Hake(Model, nn.Module):
         """
 
         batch_type = kwargs.get('batch_type', BatchType.SINGLE)
-        print(batch_type)
 
         if batch_type == BatchType.SINGLE:
             head = torch.index_select(
@@ -324,7 +323,8 @@ class Hake(Model, nn.Module):
                 scores += filter_bias
 
                 for scores_row in scores:
-                    all_scores[i] = scores_row.double()
+                    print(scores_row)
+                    all_scores[i] = scores_row
 
                     i += 1
 
@@ -334,7 +334,7 @@ class Hake(Model, nn.Module):
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
-        targets = torch.zeros(size=(len(samples), 1)).cuda()
+        targets = torch.zeros(size=(len(samples), 1), dtype=torch.float64).cuda()
         for i, (_, _, tail_id) in enumerate(samples):
             targets[i, 0] = all_scores[i, tail_id].item()
 
