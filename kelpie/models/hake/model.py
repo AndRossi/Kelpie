@@ -431,7 +431,7 @@ class KelpieHake(Hake):
         )
 
         self.entity_embedding = torch.nn.Parameter(torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0))
-        self.relation_embedding = frozen_relation_embeddings
+        self.relation_embedding = torch.nn.Parameter(frozen_relation_embeddings)
 
 
     def predict_samples(self,
