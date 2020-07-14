@@ -357,7 +357,7 @@ class KelpieComplEx(ComplEx):
         with torch.no_grad():           # Initialize as any other embedding
             self.kelpie_entity_embedding *= init_size
 
-        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        self.entity_embeddings = torch.nn.Parameter(torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0))
         self.relation_embeddings = frozen_relation_embeddings
 
     # Override
