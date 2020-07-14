@@ -133,41 +133,6 @@ class Hake(Model, nn.Module):
         return self._func(head, relation, tail, BatchType.SINGLE).cpu().numpy()
 
 
-    def _score_all_tails(self, samples: np.array) -> torch.Tensor:
-
-        '''tail = self.entity_embedding[:self.num_entities]
-
-        matrix = np.zeros((len(samples),len(tail)))
-        for i in range(0, len(samples)-1):
-            head = samples[i, 0]
-            rel = samples[i, 1]
-
-            print(head)
-            print(rel)
-            matrix[i] = self._func(head, rel, tail, BatchType.TAIL_BATCH)#.cpu().numpy()'''
-
-        head = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=torch.from_numpy(samples[:, 0]).cuda()
-        ).unsqueeze(1)
-
-        relation = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=torch.from_numpy(samples[:, 1]).cuda()
-        ).unsqueeze(1)
-
-        all_entities_ids = np.array(list(self.dataset.entity_name_2_id.values()))
-        tail = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=torch.from_numpy(all_entities_ids[:self.num_entities]).cuda()
-        ).unsqueeze(1)
-
-        return self._func(head, relation, tail, BatchType.TAIL_BATCH)#.cpu().numpy()
-
-
     def forward(self, sample, *args, **kwargs):
         """
         Given the indexes in `sample`, extract the corresponding embeddings,
@@ -255,7 +220,7 @@ class Hake(Model, nn.Module):
             raise ValueError('batch_type %s not supported!'.format(batch_type))
 
         # return scores
-        return self._func(head, relation, tail, batch_type)#.cpu().numpy()
+        return self._func(head, relation, tail, batch_type).cpu().numpy()
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
