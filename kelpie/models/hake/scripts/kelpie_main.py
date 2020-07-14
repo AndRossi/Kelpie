@@ -40,7 +40,7 @@ parser.add_argument('--test_batch_size',
 )
 
 parser.add_argument('--max_epochs',
-                    default=200,    # the original Hake default is 100000!
+                    default=20,
                     type=int,
                     help="Number of epochs to run in post-training")
 

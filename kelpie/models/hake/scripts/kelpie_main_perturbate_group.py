@@ -38,7 +38,7 @@ parser.add_argument('--batch_size',
                     help="Batch size to use in post-training")
 
 parser.add_argument('--max_epochs',
-                    default=200,
+                    default=20,
                     type=int,
                     help="Number of epochs to run in post-training")
 
