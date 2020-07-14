@@ -48,14 +48,14 @@ class Hake(Model, nn.Module):
             requires_grad=False
         )
 
-        self.entity_embedding = nn.Parameter(torch.zeros(self.num_entities, hidden_dim * 2))
+        self.entity_embedding = nn.Parameter(torch.zeros(self.num_entities, hidden_dim * 2).cuda())
         nn.init.uniform_(
             tensor=self.entity_embedding,
             a=-self.embedding_range.item(),
             b=self.embedding_range.item()
         )
 
-        self.relation_embedding = nn.Parameter(torch.zeros(self.num_relations, hidden_dim * 3))
+        self.relation_embedding = nn.Parameter(torch.zeros(self.num_relations, hidden_dim * 3).cuda())
         nn.init.uniform_(
             tensor=self.relation_embedding,
             a=-self.embedding_range.item(),
