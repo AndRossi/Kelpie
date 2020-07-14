@@ -419,8 +419,8 @@ class KelpieHake(Hake):
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings for entities and relations and freeze them.
-        frozen_entity_embeddings = model.entity_embeddings.clone().detach()
-        frozen_relation_embeddings = model.relation_embeddings.clone().detach()
+        frozen_entity_embeddings = model.entity_embedding.clone().detach()
+        frozen_relation_embeddings = model.relation_embedding.clone().detach()
 
         # Therefore entity_to_explain_embedding would not be a Parameter anymore.
         self.kelpie_entity_embedding = nn.Parameter(torch.zeros(1, self.hidden_dim * 2))
@@ -430,8 +430,8 @@ class KelpieHake(Hake):
             b=self.embedding_range.item()
         )
 
-        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
-        self.relation_embeddings = frozen_relation_embeddings
+        self.entity_embedding = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        self.relation_embedding = frozen_relation_embeddings
 
 
     def predict_samples(self,
@@ -507,4 +507,4 @@ class KelpieHake(Hake):
 
     def update_embeddings(self):
         with torch.no_grad():
-            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
+            self.entity_embedding[self.kelpie_entity_id] = self.kelpie_entity_embedding
