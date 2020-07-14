@@ -130,7 +130,7 @@ class Hake(Model, nn.Module):
             index=torch.from_numpy(samples[:, 2]).cuda()
         ).unsqueeze(1)
 
-        return self._func(head, relation, tail, BatchType.SINGLE).cpu()#.numpy()
+        return self._func(head, relation, tail, BatchType.SINGLE).cpu().numpy()
 
 
     def forward(self, sample, *args, **kwargs):
@@ -220,7 +220,7 @@ class Hake(Model, nn.Module):
             raise ValueError('batch_type %s not supported!'.format(batch_type))
 
         # return scores
-        return self._func(head, relation, tail, batch_type).cpu().numpy()
+        return self._func(head, relation, tail, batch_type).cpu()#.numpy()
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
