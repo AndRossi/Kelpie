@@ -423,7 +423,7 @@ class KelpieHake(Hake):
         frozen_relation_embeddings = model.relation_embedding.clone().detach()
 
         # Therefore entity_to_explain_embedding would not be a Parameter anymore.
-        self.kelpie_entity_embedding = nn.Parameter(torch.zeros(1, self.hidden_dim * 2))
+        self.kelpie_entity_embedding = nn.Parameter(torch.zeros(1, self.hidden_dim * 2).cuda())
         nn.init.uniform_(
             tensor=self.kelpie_entity_embedding,
             a=-self.embedding_range.item(),
