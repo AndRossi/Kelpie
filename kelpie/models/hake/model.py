@@ -430,7 +430,7 @@ class KelpieHake(Hake):
             b=self.embedding_range.item()
         )
 
-        self.entity_embedding = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        self.entity_embedding = torch.nn.Parameter(torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0))
         self.relation_embedding = frozen_relation_embeddings
 
 
