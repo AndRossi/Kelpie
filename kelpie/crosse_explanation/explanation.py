@@ -103,7 +103,7 @@ class CrossEExplanator:
 
         for (h, cur_relation_1, e1, e1, cur_relation_2, e2) in two_step_filtered_paths:
             for similar_fact in similar_fact_2_two_step_paths:
-                for (_, other_relation_1, _, _, other_relation_2, _) in similar_fact_2_one_step_paths[similar_fact]:
+                for (_, other_relation_1, _, _, other_relation_2, _) in similar_fact_2_two_step_paths[similar_fact]:
                     if cur_relation_1 == other_relation_1 and cur_relation_2 == other_relation_2:
                         two_step_path_2_support[(h, cur_relation_1, e1, e1, cur_relation_2, e2)] += 1
 
