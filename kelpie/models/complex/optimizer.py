@@ -95,7 +95,8 @@ class ComplExOptimizer:
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
-                batch = actual_samples[batch_start : batch_start + batch_size].cuda()
+                batch_end = min(batch_start + batch_size, training_samples.shape[0])
+                batch = actual_samples[batch_start : batch_end].cuda()
                 l = self.step_on_batch(loss, batch)
 
                 batch_start += self.batch_size

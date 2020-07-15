@@ -97,6 +97,12 @@ parser.add_argument('--decay2',
 #   /m/02mjmr (Barack Obama)	/people/person/places_lived./people/place_lived/location	/m/02hrh0_ (Honolulu)
 args = parser.parse_args()
 
+#deterministic!
+seed = 42
+numpy.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.set_rng_state(torch.cuda.get_rng_state())
+torch.backends.cudnn.deterministic = True
 
 #############  LOAD DATASET
 
@@ -176,6 +182,7 @@ def run_kelpie(train_samples):
     # Kelpie model on original fact
     scores, ranks, predictions = kelpie_model.predict_sample(sample=original_sample, original_mode=True)
     original_direct_score, original_inverse_score = scores[0], scores[1]
+    original_direct_rank, original_inverse_rank = ranks[0], [1]
     print("\nKelpie model on original test fact: <%s, %s, %s>" % original_triple)
     print("\tDirect fact score: %f; Inverse fact score: %f" % (original_direct_score, original_inverse_score))
     print("\tHead Rank: %f" % ranks[0])
@@ -192,10 +199,9 @@ def run_kelpie(train_samples):
     # results on kelpie fact
     scores, ranks, _ = kelpie_model.predict_sample(sample=kelpie_sample, original_mode=False)
     kelpie_direct_score, kelpie_inverse_score = scores[0], scores[1]
+    kelpie_direct_rank, kelpie_inverse_rank = ranks[0], ranks[1]
     print("\nKelpie model on original test fact: <%s, %s, %s>" % kelpie_sample_tuple)
     print("\tDirect fact score: %f; Inverse fact score: %f" % (kelpie_direct_score, kelpie_inverse_score))
-    print("\tDirect fact score diff: %f; Inverse fact score diff: %f" % (kelpie_direct_score-original_direct_score,
-                                                                         kelpie_inverse_score-original_inverse_score))
     print("\tHead Rank: %f" % ranks[0])
     print("\tTail Rank: %f" % ranks[1])
 
@@ -204,10 +210,16 @@ def run_kelpie(train_samples):
     mrr, h1 = KelpieEvaluator(kelpie_model).eval(samples=kelpie_test_samples, original_mode=False)
     print("\tMRR: %f\n\tH@1: %f" % (mrr, h1))
 
-    return kelpie_direct_score-original_direct_score, kelpie_inverse_score-original_inverse_score
+    return kelpie_direct_score, kelpie_inverse_score, kelpie_direct_rank, kelpie_inverse_rank
+
 
 
 outlines = []
+print("### BASE POST-TRAINING")
+direct_score, inverse_score, direct_rank, inverse_rank = run_kelpie(kelpie_train_samples)
+outlines.append("\t".join(["NO FACTS SKIPPED",
+                           str(direct_score), str(inverse_score), str(direct_rank), str(inverse_rank)]) + "\n")
+
 for i in range(len(perturbed_list)):
     samples = perturbed_list[i]
 
@@ -225,9 +237,12 @@ for i in range(len(perturbed_list)):
     for x in skipped_facts:
         print("\t" + x)
 
-    direct_diff, inverse_diff = run_kelpie(samples)
+    cur_direct_score, cur_inverse_score, cur_direct_rank, cur_inverse_rank = run_kelpie(samples)
 
-    outlines.append(";".join(skipped_facts[0]) + "\t" + str(direct_diff) + "\t" + str(inverse_diff) + "\n")
+    direct_diff = cur_direct_score - direct_score
+    inverse_diff = cur_inverse_score - inverse_score
+
+    outlines.append("\t".join([skipped_facts[0], str(cur_direct_score), str(cur_inverse_score), str(cur_direct_rank), str(cur_inverse_rank)]) + "\n")
 
 with open("output.txt", "w") as outfile:
     outfile.writelines(outlines)

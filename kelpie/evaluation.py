@@ -14,6 +14,8 @@ class Evaluator:
             samples: np.array,
             write_output:bool = False):
 
+        self.model.cuda()
+
         # run prediction on the samples
         scores, ranks, predictions = self.model.predict_samples(samples)
 

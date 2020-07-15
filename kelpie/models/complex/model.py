@@ -97,7 +97,6 @@ class ComplEx(Model, nn.Module):
         # => the real part of the result is:
         #    (lhs[0] * rel[0] - lhs[1] * rel[1]) * rhs[0] +
         #    (lhs[0] * rel[1] + lhs[1] * rel[0]) * rhs[1]
-        # WHY NOT USING THE IMAGINARY PART TOO?
         return torch.sum(
             (lhs[0] * rel[0] - lhs[1] * rel[1]) * rhs[0] +
             (lhs[0] * rel[1] + lhs[1] * rel[0]) * rhs[1],
@@ -343,22 +342,22 @@ class KelpieComplEx(ComplEx):
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
-        # It is *extremely* important that entity_to_explain_embedding is both a Parameter and an instance variable
+        # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
         #
         # If I used .cuda() outside the Parameter, like
-        #       self.entity_to_explain_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
+        #       self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
         # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
 
-        # Therefore entity_to_explain_embedding would not be a Parameter anymore.
+        # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension).cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
             self.kelpie_entity_embedding *= init_size
 
-        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
+        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
 
     # Override
     def predict_samples(self,
