@@ -86,6 +86,11 @@ class HakeOptimizer:
                     print("\t saving model...")
                     torch.save(self.model.state_dict(), self.save_path)
                 print("\t done.")
+        for i in range(0, 20):
+            print(self.model.entity_embedding[i])
+        print()
+        for i in range(0, 20):
+            print(self.model.relation_embedding[i])
 
 
     def train_step(self, train_iterator):
