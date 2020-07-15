@@ -239,7 +239,9 @@ class Hake(Model, nn.Module):
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
         # obtain scores, ranks and predictions both for direct and inverse samples
+        np.random.seed()  # resets np.random seed
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+        np.random.seed()  # resets np.random seed
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
         for i in range(direct_samples.shape[0]):
@@ -272,7 +274,8 @@ class Hake(Model, nn.Module):
             ),
             batch_size=self.test_batch_size,
             num_workers=max(1, self.cpu_num // 2),
-            collate_fn=TestDataset.collate_fn
+            collate_fn=TestDataset.collate_fn,
+            worker_init_fn=TestDataset.worker_init_fn
         )
 
         i = 0
