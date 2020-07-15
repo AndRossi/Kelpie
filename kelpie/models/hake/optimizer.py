@@ -25,15 +25,16 @@ class HakeOptimizer:
         self.adversarial_temperature = adversarial_temperature
         self.save_path = save_path
 
-        # build all the supported optimizers using the passed params (learning rate and decays if Adam)
+        # build all the supported optimizers using the passed params
         supported_optimizers = {
             'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=learning_rate),
             'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate),
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate)
         }
+        self.optimizer_name = optimizer_name
 
         # choose the Torch Optimizer object to use, based on the passed name
-        self.optimizer = supported_optimizers[optimizer_name]
+        self.optimizer = supported_optimizers[self.optimizer_name]
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
@@ -63,10 +64,16 @@ class HakeOptimizer:
             if step >= warm_up_steps:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
-                    self.optimizer(
-                        filter(lambda p: p.requires_grad, self.model.parameters()),
-                        lr=current_learning_rate
-                    )
+                    print('Change learning_rate to %f at step %d' % (current_learning_rate, step))
+                supported_optimizers = {
+                    'Adagrad': optim.Adagrad(filter(lambda p: p.requires_grad, self.model.parameters()),
+                                             lr=current_learning_rate),
+                    'Adam': optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()),
+                                       lr=current_learning_rate),
+                    'SGD': optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()),
+                                     lr=current_learning_rate)
+                }
+                self.optimizer = supported_optimizers[self.optimizer_name]
                 warm_up_steps = warm_up_steps * 3
 
             if evaluate_every > 0 and valid_samples is not None and (step + 1) % evaluate_every == 0:
