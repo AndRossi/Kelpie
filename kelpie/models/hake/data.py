@@ -78,6 +78,10 @@ class TrainDataset(Dataset):
         batch_type = data[0][3]
         return positive_sample, negative_sample, subsample_weight, batch_type
 
+    @staticmethod
+    def worker_init_fn(worker_id):
+        np.random.seed(np.random.get_state()[1][0] + worker_id)
+
     def two_tuple_count(self):
         """
         Return two dict:
@@ -159,6 +163,9 @@ class TestDataset(Dataset):
         batch_type = data[0][3]
         return positive_sample, negative_sample, filter_bias, batch_type
 
+    @staticmethod
+    def worker_init_fn(worker_id):
+        np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 
 class BidirectionalOneShotIterator(object):
@@ -197,7 +204,8 @@ def get_train_iterator_from_dataset(triples,
         batch_size=batch_size,
         shuffle=True,
         num_workers=max(1, cpu_num // 2),
-        collate_fn=TrainDataset.collate_fn
+        collate_fn=TrainDataset.collate_fn,
+        worker_init_fn=TrainDataset.worker_init_fn
     )
 
     train_dataloader_tail = DataLoader(
@@ -205,7 +213,8 @@ def get_train_iterator_from_dataset(triples,
         batch_size=batch_size,
         shuffle=True,
         num_workers=max(1, cpu_num // 2),
-        collate_fn=TrainDataset.collate_fn
+        collate_fn=TrainDataset.collate_fn,
+        worker_init_fn=TrainDataset.worker_init_fn
     )
 
     return BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)

@@ -59,6 +59,7 @@ class HakeOptimizer:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
             for i in range(actual_steps):
                 loss = self.train_step(train_iterator)
+                np.random.seed()    #resets np.random seed
             print(loss)
 
             if step >= warm_up_steps:
