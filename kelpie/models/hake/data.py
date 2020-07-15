@@ -158,11 +158,11 @@ class TestDataset(Dataset):
                 tmp.append((0, rand_tail))
             tmp[tail] = (-1, tail)
 
-        print(tmp)
         tmp = torch.LongTensor(tmp)
-        print(tmp)
         filter_bias = tmp[:, 0].float()
         negative_sample = tmp[:, 1]
+
+        print(negative_sample)
 
         positive_sample = torch.LongTensor((head, relation, tail))
 
