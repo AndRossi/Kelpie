@@ -150,12 +150,12 @@ class TestDataset(Dataset):
         tmp = []
         if self.batch_type == BatchType.HEAD_BATCH:
             for rand_head in range(self.num_entity):
-                tmp[rand_head] = (0, rand_head)
+                tmp.append((0, rand_head))
             tmp[head] = (-1, head)
 
         if self.batch_type == BatchType.TAIL_BATCH:
             for rand_tail in range(self.num_entity):
-                tmp[rand_tail] = (0, rand_tail)
+                tmp.append((0, rand_tail))
             tmp[tail] = (-1, tail)
 
         print(tmp)
