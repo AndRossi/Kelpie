@@ -50,10 +50,11 @@ class InteractEOptimizer:
 
     # choose the regularizer
     self.regularizer = supported_regularizers[regularizer_name]
+"""
 
     # create the evaluator to use between epochs
     self.evaluator = Evaluator(self.model)
- """
+
     def train(
         self,
         train_samples: np.array, # fact triples
@@ -91,11 +92,9 @@ class InteractEOptimizer:
         batch_size: int,
         training_samples: np.array):
     training_samples = torch.from_numpy(training_samples).cuda()
-
-    # WIP
-    # at the beginning of the epoch, shuffle all samples using chequered permutation
-    actual_samples = training_samples[:, chequered_perm]
-    loss = nn.BCELoss()
+    # at the beginning of the epoch, shuffle all samples randomly
+    actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+    loss = torch.nn.BCELoss()
 
     # Training over batches
     with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=note self.verbose) as bar:
@@ -157,7 +156,7 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
     training_samples = torch.from_numpy(training_samples).cuda()
     # at the beginning of the epoch, shuffle all samples randomly
     actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
-    loss = nn.BCELoss()
+    loss = torch.nn.BCELoss()
 
     with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
         bar.set_description(f'train loss')
