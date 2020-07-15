@@ -1,3 +1,4 @@
+import copy
 from typing import Tuple, Any
 
 import torch
@@ -15,15 +16,12 @@ class TuckER(Model, nn.Module):
     """
         The TuckER class provides a Model implementation in PyTorch for the TuckER system.
         This implementation adheres to paper "TuckER: Tensor Factorization for Knowledge Graph Completion",
-        and is largely inspired by the official implementation provided by the authors Ivana Balažević, Carl Allen, and Timothy M. Hospedales
-        at https://github.com/ibalazevic/TuckER.
+        and is largely inspired by the official implementation provided by the authors
+        Ivana Balažević, Carl Allen, and Timothy M. Hospedales at https://github.com/ibalazevic/TuckER.
 
         In training or evaluation, our TuckER class requires samples to be passed as 2-dimensional np.arrays.
         Each row corresponds to a sample and contains the integer ids of its head, relation and tail.
         Only *direct* samples should be passed to the model.
-
-        TODO: add documentation about inverse facts and relations
-        TODO: explain that the input must always be direct facts only
     """
 
 
@@ -31,9 +29,9 @@ class TuckER(Model, nn.Module):
                  dataset: Dataset,
                  entity_dimension: int,
                  relation_dimension:int,
-                 input_dropout: float,
-                 hidden_dropout1: float,
-                 hidden_dropout2: float,
+                 input_dropout : float = 0.0,
+                 hidden_dropout1: float = 0.0,
+                 hidden_dropout2: float = 0.0,
                  init_random = True):
         """
             Constructor for TuckER model.
@@ -72,9 +70,9 @@ class TuckER(Model, nn.Module):
         if init_random:
             self.entity_embeddings = Parameter(torch.empty(self.num_entities, self.entity_dimension).cuda(), requires_grad=True)
             self.relation_embeddings = Parameter(torch.empty(self.num_relations, self.relation_dimension).cuda(), requires_grad=True)
-            self.core_tensor = Parameter(torch.tensor(np.random.uniform(-1, 1, (self.relation_dimension, self.entity_dimension, self.entity_dimension)), 
-                                    dtype=torch.float, device="cuda", requires_grad=True))
-            
+            self.core_tensor = Parameter(torch.tensor(np.random.uniform(-1, 1, (self.relation_dimension, self.entity_dimension, self.entity_dimension)), dtype=torch.float).cuda(), requires_grad=True)
+
+            # initialize only the entity_embeddings and relation embeddings wih xavier method
             xavier_normal_(self.entity_embeddings)
             xavier_normal_(self.relation_embeddings)
 
@@ -82,69 +80,68 @@ class TuckER(Model, nn.Module):
         """
             Compute scores for the passed samples
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
-            :return: a numpy array containing the scores of the passed samples
+            :return: a monodimensional numpy array containing the score for each passed sample
         """
-        head_indexes = samples[:, 0]
-        head_embeddings = self.entity_embeddings[head_indexes]
-        relation_indexes = samples[:, 1]
-        relation_embeddings = self.relation_embeddings[relation_indexes]
-        tail_indexes = samples[:, 2]
-        tail_embeddings = self.entity_embeddings[tail_indexes]
-        core_tensor_reshaped = self.core_tensor.view(self.relation_dimension, -1)
+        # compute scores for each possible tail
+        all_scores = self.all_scores(samples)
 
-        first_multiplication = torch.mm(relation_embeddings, core_tensor_reshaped)
-        first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
-        # Dropout is not needed in score because it is only used in inference, so I commented it.
-        # first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+        # extract from all_scores the specific scores for the initial samples
+        samples_scores = []
+        for i, (head_index, relation_index, tail_index) in enumerate(samples):
+            samples_scores.append(all_scores[i][tail_index])
 
-        head_embeddings = self.batch_norm1(head_embeddings)
-        # head_embeddings = self.input_dropout(head_embeddings)
-        head_embeddings_reshaped = head_embeddings.view(-1, 1, self.entity_dimension)
-
-        second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped) 
-        second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)      
-        second_multiplication_reshaped = self.batch_norm2(second_multiplication_reshaped)
-        # second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
-        
-        tail_embeddings_transposed = tail_embeddings.transpose(1,0)
-
-        result = torch.mm(second_multiplication_reshaped, tail_embeddings_transposed)
-        predictions = torch.sigmoid(result)
-
-        return predictions
+        return np.array(samples_scores)
 
     def forward(self, samples: np.array):
         """
-            Perform forward propagation on the passed samples
-            :param samples: a 2-dimensional numpy array containing the samples to use in forward propagation, one per row
-            :return: the scores for each passed sample with all possible tails
-        """
-        head_indexes = samples[:, 0]
-        head_embeddings = self.entity_embeddings[head_indexes]
-        relation_indexes = samples[:, 1]
-        relation_embeddings = self.relation_embeddings[relation_indexes]
-        tail_embeddings = self.entity_embeddings
-        core_tensor_reshaped = self.core_tensor.view(self.relation_dimension, -1)
+            Perform forward propagation on the passed samples.
 
-        first_multiplication = torch.mm(relation_embeddings, core_tensor_reshaped)
-        first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
-        first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+            In the specific case of TuckER, this method just returns the scores
+            that each sample obtains with each possible tail.
+            This is because TuckER does not require any external Regularizer,
+            so only the scores (for all possible tails) are required in training.
+            So, in this specific case, the forward method corresponds to the all_scores method.
+
+            :param samples: a 2-dimensional numpy array containing the samples to run forward propagation on, one per row
+            :return: a 2-dimensional numpy array that, for each sample, contains a row with the for each passed sample
+        """
+        return self.all_scores(samples)
+
+    def all_scores(self, samples: np.array):
+        """
+            For each of the passed samples, compute scores for all possible entities.
+            :param samples: a 2-dimensional numpy array containing the samples to score, one per row
+            :return: a 2-dimensional numpy array that, for each sample, contains a row with the for each passed sample
+        """
+
+        head_indexes, relation_indexes = samples[:, 0], samples[:, 1]
+        head_embeddings = self.entity_embeddings[head_indexes]
+        relation_embeddings = self.relation_embeddings[relation_indexes]
+        tail_embeddings = self.entity_embeddings  # all possible tails
+
+        # batch normalization and reshape of head embeddings
 
         head_embeddings = self.batch_norm1(head_embeddings)
         head_embeddings = self.input_dropout(head_embeddings)
         head_embeddings_reshaped = head_embeddings.view(-1, 1, self.entity_dimension)
 
-        second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped) 
-        second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)      
+        # first multiplication with reshape and dropout
+        first_multiplication = torch.mm(relation_embeddings, self.core_tensor.view(self.relation_dimension, -1))
+        first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
+        first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+
+        # second multiplication with reshape, batch norm and dropout
+        second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped)
+        second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)
         second_multiplication_reshaped = self.batch_norm2(second_multiplication_reshaped)
         second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
-        
-        tail_embeddings_transposed = tail_embeddings.transpose(1,0)
 
-        result = torch.mm(second_multiplication_reshaped, tail_embeddings_transposed)
-        predictions = torch.sigmoid(result)
+        # third multiplication with sigmoid activation
+        result = torch.mm(second_multiplication_reshaped, tail_embeddings.transpose(1, 0))
 
-        return predictions
+        scores = torch.sigmoid(result)
+
+        return scores
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
@@ -189,6 +186,7 @@ class TuckER(Model, nn.Module):
 
         return scores, ranks, predictions
 
+    # TODO: in the future, this may need to be moved to model.py
     def predict_tails(self, samples):
         """
         This method receives in input a batch of samples
@@ -208,58 +206,52 @@ class TuckER(Model, nn.Module):
         """
 
         scores, ranks, pred_out = [], [], []
-        
+
         batch_size = 128
         for i in range(0, samples.shape[0], batch_size):
-            batch = samples[i : i + batch_size]
+            batch = samples[i : min(i + batch_size, len(samples))]
 
-            predictions = self.forward(batch)
-            
-            # dictionary with Head-Relation couples of sample as keys
-            # and a list of all correct Tails for that couple as values
-            entity_relation_dict = self.dataset.to_filter
-            head_indexes = torch.tensor(batch[:, 0]).cuda()  # heads of all direct_samples
-            relation_indexes = torch.tensor(batch[:, 1]).cuda()  # relation of all direct_samples
-            tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all direct_samples
-            
+            all_scores = self.all_scores(batch)
+
+            tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
+
             # for every triple in the samples
-            for row in range(batch.shape[0]):
-                entities_to_filter = entity_relation_dict[(batch[row][0], batch[row][1])]
-    
+            for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
+                tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
+
                 # predicted value for the correct tail of that triple
-                predicted_value = predictions[row, tail_indexes[row]].item()
-    
-                scores.append(predicted_value)
-    
+                target_tail_score = all_scores[sample_number, tail_id].item()
+                scores.append(target_tail_score)
+
                 # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
-                predictions[row, entities_to_filter] = 0.0
-    
+                all_scores[sample_number, tails_to_filter] = 0.0
                 # re-set the predicted value for that tail to the original value
-                predictions[row, tail_indexes[row]] = predicted_value
-                
-            sorted_values, sorted_indexes = torch.sort(predictions, dim=1, descending=True)
+                all_scores[sample_number, tail_id] = target_tail_score
+
+            # this amounts to using ORDINAL policy
+            sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
             sorted_indexes = sorted_indexes.cpu().numpy()
-            
+
             for row in sorted_indexes:
                 pred_out.append(row)
-            
+
             for row in range(batch.shape[0]):
                 # rank of the correct target
                 rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
                 ranks.append(rank + 1)
-                
+
         return scores, ranks, pred_out
 
 
 ################
 
 class KelpieTuckER(TuckER):
-    def __init__( # suggested parameters for every dataset can be found in the tuckER repo: https://github.com/ibalazevic/TuckER
+    def __init__(
             self,
             dataset: KelpieDataset,
             model: TuckER,
-            entity_dimension: float,
-            relation_dimension: float,
+            entity_dimension: int,
+            relation_dimension: int,
             input_dropout: float,
             hidden_dropout1: float,
             hidden_dropout2: float
@@ -271,33 +263,47 @@ class KelpieTuckER(TuckER):
                         input_dropout=input_dropout,
                         hidden_dropout1=hidden_dropout1,
                         hidden_dropout2=hidden_dropout2,
-                        init_random=True)
+                        init_random=False)  # NOTE: this is important! if it is set to True,
+                                            # self.entity_embeddings and self.relation_embeddings will be initialized as Parameters
+                                            # and it will not be possible to overwrite them with mere Tensors
+                                            # such as the one resulting from torch.cat(...) and as frozen_relation_embeddings
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
-        # extract the values of the trained embeddings for entities and relations and freeze them.
+        # extract the values of the trained embeddings for entities, relations and core, and freeze them.
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
+        frozen_core = model.core_tensor.clone().detach()
 
-        # It is *extremely* important that entity_to_explain_embedding is both a Parameter and an instance variable
+        # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
         #
         # If I used .cuda() outside the Parameter, like
-        #       self.entity_to_explain_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
+        #       self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
         # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
 
-        # Therefore entity_to_explain_embedding would not be a Parameter anymore.
+        # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, self.entity_dimension).cuda(), requires_grad=True)
 
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
+        self.core_tensor = frozen_core
 
+        # copy the batchnorms of the original TuckER model and keep them frozen
+        self.batch_norm1 = copy.deepcopy(self.model.batch_norm1)  # copy weights and stuff
+        self.batch_norm2 = copy.deepcopy(self.model.batch_norm2)  # copy weights and stuff
+        self.batch_norm1.weight.requires_grad = False
+        self.batch_norm1.bias.requires_grad = False
+        self.batch_norm2.weight.requires_grad = False
+        self.batch_norm2.bias.requires_grad = False
+        self.batch_norm1.eval()
+        self.batch_norm2.eval()
 
-# Override
+    # Override
     def predict_samples(self,
                         samples: np.array,
                         original_mode: bool = False):
@@ -320,7 +326,7 @@ class KelpieTuckER(TuckER):
         forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
         assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
 
-        # use the Model implementation method to obtain scores, ranks and prediction results.
+        # use the TuckER implementation method to obtain scores, ranks and prediction results.
         # these WILL feature the forbidden entity, so we now need to filter them
         scores, ranks, predictions = super().predict_samples(direct_samples)
 
@@ -354,7 +360,7 @@ class KelpieTuckER(TuckER):
         return scores, ranks, predictions
 
 
-# Override
+    # Override
     def predict_sample(self,
                        sample: np.array,
                        original_mode: bool = False):
@@ -369,6 +375,14 @@ class KelpieTuckER(TuckER):
 
         scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
         return scores[0], ranks[0], predictions[0]
+
+    #Override
+    def train(self, mode=True):
+        self.training = mode
+        for module in self.children():
+            if not isinstance(module, torch.nn.BatchNorm1d):
+                module.train(mode)
+        return self
 
     def update_embeddings(self):
         with torch.no_grad():
