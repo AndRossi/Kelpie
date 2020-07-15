@@ -138,16 +138,29 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
-        if self.batch_type == BatchType.HEAD_BATCH:
+        '''if self.batch_type == BatchType.HEAD_BATCH:
             tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.triples
                    else (-1, head) for rand_head in range(self.num_entity)]
             tmp[head] = (0, head)
         elif self.batch_type == BatchType.TAIL_BATCH:
             tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.triples
                    else (-1, tail) for rand_tail in range(self.num_entity)]
-            tmp[tail] = (0, tail)
+            tmp[tail] = (0, tail)'''
 
+        tmp = []
+        if self.batch_type == BatchType.HEAD_BATCH:
+            for rand_head in range(self.num_entity):
+                tmp[rand_head] = (0, rand_head)
+            tmp[head] = (-1, head)
+
+        if self.batch_type == BatchType.TAIL_BATCH:
+            for rand_tail in range(self.num_entity):
+                tmp[rand_tail] = (0, rand_tail)
+            tmp[tail] = (-1, tail)
+
+        print(tmp)
         tmp = torch.LongTensor(tmp)
+        print(tmp)
         filter_bias = tmp[:, 0].float()
         negative_sample = tmp[:, 1]
 
