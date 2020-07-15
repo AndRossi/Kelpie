@@ -1,65 +1,77 @@
-from helper import *
-from ordered_set import OrderedSet
-from torch.utils.data import DataLoader
-from data_loader import *
-from model import *
+import numpy as np
+import torch
+from torch import nn
 
 
-class Permutator():
-	
-    def __init(self, params):
-        
-        self.p = params
+class Permutator(nn.Module):
+
+    def __init__(self,
+            	 embed_dim: int,
+            	 permutations: int = 1,
+            	 k_h: int = 20,
+            	 k_w: int = 10,
+				 device: str = '-1'):
+
+		self.embed_dim = embed_dim
+		self.permutations = permutations
+		self.k_h = k_h
+		self.k_w = k_w
+
+		if device != '-1' and torch.cuda.is_available():
+			self.device = torch.device('cuda')
+			torch.cuda.set_rng_state(torch.cuda.get_rng_state())
+			torch.backends.cudnn.deterministic = True
+		else:
+			self.device = torch.device('cpu')
     
-    def get_chequer_perm(self):
-			"""
-			Function to generate the chequer permutation required for InteractE model
 
-			Parameters
-			----------
-			
-			Returns
-			-------
-			
-			"""
-            # embed_dim is the embedding dimension for ent end rel embeddings; None by default 
-            #   and not considered (?) if a k_h and k_w are defined
-            # p.perm represents the number of permutations to execute
-			ent_perm  = np.int32([np.random.permutation(self.p.embed_dim) for _ in range(self.p.perm)])
-			rel_perm  = np.int32([np.random.permutation(self.p.embed_dim) for _ in range(self.p.perm)])
+    def chequer_perm(self):
+		"""
+		Function to generate the chequer permutation required for InteractE model
 
-			comb_idx = []
-			for k in range(self.p.perm): 
-				temp = []
-				ent_idx, rel_idx = 0, 0
+		Parameters
+		----------
+		Returns
+		-------
+		"""
+		ent_perm  = np.int32([np.random.permutation(self.embed_dim) for _ in range(self.permutations)])
+		rel_perm  = np.int32([np.random.permutation(self.embed_dim) for _ in range(self.permutations)])
 
-				for i in range(self.p.k_h):
-					for j in range(self.p.k_w):
-						#if k is even
-                        if k % 2 == 0:
-							if i % 2 == 0:
-								temp.append(ent_perm[k, ent_idx])
-                                ent_idx += 1
-								temp.append(rel_perm[k, rel_idx]+self.p.embed_dim)
-                                rel_idx += 1
-							else:
-								temp.append(rel_perm[k, rel_idx]+self.p.embed_dim)
-                                rel_idx += 1
-								temp.append(ent_perm[k, ent_idx])
-                                ent_idx += 1
+		comb_idx = [] # matrice da costruire
+		for k in range(self.permutations): 
+			temp = [] # riga corrente della matrice
+			ent_idx, rel_idx = 0, 0
+
+			# ciclo sulle righe della matriche risultante
+			for i in range(self.k_h):
+				# ciclo sulle colonne della matriche risultante
+				for j in range(self.k_w):
+					# if k is even
+					if k % 2 == 0:
+						if i % 2 == 0:
+							temp.append(ent_perm[k, ent_idx])
+							ent_idx += 1
+							temp.append(rel_perm[k, rel_idx] + self.embed_dim)
+							rel_idx += 1
 						else:
-							if i % 2 == 0:
-								temp.append(rel_perm[k, rel_idx]+self.p.embed_dim)
-                                rel_idx += 1
-								temp.append(ent_perm[k, ent_idx])
-                                ent_idx += 1
-							else:
-								temp.append(ent_perm[k, ent_idx])
-                                ent_idx += 1
-								temp.append(rel_perm[k, rel_idx]+self.p.embed_dim)
-                                rel_idx += 1
+							temp.append(rel_perm[k, rel_idx] + self.embed_dim)
+							rel_idx += 1
+							temp.append(ent_perm[k, ent_idx])
+							ent_idx += 1
+					else:
+						if i % 2 == 0:
+							temp.append(rel_perm[k, rel_idx] + self.embed_dim)
+							rel_idx += 1
+							temp.append(ent_perm[k, ent_idx])
+							ent_idx += 1
+						else:
+							temp.append(ent_perm[k, ent_idx])
+							ent_idx += 1
+							temp.append(rel_perm[k, rel_idx] + self.embed_dim)
+							rel_idx += 1
 
-				comb_idx.append(temp)
+			comb_idx.append(temp)
 
-			chequer_perm = torch.LongTensor(np.int32(comb_idx)).to(self.device)
-			return chequer_perm
+		# valutare se bisogna modificare la costruzione della chequer_perm (?)
+		chequer_perm = torch.LongTensor(np.int32(comb_idx)).to(self.device)
+		return chequer_perm
