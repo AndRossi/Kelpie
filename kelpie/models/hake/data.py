@@ -162,8 +162,6 @@ class TestDataset(Dataset):
         filter_bias = tmp[:, 0].float()
         negative_sample = tmp[:, 1]
 
-        print(negative_sample)
-
         positive_sample = torch.LongTensor((head, relation, tail))
 
         return positive_sample, negative_sample, filter_bias, self.batch_type
