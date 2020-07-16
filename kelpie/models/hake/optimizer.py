@@ -59,7 +59,7 @@ class HakeOptimizer:
             else:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
 
-            with tqdm.tqdm(total=actual_steps, unit='ex', disable=not self.model.verbose) as bar:
+            with tqdm.tqdm(total=actual_steps, unit='ex') as bar:
                 bar.set_description(f'train loss')
                 for i in range(actual_steps):
 

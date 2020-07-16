@@ -280,7 +280,7 @@ class Hake(Model, nn.Module):
         i = 0
         all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities))).cuda()
 
-        with torch.no_grad(), tqdm.tqdm(total=len(samples), unit='ex', disable=not self.verbose) as bar:
+        with torch.no_grad(), tqdm.tqdm(total=len(samples), unit='ex') as bar:
 
             bar.set_description(f'evaluating...')
 
