@@ -150,13 +150,19 @@ class TestDataset(Dataset):
         tmp = []
         if self.batch_type == BatchType.HEAD_BATCH:
             for rand_head in range(self.num_entity):
-                tmp.append((0, rand_head))
-            tmp[head] = (-1, head)
+                if (rand_head, relation, tail) not in self.triples:
+                    tmp.append((0, rand_head))
+                else:
+                    tmp.append((-1, head))
+            tmp[head] = (0, head)   # WTF?
 
         if self.batch_type == BatchType.TAIL_BATCH:
             for rand_tail in range(self.num_entity):
-                tmp.append((0, rand_tail))
-            tmp[tail] = (-1, tail)
+                if (head, relation, rand_tail) not in self.triples:
+                    tmp.append((0, rand_tail))
+                else:
+                    tmp.append((-1, tail))
+            tmp[tail] = (0, tail)   # WTF?
 
         tmp = torch.LongTensor(tmp)
         filter_bias = tmp[:, 0].float()
