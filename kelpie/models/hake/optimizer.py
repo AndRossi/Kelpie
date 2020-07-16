@@ -60,7 +60,7 @@ class HakeOptimizer:
             for i in range(actual_steps):
                 loss = self.train_step(train_iterator)
                 np.random.seed()    #resets np.random seed
-            print(loss)
+            print("loss: "+str(loss[0]))
 
             if step >= warm_up_steps:
                 if not self.no_decay:

@@ -1,5 +1,6 @@
 from typing import Tuple, Any
 
+import tqdm
 import numpy as np
 import torch
 from torch import nn
@@ -278,9 +279,10 @@ class Hake(Model, nn.Module):
 
         i = 0
         all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities))).cuda()
-        print("number of samples: "+str(len(samples)))
 
-        with torch.no_grad():
+        with torch.no_grad(), tqdm.tqdm(total=len(samples), unit='ex', disable=not self.verbose) as bar:
+
+            bar.set_description(f'evaluating...')
 
             for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
                 positive_sample = positive_sample.cuda()
@@ -295,9 +297,9 @@ class Hake(Model, nn.Module):
 
                     i += 1
 
-                print(i)
+                bar.update(i)
+                bar.set_postfix(evaluated_samples=f'{i}')
 
-        print(all_scores)
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
