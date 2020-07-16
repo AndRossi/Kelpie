@@ -67,7 +67,7 @@ class HakeOptimizer:
                     np.random.seed()    #resets np.random seed
 
                     bar.update(i)
-                    bar.set_postfix(loss=str(loss.item()))
+                bar.set_postfix(loss=str(loss.item()))
                 #print("loss: "+str(loss[0]))
 
             if step >= warm_up_steps:
