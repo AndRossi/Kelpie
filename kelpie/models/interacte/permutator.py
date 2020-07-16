@@ -6,16 +6,17 @@ from torch import nn
 class Permutator(nn.Module):
 
     def __init__(self,
-            	 embed_dim: int,
+            	 # embed_dim: int,
             	 permutations: int = 1,
             	 k_h: int = 20,
             	 k_w: int = 10,
 				 device: str = '-1'):
 
-		self.embed_dim = embed_dim
+		# self.embed_dim = embed_dim
 		self.permutations = permutations
 		self.k_h = k_h
 		self.k_w = k_w
+		self.embed_dim = (k_h * k_w) / 2	# follows the paper formula
 
 		if device != '-1' and torch.cuda.is_available():
 			self.device = torch.device('cuda')

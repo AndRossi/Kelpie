@@ -34,10 +34,11 @@ class InteractE(Model, torch.nn.Module):
 		self.num_relations = dataset.num_relations		# number of relations in dataset
 		self.dimension = dimension						# embedding dimension
 
-		# Subject and relation (direct and inverse ones) embeddings, xavier_normal_ distributes 
+		# Subject and relationship embeddings, xavier_normal_ distributes 
 		# the embeddings weight values by the said distribution
 		self.ent_embed	= torch.nn.Embedding(self.num_entities, embed_dim, padding_idx=None) 
 		xavier_normal_(self.ent_embed.weight)
+		# num_relation is x2 since we need to embed direct and inverse relationships
 		self.rel_embed	= torch.nn.Embedding(self.num_relations*2, embed_dim, padding_idx=None)
 		xavier_normal_(self.rel_embed.weight)
 		
