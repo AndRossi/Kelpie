@@ -1,6 +1,6 @@
 from helper import *
 
-class InteractE(torch.nn.Module):
+class InteractE(Model, torch.nn.Module):
 	"""
 	Proposed method in the paper. Refer Section 6 of the paper for mode details 
 
@@ -14,32 +14,70 @@ class InteractE(torch.nn.Module):
 	The InteractE model instance
 		
 	"""
-	def __init__(self, params, chequer_perm):
-		super(InteractE, self).__init__()
+	def __init__(self, 
+		chequer_perm,
+		dataset: Dataset,
+		embed_dim: int,
+		inp_drop_p: float = 0.5,
+		hid_drop_p: float = 0.5,
+		feat_drop_p: float = 0.5,
+		num_perm: int = 1,
+		num_filt_conv: int = 96,
+		init_random = True,
+		init_size: float = 1e-3):
 
-		self.p                  = params
-		self.ent_embed		= torch.nn.Embedding(self.p.num_ent,   self.p.embed_dim, padding_idx=None); xavier_normal_(self.ent_embed.weight)
-		self.rel_embed		= torch.nn.Embedding(self.p.num_rel*2, self.p.embed_dim, padding_idx=None); xavier_normal_(self.rel_embed.weight)
-		self.bceloss		= torch.nn.BCELoss()
+		Model.__init(self, dataset)
+		nn.Module.__init__(self)
 
-		self.inp_drop		= torch.nn.Dropout(self.p.inp_drop)
-		self.hidden_drop	= torch.nn.Dropout(self.p.hid_drop)
-		self.feature_map_drop	= torch.nn.Dropout2d(self.p.feat_drop)
-		self.bn0		= torch.nn.BatchNorm2d(self.p.perm)
+		self.dataset = dataset
+		self.num_entities = dataset.num_entities		# number of entities in dataset
+		self.num_relations = dataset.num_relations		# number of relations in dataset
+		self.dimension = dimension						# embedding dimension
 
-		flat_sz_h 		= self.p.k_h
-		flat_sz_w 		= 2*self.p.k_w
-		self.padding 		= 0
+		# Subject and relation (direct and inverse ones) embeddings, xavier_normal_ distributes 
+		# the embeddings weight values by the said distribution
+		self.ent_embed	= torch.nn.Embedding(self.num_entities, embed_dim, padding_idx=None) 
+		xavier_normal_(self.ent_embed.weight)
+		self.rel_embed	= torch.nn.Embedding(self.num_relations*2, embed_dim, padding_idx=None)
+		xavier_normal_(self.rel_embed.weight)
+		
+		# Binary Cross Entropy Loss
+		self.bceloss = torch.nn.BCELoss()
 
-		self.bn1 		= torch.nn.BatchNorm2d(self.p.num_filt*self.p.perm)
+		# Dropout regularization (default p = 0.5)
+		self.inp_drop		= torch.nn.Dropout(inp_drop_p)
+		self.hidden_drop	= torch.nn.Dropout(hid_drop_p)
+		# Dropout regularization on embedding matrix (default p = 0.5)
+		self.feature_map_drop	= torch.nn.Dropout2d(feat_drop_p)
+		
+		# Embedding matrix normalization
+		self.bn0		= torch.nn.BatchNorm2d(num_perm)
+
+		flat_sz_h 		= embed_dim
+		flat_sz_w 		= embed_dim
+		self.padding 	= 0
+
+		# Conv layer normalization 
+		self.bn1 		= torch.nn.BatchNorm2d(num_filt_conv*num_perm)
+		
+		# Flattened embedding matrix size
 		self.flat_sz 		= flat_sz_h * flat_sz_w * self.p.num_filt*self.p.perm
 
+		# Normalization 
 		self.bn2		= torch.nn.BatchNorm1d(self.p.embed_dim)
+
+		# Matrix flattening
 		self.fc 		= torch.nn.Linear(self.flat_sz, self.p.embed_dim)
+		
+		# Chequered permutation
 		self.chequer_perm	= chequer_perm
 
+		# Bias definition
 		self.register_parameter('bias', Parameter(torch.zeros(self.p.num_ent)))
+
+		# Kernel filter definition
 		self.register_parameter('conv_filt', Parameter(torch.zeros(self.p.num_filt, 1, self.p.ker_sz,  self.p.ker_sz))); xavier_normal_(self.conv_filt)
+
 
 	def loss(self, pred, true_label=None, sub_samp=None):
 		label_pos	= true_label[0]; 
@@ -47,6 +85,13 @@ class InteractE(torch.nn.Module):
 		loss 		= self.bceloss(pred, true_label)
 		return loss
 
+
+	def score(self):
+		# Formula
+        score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
+
+
+	# Circular padding definition
 	def circular_padding_chw(self, batch, padding):
 		upper_pad	= batch[..., -padding:, :]
 		lower_pad	= batch[..., :padding, :]
@@ -57,9 +102,11 @@ class InteractE(torch.nn.Module):
 		padded		= torch.cat([left_pad, temp, right_pad], dim=3)
 		return padded
 
+
+	# Forwards data throughout the network
 	def forward(self, sub, rel, neg_ents, strategy='one_to_x'):
-		sub_emb		= self.ent_embed(sub)
-		rel_emb		= self.rel_embed(rel)
+		sub_emb		= self.ent_embed(sub)	# Embeds the subject tensor
+		rel_emb		= self.rel_embed(rel)	# Embeds the relationship tensor
 		comb_emb	= torch.cat([sub_emb, rel_emb], dim=1)
 		chequer_perm	= comb_emb[:, self.chequer_perm]
 		stack_inp	= chequer_perm.reshape((-1, self.p.perm, 2*self.p.k_w, self.p.k_h))
@@ -88,7 +135,7 @@ class InteractE(torch.nn.Module):
 		return pred
 
 class KelpieInteractE(InteractE):
-    # Costruttore
+    # Constructor
     def __init__(
             self,
             dataset: KelpieDataset,
