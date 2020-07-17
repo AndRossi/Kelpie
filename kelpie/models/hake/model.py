@@ -370,6 +370,96 @@ class Hake(Model, nn.Module):
 
         return scores, ranks, predictions
 
+    # the original test_step implementation
+    def test_step(self, samples: np.array, test_log_steps: int):
+        '''
+        Evaluate the model on test or valid datasets
+        '''
+
+        self.eval()
+
+        test_dataloader_head = DataLoader(
+            TestDataset(
+                samples,
+                self.dataset.num_entities,
+                self.dataset.num_relations,
+                BatchType.HEAD_BATCH
+            ),
+            batch_size=self.test_batch_size,
+            num_workers=max(1, self.cpu_num // 2),
+            collate_fn=TestDataset.collate_fn,
+            worker_init_fn=TestDataset.worker_init_fn
+        )
+
+        test_dataloader_tail = DataLoader(
+            TestDataset(
+                samples,
+                self.dataset.num_entities,
+                self.dataset.num_relations,
+                BatchType.TAIL_BATCH
+            ),
+            batch_size=self.test_batch_size,
+            num_workers=max(1, self.cpu_num // 2),
+            collate_fn=TestDataset.collate_fn,
+            worker_init_fn=TestDataset.worker_init_fn
+        )
+
+        test_dataset_list = [test_dataloader_head, test_dataloader_tail]
+
+        logs = []
+
+        step = 0
+        total_steps = sum([len(dataset) for dataset in test_dataset_list])
+
+        with torch.no_grad():
+            for test_dataset in test_dataset_list:
+                for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
+                    positive_sample = positive_sample.cuda()
+                    negative_sample = negative_sample.cuda()
+                    filter_bias = filter_bias.cuda()
+
+                    batch_size = positive_sample.size(0)
+
+                    score = self((positive_sample, negative_sample), batch_type=batch_type)
+                    score += filter_bias
+
+                    # Explicitly sort all the entities to ensure that there is no test exposure bias
+                    argsort = torch.argsort(score, dim=1, descending=True)
+
+                    if batch_type == BatchType.HEAD_BATCH:
+                        positive_arg = positive_sample[:, 0]
+                    elif batch_type == BatchType.TAIL_BATCH:
+                        positive_arg = positive_sample[:, 2]
+                    else:
+                        raise ValueError('mode %s not supported' % batch_type)
+
+                    for i in range(batch_size):
+                        # Notice that argsort is not ranking
+                        ranking = (argsort[i, :] == positive_arg[i]).nonzero()
+                        assert ranking.size(0) == 1
+
+                        # ranking + 1 is the true ranking used in evaluation metrics
+                        ranking = 1 + ranking.item()
+                        logs.append({
+                            'MRR': 1.0 / ranking,
+                            'MR': float(ranking),
+                            'HITS@1': 1.0 if ranking <= 1 else 0.0,
+                            'HITS@3': 1.0 if ranking <= 3 else 0.0,
+                            'HITS@10': 1.0 if ranking <= 10 else 0.0,
+                        })
+
+                    if step % test_log_steps == 0:
+                        print('Evaluating the model... ({}/{})'.format(step, total_steps))
+
+                    step += 1
+
+        metrics = {}
+        for metric in logs[0].keys():
+            metrics[metric] = sum([log[metric] for log in logs]) / len(logs)
+
+        for metric in metrics:
+            print('%s at step %d: %f' % (metric, step, metrics[metric]))
+
 
 
 class KelpieHake(Hake):
