@@ -280,11 +280,11 @@ class Hake(Model, nn.Module):
         i = 0
         all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities))).cuda()
 
-        with torch.no_grad(), trange(len(samples)) as bar:
+        with torch.no_grad(), trange(test_dataset) as bar:
 
             bar.set_description('calculating scores')
 
-            for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
+            for positive_sample, negative_sample, filter_bias, batch_type in bar:
                 positive_sample = positive_sample.cuda()
                 negative_sample = negative_sample.cuda()
                 filter_bias = filter_bias.cuda()
@@ -297,7 +297,7 @@ class Hake(Model, nn.Module):
 
                     i += 1
 
-                bar.update(i)
+                #bar.update(i)
 
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 

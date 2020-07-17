@@ -60,7 +60,7 @@ class HakeOptimizer:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
 
             with trange(actual_steps) as bar:
-                bar.set_description('epoch #' + str(step))
+                bar.set_description('epoch #' + str(step+1))
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
