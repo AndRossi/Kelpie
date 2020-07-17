@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from tqdm import trange
-from tqdm.auto import tqdm
 from torch import optim
 import torch.nn.functional as F
 
@@ -60,19 +59,12 @@ class HakeOptimizer:
             else:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
 
-            #with tqdm.tqdm(total=actual_steps) as bar:
-                #bar.set_description('train loss: epoch #'+str(step))   , bar_format='{l_bar}{bar}|{elapsed}, {postfix}'
-            #with tqdm(range(actual_steps), desc='epoch #'+str(step)) as bar:
             with trange(actual_steps) as bar:
                 bar.set_description('epoch #' + str(step))
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
                     bar.set_postfix(loss="{:.4f}".format(loss.item()))
-                    #bar.update(i)
-
-                #bar.close()
-                #print("loss: "+str(loss[0]))
 
             if step >= warm_up_steps:
                 if not self.no_decay:
