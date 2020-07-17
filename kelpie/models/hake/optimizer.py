@@ -65,6 +65,7 @@ class HakeOptimizer:
             #with tqdm(range(actual_steps), desc='epoch #'+str(step)) as bar:
             with trange(actual_steps) as bar:
                 bar.set_description('epoch #' + str(step))
+                bar.set_postfix(loss="...")
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
