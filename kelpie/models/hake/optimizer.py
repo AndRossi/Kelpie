@@ -68,6 +68,7 @@ class HakeOptimizer:
 
                     bar.update(i)
                 bar.set_postfix(loss=str(loss.item()))
+                bar.close()
                 #print("loss: "+str(loss[0]))
 
             if step >= warm_up_steps:

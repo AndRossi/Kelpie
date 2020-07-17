@@ -299,6 +299,7 @@ class Hake(Model, nn.Module):
 
                 bar.update(i)
             bar.set_postfix(evaluated_samples=str(i))
+            bar.close()
 
         # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
