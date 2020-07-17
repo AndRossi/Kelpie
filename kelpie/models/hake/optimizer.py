@@ -60,8 +60,8 @@ class HakeOptimizer:
                 actual_steps = ((self.model.num_entities * 2) // self.model.batch_size) + 1
 
             #with tqdm.tqdm(total=actual_steps) as bar:
-                #bar.set_description('train loss: epoch #'+str(step))
-            with tqdm(range(actual_steps), desc='epoch #'+str(step), bar_format='{l_bar}{bar}|{elapsed}, {postfix}') as bar:
+                #bar.set_description('train loss: epoch #'+str(step))   , bar_format='{l_bar}{bar}|{elapsed}, {postfix}'
+            with tqdm(range(actual_steps), desc='epoch #'+str(step)) as bar:
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
