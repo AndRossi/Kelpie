@@ -68,8 +68,8 @@ class HakeOptimizer:
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
-                    bar.set_postfix(loss=str(loss.item()))
                     #bar.update(i)
+                bar.set_postfix(loss="{:.4f}".format(loss.item()))
 
                 #bar.close()
                 #print("loss: "+str(loss[0]))
