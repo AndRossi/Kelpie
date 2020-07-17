@@ -239,8 +239,10 @@ class Hake(Model, nn.Module):
 
         # obtain scores, ranks and predictions both for direct and inverse samples
         np.random.seed()  # resets np.random seed
+        print("predicting direct samples tails...")
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         np.random.seed()  # resets np.random seed
+        print("predicting inverse samples tails...")
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
         for i in range(direct_samples.shape[0]):

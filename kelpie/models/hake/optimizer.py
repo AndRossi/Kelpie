@@ -64,12 +64,12 @@ class HakeOptimizer:
                 for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
-                    bar.set_postfix(loss="{:.4f}".format(loss.item()))
+                    bar.set_postfix(loss="{:.6f}".format(loss.item()))
 
             if step >= warm_up_steps:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
-                    print('Change learning_rate to %f at step %d' % (current_learning_rate, step))
+                    print('changed learning_rate to %f after epoch #%d' % (current_learning_rate, step+1))
                 supported_optimizers = {
                     'Adagrad': optim.Adagrad(filter(lambda p: p.requires_grad, self.model.parameters()),
                                              lr=current_learning_rate),
