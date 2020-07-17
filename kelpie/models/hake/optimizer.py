@@ -53,7 +53,7 @@ class HakeOptimizer:
         # Training Loop
         for step in range(init_step, self.max_steps):
 
-            loss = None
+            loss = torch.Tensor([0])
             if((self.model.num_entities * 2)%self.model.batch_size == 0):
                 actual_steps = (self.model.num_entities * 2) // self.model.batch_size
             else:
