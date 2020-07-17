@@ -296,12 +296,8 @@ class Hake(Model, nn.Module):
 
                 for scores_row in scores:
                     all_scores[i] = scores_row
-
+                    # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
                     i += 1
-
-                #bar.update(i)
-
-        # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
         targets = torch.zeros(size=(len(samples), 1), dtype=torch.float64).cuda()
@@ -371,7 +367,7 @@ class Hake(Model, nn.Module):
         return scores, ranks, predictions
 
     # the original test_step implementation
-    def test_step(self, samples: np.array, test_log_steps: int):
+    def test_step(self, samples: np.array):
         '''
         Evaluate the model on test or valid datasets
         '''
@@ -409,50 +405,49 @@ class Hake(Model, nn.Module):
         logs = []
 
         step = 0
-        total_steps = sum([len(dataset) for dataset in test_dataset_list])
 
         with torch.no_grad():
+            current_dataset_num = 1
+            datasets_num = len(test_dataset_list)
             for test_dataset in test_dataset_list:
-                for positive_sample, negative_sample, filter_bias, batch_type in test_dataset:
-                    positive_sample = positive_sample.cuda()
-                    negative_sample = negative_sample.cuda()
-                    filter_bias = filter_bias.cuda()
+                with torch.no_grad(), tqdm(test_dataset) as bar:
+                    bar.set_description('calculating scores ({}/{})'.format(current_dataset_num, datasets_num))
+                    for positive_sample, negative_sample, filter_bias, batch_type in bar:
+                        positive_sample = positive_sample.cuda()
+                        negative_sample = negative_sample.cuda()
+                        filter_bias = filter_bias.cuda()
 
-                    batch_size = positive_sample.size(0)
+                        batch_size = positive_sample.size(0)
 
-                    score = self((positive_sample, negative_sample), batch_type=batch_type)
-                    score += filter_bias
+                        score = self((positive_sample, negative_sample), batch_type=batch_type)
+                        score += filter_bias
 
-                    # Explicitly sort all the entities to ensure that there is no test exposure bias
-                    argsort = torch.argsort(score, dim=1, descending=True)
+                        # Explicitly sort all the entities to ensure that there is no test exposure bias
+                        argsort = torch.argsort(score, dim=1, descending=True)
 
-                    if batch_type == BatchType.HEAD_BATCH:
-                        positive_arg = positive_sample[:, 0]
-                    elif batch_type == BatchType.TAIL_BATCH:
-                        positive_arg = positive_sample[:, 2]
-                    else:
-                        raise ValueError('mode %s not supported' % batch_type)
+                        if batch_type == BatchType.HEAD_BATCH:
+                            positive_arg = positive_sample[:, 0]
+                        elif batch_type == BatchType.TAIL_BATCH:
+                            positive_arg = positive_sample[:, 2]
+                        else:
+                            raise ValueError('mode %s not supported' % batch_type)
 
-                    for i in range(batch_size):
-                        # Notice that argsort is not ranking
-                        ranking = (argsort[i, :] == positive_arg[i]).nonzero()
-                        assert ranking.size(0) == 1
+                        for i in range(batch_size):
+                            # Notice that argsort is not ranking
+                            ranking = (argsort[i, :] == positive_arg[i]).nonzero()
+                            assert ranking.size(0) == 1
 
-                        # ranking + 1 is the true ranking used in evaluation metrics
-                        ranking = 1 + ranking.item()
-                        logs.append({
-                            'MRR': 1.0 / ranking,
-                            'MR': float(ranking),
-                            'HITS@1': 1.0 if ranking <= 1 else 0.0,
-                            'HITS@3': 1.0 if ranking <= 3 else 0.0,
-                            'HITS@10': 1.0 if ranking <= 10 else 0.0,
-                        })
-
-                    if step % test_log_steps == 0:
-                        print('Evaluating the model... ({}/{})'.format(step, total_steps))
-
-                    step += 1
-
+                            # ranking + 1 is the true ranking used in evaluation metrics
+                            ranking = 1 + ranking.item()
+                            logs.append({
+                                'MRR': 1.0 / ranking,
+                                'MR': float(ranking),
+                                'HITS@1': 1.0 if ranking <= 1 else 0.0,
+                                'HITS@3': 1.0 if ranking <= 3 else 0.0,
+                                'HITS@10': 1.0 if ranking <= 10 else 0.0,
+                            })
+                        step += 1
+                current_dataset_num += 1
         metrics = {}
         for metric in logs[0].keys():
             metrics[metric] = sum([log[metric] for log in logs]) / len(logs)

@@ -92,4 +92,4 @@ model.load_state_dict(torch.load(model_path))
 model.eval()
 
 print("\nEvaluating model...")
-model.test_step(dataset.test_samples, 100)
+model.test_step(dataset.test_samples)
