@@ -1,6 +1,6 @@
 from typing import Tuple, Any
 
-from tqdm import trange
+from tqdm.auto import tqdm
 import numpy as np
 import torch
 from torch import nn
@@ -280,7 +280,7 @@ class Hake(Model, nn.Module):
         i = 0
         all_scores = torch.from_numpy(np.empty(shape=(len(samples),self.dataset.num_entities))).cuda()
 
-        with torch.no_grad(), trange(test_dataset) as bar:
+        with torch.no_grad(), tqdm(test_dataset) as bar:
 
             bar.set_description('calculating scores')
 
