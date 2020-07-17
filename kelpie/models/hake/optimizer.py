@@ -53,7 +53,7 @@ class HakeOptimizer:
         # Training Loop
         for step in range(init_step, self.max_steps):
 
-            loss = torch.Tensor([0])
+            loss = None
             if((self.model.num_entities * 2)%self.model.batch_size == 0):
                 actual_steps = (self.model.num_entities * 2) // self.model.batch_size
             else:
@@ -61,13 +61,12 @@ class HakeOptimizer:
 
             #with tqdm.tqdm(total=actual_steps) as bar:
                 #bar.set_description('train loss: epoch #'+str(step))
-                for i in tqdm(range(actual_steps), desc='epoch #'+str(step), postfix=loss.item()):
-
+            with tqdm(range(actual_steps), desc='epoch #'+str(step), bar_format='{l_bar}{bar}|{elapsed}, {postfix}') as bar:
+                for i in bar:
                     loss = self.train_step(train_iterator)
                     np.random.seed()    #resets np.random seed
-
                     #bar.update(i)
-                #bar.set_postfix(loss=str(loss.item()))
+                bar.set_postfix(loss=str(loss.item()))
                 #bar.close()
                 #print("loss: "+str(loss[0]))
 
