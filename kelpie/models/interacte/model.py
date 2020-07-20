@@ -36,6 +36,8 @@ class InteractE(Model, torch.nn.Module):
 		self.num_entities = dataset.num_entities		# number of entities in dataset
 		self.num_relations = dataset.num_relations		# number of relations in dataset
 		self.dimension = dimension						# embedding dimension
+		self.num_perm = num_perm						# number of permutation
+		self.kernel_size = kernel_size
 
 		# Subject and relationship embeddings, xavier_normal_ distributes 
 		# the embeddings weight values by the said distribution
@@ -80,7 +82,7 @@ class InteractE(Model, torch.nn.Module):
 		self.register_parameter('bias', Parameter(torch.zeros(self.num_entities)))
 
 		# Kernel filter definition
-		self.register_parameter('conv_filt', Parameter(torch.zeros(num_filt_conv, 1, kernel_size, kernel_size_sz)))
+		self.register_parameter('conv_filt', Parameter(torch.zeros(num_filt_conv, 1, kernel_size, kernel_size)))
 		xavier_normal_(self.conv_filt)
 
 
@@ -90,7 +92,7 @@ class InteractE(Model, torch.nn.Module):
 		loss = self.bceloss(pred, true_label)
 		return loss
 
-
+	# To define
 	def score(self):
 		# Formula
         score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
@@ -113,12 +115,15 @@ class InteractE(Model, torch.nn.Module):
 		sub_emb	= self.ent_embed(sub)	# Embeds the subject tensor
 		rel_emb	= self.rel_embed(rel)	# Embeds the relationship tensor
 		comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
-		chequer_perm = comb_emb[:, chequer_perm]
-		stack_inp = chequer_perm.reshape((-1, num_perm, 2*k_w, k_h))
+		# self to access local variable.
+		matrix_chequer_perm = comb_emb[:, self.chequer_perm]
+		# matrix reshaped 
+		stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*k_w, k_h))
 		stack_inp = self.bn0(stack_inp)  # Normalizes
 		x = self.inp_drop(stack_inp)	# Regularizes with dropout
-		x = self.circular_padding_chw(x, kernel_size//2)	# Defines the kernel for the circular conv
-		x = F.conv2d(x, self.conv_filt.repeat(num_perm, 1, 1, 1), padding=self.padding, groups=num_perm) # Circular conv
+		# Circular convolution
+		x = self.circular_padding_chw(x, self.kernel_size//2)	# Defines the kernel for the circular conv
+		x = F.conv2d(x, self.conv_filt.repeat(self.num_perm, 1, 1, 1), padding=self.padding, groups=self.num_perm) # Circular conv
 		x = self.bn1(x)	# Normalizes
 		x = F.relu(x)
 		x = self.feature_map_drop(x)	# Regularizes with dropout
