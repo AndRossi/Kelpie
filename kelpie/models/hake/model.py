@@ -306,14 +306,14 @@ class Hake(Model, nn.Module):
 
         # set to -1e6 the scores obtained using tail entities that must be filtered out (filtered scenario)
         # In this way, those entities will be ignored in rankings
-        '''for i, (head_id, rel_id, tail_id) in enumerate(samples):
+        for i, (head_id, rel_id, tail_id) in enumerate(samples):
             # get the list of tails to filter out; include the actual target tail entity too
             filter_out = self.dataset.to_filter[(head_id, rel_id)]
 
             if tail_id not in filter_out:
                 filter_out.append(tail_id)
 
-            all_scores[i, torch.LongTensor(filter_out)] = -1e6'''
+            all_scores[i, torch.LongTensor(filter_out)] = -1e6
 
         # fill the ranks data structure and convert it to a Python list
         ranks = torch.ones(len(samples))  # initialize with ONES
@@ -328,9 +328,9 @@ class Hake(Model, nn.Module):
 
         predictions = []
         for i, (head_id, rel_id, tail_id) in enumerate(samples):
-            '''filter_out = self.dataset.to_filter[(head_id, rel_id)]
+            filter_out = self.dataset.to_filter[(head_id, rel_id)]
             if tail_id not in filter_out:
-                filter_out.append(tail_id)'''
+                filter_out.append(tail_id)
 
             predicted_tails = np.where(all_scores[i] > -1e6)[0]
 
@@ -372,7 +372,7 @@ class Hake(Model, nn.Module):
         Evaluate the model on test or valid datasets
         '''
 
-        self.eval()
+        #self.eval()    <- I already call this in original_test
 
         test_dataloader_head = DataLoader(
             TestDataset(
