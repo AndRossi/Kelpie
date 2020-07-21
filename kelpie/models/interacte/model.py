@@ -191,25 +191,24 @@ class InteractE(Model, torch.nn.Module):
 
 		return pred.numpy()
 
+
 class KelpieInteractE(InteractE):
-    # Constructor
-    def __init__(
-            self,
-            dataset: KelpieDataset,
-            model: InteractE,
-            params,
-			):
+	# Constructor
+	def __init__(
+		self,
+		dataset: KelpieDataset,
+		model: InteractE,
+		params):
 
 		#Parameters
 		#----------
 		#params:        	Hyperparameters of the model
 		#chequer_perm:   	Reshaping to be used by the model
-	
 
-        InteractE.__init__(self,
-                         dataset=dataset,
-                         dimension=model.dimension,
-                         init_random=False,
-                         init_size=init_size)
-        
+		InteractE.__init__(self,
+			dataset=dataset,
+			dimension=model.dimension,
+			init_random=False,
+			init_size=init_size)
+		
 		self.model = model

@@ -4,12 +4,11 @@ from torch.utils.data import DataLoader
 from data_loader import *
 from model import *
 from torch import optim
-
-from permutator.py import Permutator
-
 import tqdm
 
 from kelpie.models.interacte.model import InteractE
+from kelpie.models.interacte.permutator import Permutator
+
 
 class InteractEOptimizer:
 
@@ -58,14 +57,15 @@ class InteractEOptimizer:
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
 
+
     def train(
         self,
         train_samples: np.array, # fact triples
         max_epochs: int,
         save_path: str = None,
         evaluate_every: int = -1,
-        valid_samples: np.array = none,
-        strategy: 'one-to-n'):
+        valid_samples: np.array = None,
+        strategy: str = 'one-to-n'):
 
         batch_size = min(self.batch_size, len(train_samples))
         
@@ -100,7 +100,7 @@ class InteractEOptimizer:
         loss = torch.nn.BCELoss()
 
         # Training over batches
-        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=note self.verbose) as bar:
+        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=self.verbose) as bar:
             bar.set_description(f'train loss')
 
             batch_start = 0
@@ -129,18 +129,18 @@ class InteractEOptimizer:
         # return loss
         return l
 
+
 class KelpieInteractEOptimizer(InteractEOptimizer):
 
     def __init__(
-        self
+        self,
         model: InteractE,
         optimizer_name: str ="Adam",
         batch_size: int = 256,
         learning_rate: float = 1e-2,
         l2: float = 0.0, # Decay for Adam optimizer
-        regularizer_name: str = "dropout" #?
-        verbose: bool = True
-    )
+        regularizer_name: str = "dropout", #?
+        verbose: bool = True):
         
         super(KelpieComplExOptimizer, self).__init__(
             model = model,
@@ -150,9 +150,9 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
             l2 = l2,
             regularizer_name = regularizer_name,
             regularizer_weight = regularizer_weight,
-            verbose=verbose
-        )
-        
+            verbose=verbose)
+    
+    
     def epoch(self,
             batch_size: int,
             training_samples: np.array):
