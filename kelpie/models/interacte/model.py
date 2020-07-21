@@ -26,9 +26,11 @@ class InteractE(Model, torch.nn.Module):
 		num_perm: int = 1,
 		kernel_size: int = 9,
 		num_filt_conv: int = 96,
-		init_random = True,
-		init_size: float = 1e-3):
+		init_random = True,		#? forse non sarà usato
+		init_size: float = 1e-3,#? forse non sarà usato
+		strategy: str='one_to_x'):
 
+        # initialize this object both as a Model and as a nn.Module
 		Model.__init(self, dataset)
 		nn.Module.__init__(self)
 
@@ -38,6 +40,8 @@ class InteractE(Model, torch.nn.Module):
 		self.dimension = dimension						# embedding dimension
 		self.num_perm = num_perm						# number of permutation
 		self.kernel_size = kernel_size
+
+		self.strategy=strategy
 
 		# Subject and relationship embeddings, xavier_normal_ distributes 
 		# the embeddings weight values by the said distribution
@@ -93,10 +97,46 @@ class InteractE(Model, torch.nn.Module):
 		return loss
 
 	# To define
-	def score(self):
-		# Formula
-        score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
+	#def score(self, samples: numpy.array) -> numpy.array:
+	def score(self, samples: numpy.array, neg_ents) -> numpy.array:
+		
+		sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
+		rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
+		
+        #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
+		sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
+		rel_emb	= self.ent_embed(rel_samples)	# Embeds the relationship tensor
+		
+		comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
+		# self to access local variable.
+		matrix_chequer_perm = comb_emb[:, self.chequer_perm]
+		# matrix reshaped
+		stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*k_w, k_h))
+		stack_inp = self.bn0(stack_inp)  # Normalizes
+		x = self.inp_drop(stack_inp)	# Regularizes with dropout
+		# Circular convolution
+		x = self.circular_padding_chw(x, self.kernel_size//2)	# Defines the kernel for the circular conv
+		x = F.conv2d(x, self.conv_filt.repeat(self.num_perm, 1, 1, 1), padding=self.padding, groups=self.num_perm) # Circular conv
+		x = self.bn1(x)	# Normalizes
+		x = F.relu(x)
+		x = self.feature_map_drop(x)	# Regularizes with dropout
+		x = x.view(-1, self.flat_sz)
+		x = self.fc(x)
+		x = self.hidden_drop(x)	# Regularizes with dropout
+		x = self.bn2(x)	# Normalizes
+		x = F.relu(x)
+		
+		
+		if self.strategy == 'one_to_n':
+			x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
+			x += self.bias.expand_as(x)
+		else:
+			x = torch.mul(x.unsqueeze(1), self.ent_embed(neg_ents)).sum(dim=-1)
+			x += self.bias[neg_ents]
 
+		pred = torch.sigmoid(x)
+
+		return pred		
 
 	# Circular padding definition
 	def circular_padding_chw(self, batch, padding):
@@ -117,7 +157,7 @@ class InteractE(Model, torch.nn.Module):
 		comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
 		# self to access local variable.
 		matrix_chequer_perm = comb_emb[:, self.chequer_perm]
-		# matrix reshaped 
+		# matrix reshaped
 		stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*k_w, k_h))
 		stack_inp = self.bn0(stack_inp)  # Normalizes
 		x = self.inp_drop(stack_inp)	# Regularizes with dropout
