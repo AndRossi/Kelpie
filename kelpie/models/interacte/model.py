@@ -28,7 +28,7 @@ class InteractE(Model, torch.nn.Module):
 		num_filt_conv: int = 96,
 		init_random = True,		#? forse non sarà usato
 		init_size: float = 1e-3,#? forse non sarà usato
-		strategy: str='one_to_x'):
+		strategy: str='one_to_n'):
 
         # initialize this object both as a Model and as a nn.Module
 		Model.__init(self, dataset)
@@ -42,7 +42,10 @@ class InteractE(Model, torch.nn.Module):
 		self.kernel_size = kernel_size
 
 		self.strategy=strategy
-
+		
+		# Inverted Entities
+		self.neg_ents
+		
 		# Subject and relationship embeddings, xavier_normal_ distributes 
 		# the embeddings weight values by the said distribution
 		self.ent_embed = torch.nn.Embedding(self.num_entities, embed_dim, padding_idx=None) 
@@ -96,10 +99,9 @@ class InteractE(Model, torch.nn.Module):
 		loss = self.bceloss(pred, true_label)
 		return loss
 
-	# To define
-	#def score(self, samples: numpy.array) -> numpy.array:
-	def score(self, samples: numpy.array, neg_ents) -> numpy.array:
-		
+
+	def score(self, samples: numpy.array) -> numpy.array:
+	
 		sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
 		rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
 		
@@ -126,13 +128,12 @@ class InteractE(Model, torch.nn.Module):
 		x = self.bn2(x)	# Normalizes
 		x = F.relu(x)
 		
-		
 		if self.strategy == 'one_to_n':
 			x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
 			x += self.bias.expand_as(x)
 		else:
-			x = torch.mul(x.unsqueeze(1), self.ent_embed(neg_ents)).sum(dim=-1)
-			x += self.bias[neg_ents]
+			x = torch.mul(x.unsqueeze(1), self.ent_embed(self.neg_ents)).sum(dim=-1)
+			x += self.bias[self.neg_ents]
 
 		pred = torch.sigmoid(x)
 
