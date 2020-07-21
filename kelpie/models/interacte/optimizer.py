@@ -5,6 +5,8 @@ from data_loader import *
 from model import *
 from torch import optim
 
+from permutator.py import Permutator
+
 import tqdm
 
 from kelpie.models.interacte.model import InteractE
@@ -12,48 +14,49 @@ from kelpie.models.interacte.model import InteractE
 class InteractEOptimizer:
 
     def __init__(self,
-                 model: InteractE,
-                 optimizer_name: str ="Adam",
-                 batch_size: int = 256,
-                 learning_rate: float = 1e-2,
-                 l2: float = 0.0, # Decay for Adam optimizer
-                 regularizer_name: str = "dropout", #?
-                 permutator_name: str = "chequered",
-                 verbose: bool = True):
-    self.model = model
-    self.batch_size = batch_size
-    self.verbose = verbose
+        model: InteractE,
+        optimizer_name: str ="Adam",
+        batch_size: int = 256,
+        learning_rate: float = 1e-2,
+        l2: float = 0.0, # Decay for Adam optimizer
+        regularizer_name: str = "dropout", #?
+        permutator_name: str = "chequered",
+        verbose: bool = True):
 
-    # Optimizer selection
-    # build all the supported optimizers using the passed params (learning rate and decays if Adam)
-    supported_optimizers = {
-        'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, weight_decay=l2),
-        'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate, weight_decay=l2)
-    }
-    # choose which Torch Optimizer object to use, based on the passed name
-    self.optimizer = supported_optmizer[optimizer_name]
+        self.model = model
+        self.batch_size = batch_size
+        self.verbose = verbose
 
-    # WIP
-    # build all the supported permutators
-    supported_permutators = {
-        "chequered": chequered_perm()
-    }
-    # choose which permutator to use
-    self.permutator = supported_permutators(permutator_name)
+        # Optimizer selection
+        # build all the supported optimizers using the passed params (learning rate and decays if Adam)
+        supported_optimizers = {
+            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, weight_decay=l2),
+            'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate, weight_decay=l2)
+        }
+        # choose which Torch Optimizer object to use, based on the passed name
+        self.optimizer = supported_optimizer[optimizer_name]
 
-""" 
-    # build all the supported regularizers using the passed regularizer_weight
-    supported_regularizers = {
-        'N3': N3(weight=regularizer_weight),
-        'N2': N2(weight=regularizer_weight)
-    }
+        # WIP
+        # build all the supported permutators
+        supported_permutators = {
+            "chequered": Permutator()
+        }
+        # choose which permutator to use
+        self.permutator = supported_permutators(permutator_name)
 
-    # choose the regularizer
-    self.regularizer = supported_regularizers[regularizer_name]
-"""
+        """ 
+            # build all the supported regularizers using the passed regularizer_weight
+            supported_regularizers = {
+                'N3': N3(weight=regularizer_weight),
+                'N2': N2(weight=regularizer_weight)
+            }
 
-    # create the evaluator to use between epochs
-    self.evaluator = Evaluator(self.model)
+            # choose the regularizer
+            self.regularizer = supported_regularizers[regularizer_name]
+        """
+
+        # create the evaluator to use between epochs
+        self.evaluator = Evaluator(self.model)
 
     def train(
         self,
@@ -62,14 +65,14 @@ class InteractEOptimizer:
         save_path: str = None,
         evaluate_every: int = -1,
         valid_samples: np.array = none,
-        strategy: 'one-to-many'):
+        strategy: 'one-to-n'):
 
         batch_size = min(self.batch_size, len(train_samples))
         
         cur_loss = 0
         
         for e in range(max_epochs):
-            cur_loss = self.epoch(batch_size, training_samples)
+            cur_loss = self.epoch(batch_size, train_samples)
 
             if evaluate_every > 0 and valid_samples is not None and (e + 1) % evaluate_every == 0:
                 mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
@@ -91,23 +94,23 @@ class InteractEOptimizer:
     def epoch(self,
         batch_size: int,
         training_samples: np.array):
-    training_samples = torch.from_numpy(training_samples).cuda()
-    # at the beginning of the epoch, shuffle all samples randomly
-    actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
-    loss = torch.nn.BCELoss()
+        training_samples = torch.from_numpy(training_samples).cuda()
+        # at the beginning of the epoch, shuffle all samples randomly
+        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+        loss = torch.nn.BCELoss()
 
-    # Training over batches
-    with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=note self.verbose) as bar:
-        bar.set_description(f'train loss')
+        # Training over batches
+        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=note self.verbose) as bar:
+            bar.set_description(f'train loss')
 
-        batch_start = 0
-        while batch_start < training_samples.shape[0]:
-            batch = actual_samples[batch_start : batch_start + batch_size].cuda()
-            l = self.step_on_batch(loss, batch)
+            batch_start = 0
+            while batch_start < training_samples.shape[0]:
+                batch = actual_samples[batch_start : batch_start + batch_size].cuda()
+                l = self.step_on_batch(loss, batch)
 
-            batch_start += self.batch_size
-            bar.update(batch.shape[0])
-            bar.set_postfix(loss=f'{l.item():.0f}')
+                batch_start += self.batch_size
+                bar.update(batch.shape[0])
+                bar.set_postfix(loss=f'{l.item():.0f}')
 
 
     # Computing the loss over a single batch
@@ -153,24 +156,24 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
     def epoch(self,
             batch_size: int,
             training_samples: np.array):
-    training_samples = torch.from_numpy(training_samples).cuda()
-    # at the beginning of the epoch, shuffle all samples randomly
-    actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
-    loss = torch.nn.BCELoss()
+        training_samples = torch.from_numpy(training_samples).cuda()
+        # at the beginning of the epoch, shuffle all samples randomly
+        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+        loss = torch.nn.BCELoss()
 
-    with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
-        bar.set_description(f'train loss')
+        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
+            bar.set_description(f'train loss')
 
-        batch_start = 0
-        while batch_start < training_samples.shape[0]:
-            batch = actual_samples[batch_start: batch_start + batch_size].cuda()
-            l = self.step_on_batch(loss, batch)
+            batch_start = 0
+            while batch_start < training_samples.shape[0]:
+                batch = actual_samples[batch_start: batch_start + batch_size].cuda()
+                l = self.step_on_batch(loss, batch)
 
-            # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
-            # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
-            # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
-            self.model.update_embeddings()
+                # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
+                # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
+                # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
+                self.model.update_embeddings()
 
-            batch_start += self.batch_size
-            bar.update(batch.shape[0])
-            bar.set_postfix(loss=f'{l.item():.0f}')
+                batch_start += self.batch_size
+                bar.update(batch.shape[0])
+                bar.set_postfix(loss=f'{l.item():.0f}')

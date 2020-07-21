@@ -137,7 +137,7 @@ class InteractE(Model, torch.nn.Module):
 
 		pred = torch.sigmoid(x)
 
-		return pred		
+		return pred.numpy()
 
 	# Circular padding definition
 	def circular_padding_chw(self, batch, padding):
@@ -152,9 +152,15 @@ class InteractE(Model, torch.nn.Module):
 
 
 	# Forwards data throughout the network
-	def forward(self, sub, rel, neg_ents, strategy='one_to_x'):
-		sub_emb	= self.ent_embed(sub)	# Embeds the subject tensor
-		rel_emb	= self.rel_embed(rel)	# Embeds the relationship tensor
+	def forward(self, samples: numpy.array) -> numpy.array:
+	
+		sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
+		rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
+		
+        #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
+		sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
+		rel_emb	= self.ent_embed(rel_samples)	# Embeds the relationship tensor
+		
 		comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
 		# self to access local variable.
 		matrix_chequer_perm = comb_emb[:, self.chequer_perm]
@@ -173,17 +179,17 @@ class InteractE(Model, torch.nn.Module):
 		x = self.hidden_drop(x)	# Regularizes with dropout
 		x = self.bn2(x)	# Normalizes
 		x = F.relu(x)
-
-		if strategy == 'one_to_n':
+		
+		if self.strategy == 'one_to_n':
 			x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
 			x += self.bias.expand_as(x)
 		else:
-			x = torch.mul(x.unsqueeze(1), self.ent_embed(neg_ents)).sum(dim=-1)
-			x += self.bias[neg_ents]
+			x = torch.mul(x.unsqueeze(1), self.ent_embed(self.neg_ents)).sum(dim=-1)
+			x += self.bias[self.neg_ents]
 
 		pred = torch.sigmoid(x)
 
-		return pred
+		return pred.numpy()
 
 class KelpieInteractE(InteractE):
     # Constructor
