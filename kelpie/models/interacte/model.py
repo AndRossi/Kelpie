@@ -1,3 +1,14 @@
+from typing import Tuple, Any
+
+import torch
+from torch import nn
+import numpy as np
+from torch.nn import Parameter
+
+from kelpie.dataset import Dataset
+from kelpie.kelpie_dataset import KelpieDataset
+from kelpie.model import Model
+
 from helper import *
 
 class InteractE(Model, torch.nn.Module):
@@ -17,7 +28,7 @@ class InteractE(Model, torch.nn.Module):
 	def __init__(self, 
 		chequer_perm,
 		dataset: Dataset,
-		# embed_dim: int,
+		embed_dim: int,
 		k_h: int = 20,
 		k_w: int = 10,
 		inp_drop_p: float = 0.5,
@@ -37,7 +48,7 @@ class InteractE(Model, torch.nn.Module):
 		self.dataset = dataset
 		self.num_entities = dataset.num_entities		# number of entities in dataset
 		self.num_relations = dataset.num_relations		# number of relations in dataset
-		self.dimension = dimension						# embedding dimension
+		self.embed_dim = embed_dim							# embedding dimension
 		self.num_perm = num_perm						# number of permutation
 		self.kernel_size = kernel_size
 
