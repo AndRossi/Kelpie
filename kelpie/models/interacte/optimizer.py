@@ -1,13 +1,12 @@
 from helper import *
 from ordered_set import OrderedSet
-from torch.utils.data import DataLoader
 from data_loader import *
 from model import *
 from torch import optim
+from torch.utils.data import DataLoader
 import tqdm
 
 from kelpie.models.interacte.model import InteractE
-from kelpie.models.interacte.permutator import Permutator
 
 
 class InteractEOptimizer:
@@ -15,11 +14,9 @@ class InteractEOptimizer:
     def __init__(self,
         model: InteractE,
         optimizer_name: str ="Adam",
-        batch_size: int = 256,
-        learning_rate: float = 1e-2,
+        batch_size: int = 128,
+        learning_rate: float = 1e-4,
         l2: float = 0.0, # Decay for Adam optimizer
-        regularizer_name: str = "dropout", #?
-        permutator_name: str = "chequered",
         verbose: bool = True):
 
         self.model = model
@@ -34,25 +31,6 @@ class InteractEOptimizer:
         }
         # choose which Torch Optimizer object to use, based on the passed name
         self.optimizer = supported_optimizer[optimizer_name]
-
-        # WIP
-        # build all the supported permutators
-        supported_permutators = {
-            "chequered": Permutator()
-        }
-        # choose which permutator to use
-        self.permutator = supported_permutators(permutator_name)
-
-        """ 
-            # build all the supported regularizers using the passed regularizer_weight
-            supported_regularizers = {
-                'N3': N3(weight=regularizer_weight),
-                'N2': N2(weight=regularizer_weight)
-            }
-
-            # choose the regularizer
-            self.regularizer = supported_regularizers[regularizer_name]
-        """
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)

@@ -8,10 +8,12 @@ from torch.nn import Parameter
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
+from kelpie.models.interacte.permutator import Permutator
 
 from helper import *
 
-class InteractE(Model, torch.nn.Module):
+
+class InteractE(Model, nn.Module):
 	"""
 	Proposed method in the paper. Refer Section 6 of the paper for mode details 
 
@@ -25,8 +27,7 @@ class InteractE(Model, torch.nn.Module):
 	The InteractE model instance
 		
 	"""
-	def __init__(self, 
-		chequer_perm,
+	def __init__(self,
 		dataset: Dataset,
 		embed_dim: int,
 		k_h: int = 20,
@@ -37,8 +38,8 @@ class InteractE(Model, torch.nn.Module):
 		num_perm: int = 1,
 		kernel_size: int = 9,
 		num_filt_conv: int = 96,
-		init_random = True,		#? forse non sarà usato
-		init_size: float = 1e-3,#? forse non sarà usato
+		# init_random = True,		#? forse non sarà usato
+		# init_size: float = 1e-3,#? forse non sarà usato
 		strategy: str='one_to_n'):
 
         # initialize this object both as a Model and as a nn.Module
@@ -59,10 +60,10 @@ class InteractE(Model, torch.nn.Module):
 		
 		# Subject and relationship embeddings, xavier_normal_ distributes 
 		# the embeddings weight values by the said distribution
-		self.ent_embed = torch.nn.Embedding(self.num_entities, embed_dim, padding_idx=None) 
+		self.ent_embed = torch.nn.Embedding(self.num_entities, self.embed_dim, padding_idx=None) 
 		xavier_normal_(self.ent_embed.weight)
 		# num_relation is x2 since we need to embed direct and inverse relationships
-		self.rel_embed = torch.nn.Embedding(self.num_relations*2, embed_dim, padding_idx=None)
+		self.rel_embed = torch.nn.Embedding(self.num_relations*2, self.embed_dim, padding_idx=None)
 		xavier_normal_(self.rel_embed.weight)
 		
 		# Binary Cross Entropy Loss
@@ -75,26 +76,26 @@ class InteractE(Model, torch.nn.Module):
 		self.feature_map_drop = torch.nn.Dropout2d(feat_drop_p)
 		
 		# Embedding matrix normalization
-		self.bn0 = torch.nn.BatchNorm2d(num_perm)
+		self.bn0 = torch.nn.BatchNorm2d(self.num_perm)
 
 		flat_sz_h = k_h
 		flat_sz_w = 2*k_w
 		self.padding = 0
 
 		# Conv layer normalization 
-		self.bn1 = torch.nn.BatchNorm2d(num_filt_conv * num_perm)
+		self.bn1 = torch.nn.BatchNorm2d(num_filt_conv * self.num_perm)
 		
 		# Flattened embedding matrix size
-		self.flat_sz = flat_sz_h * flat_sz_w * num_filt_conv * num_perm
+		self.flat_sz = flat_sz_h * flat_sz_w * num_filt_conv * self.num_perm
 
 		# Normalization 
-		self.bn2 = torch.nn.BatchNorm1d(embed_dim)
+		self.bn2 = torch.nn.BatchNorm1d(self.embed_dim)
 
 		# Matrix flattening
-		self.fc = torch.nn.Linear(self.flat_sz, embed_dim)
+		self.fc = torch.nn.Linear(self.flat_sz, self.embed_dim)
 		
 		# Chequered permutation
-		self.chequer_perm = chequer_perm
+		self.chequer_perm = Permutator(num_perm=self.num_perm, mtx_h=k_h, mtx_w=k_w).chequer_perm()
 
 		# Bias definition
 		self.register_parameter('bias', Parameter(torch.zeros(self.num_entities)))
