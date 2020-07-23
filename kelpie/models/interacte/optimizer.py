@@ -30,7 +30,7 @@ class InteractEOptimizer:
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate, weight_decay=l2)
         }
         # choose which Torch Optimizer object to use, based on the passed name
-        self.optimizer = supported_optimizer[optimizer_name]
+        self.optimizer = supported_optimizers[optimizer_name]
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
@@ -97,7 +97,7 @@ class InteractEOptimizer:
         truth = batch[:, 2]
 
         # compute loss
-        l = loss(predictions, truth)
+        l = loss(prediction, truth)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
