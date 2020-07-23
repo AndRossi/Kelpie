@@ -18,12 +18,10 @@ parser.add_argument('--dataset',
                     help="Dataset in {}".format(datasets),
                     required=True)
 
-
 # Model
 parser.add_argument('--model_path',
                     help="Path to the model to explain the predictions of",
                     required=True)
-
 
 # Gradient Descent
 optimizers = ['Adam', 'SGD']
@@ -33,22 +31,12 @@ parser.add_argument('--optimizer',
                     help="Optimizer in {} to use in post-training".format(optimizers))
 
 parser.add_argument('--batch_size',
-                    default=100,
+                    default=128,
                     type=int,
                     help="Batch size to use in post-training")
 
-parser.add_argument('--max_epochs',
-                    default=200,
-                    type=int,
-                    help="Number of epochs to run in post-training")
-
-parser.add_argument('--emb_dim',
-                    default=1000,
-                    type=int,
-                    help="Factorization rank.")
-
 parser.add_argument('--learning_rate',
-                    default=1e-1,
+                    default=1e-4,
                     type=float,
                     help="Learning rate")
 
@@ -59,30 +47,10 @@ parser.add_argument('--decay1',
                     help="Decay rate for the first moment estimate in Adam"
 )
 parser.add_argument('--decay2',
-                    default=0.999,
+                    default=0.99,
                     type=float,
                     help="Decay rate for second moment estimate in Adam"
 )
-
-
-# Samples
-parser.add_argument('--head',
-                    help="Textual name of the head entity of the test fact to explain",
-                    required=True)
-
-parser.add_argument('--relation',
-                    help="Textual name of the relation of the test fact to explain",
-                    required=True)
-
-parser.add_argument('--tail',
-                    help="Textual name of the tail entity of the test fact to explain",
-                    required=True)
-
-parser.add_argument('--perspective',
-                    choices=['head', 'tail'],
-                    default='head',
-                    help="Explanation perspective in {}".format(['head', 'tail']))
-
 
 # Regularization
 parser.add_argument('--inp_drop_p',
@@ -103,12 +71,68 @@ parser.add_argument('--feat_drop_p',
                     help="Dropout regularization probability for the feature matrix"
 )
 
-
-parser.add_argument('--init',
-                    default=1e-3,
-                    type=float,
-                    help="Initial scale"
+parser.add_argument('--num_perm',
+                    default=1,
+                    type=int,
+                    help="Number of permutation"
 )
+
+parser.add_argument('--embed_dim',
+                    default=1000,
+                    type=int,
+                    help="Factorization rank.")
+
+parser.add_argument('--kernel_size',
+                    default=9,
+                    type=int,
+                    help="Size of the kernel function window"
+)
+
+parser.add_argument('--num_filt_conv',
+                    default=96,
+                    type=int,
+                    help="Number of convolution filters"
+)
+
+parser.add_argument('--strategy',
+                    default='one_to_n',
+                    help="Choose the strategy: one_to_n"
+)
+
+parser.add_argument('--l2',
+                    default='',
+                    type = float,
+					default = 0.0,
+					help="Penalty for weight-decay"
+)
+
+parser.add_argument('--verbose',
+                    default=True,
+                    type=bool,
+                    help="Verbose"
+)
+
+parser.add_argument('--max_epochs',
+                    default=200,
+                    type=int,
+                    help="Number of epochs to run in post-training")
+# Samples
+parser.add_argument('--head',
+                    help="Textual name of the head entity of the test fact to explain",
+                    required=True)
+
+parser.add_argument('--relation',
+                    help="Textual name of the relation of the test fact to explain",
+                    required=True)
+
+parser.add_argument('--tail',
+                    help="Textual name of the tail entity of the test fact to explain",
+                    required=True)
+
+parser.add_argument('--perspective',
+                    choices=['head', 'tail'],
+                    default='head',
+                    help="Explanation perspective in {}".format(['head', 'tail']))
 
 
 #   E.G.    explain  why  /m/02mjmr (Barack Obama)  is predicted as the head for
@@ -145,13 +169,26 @@ assert(original_sample in original_dataset.test_samples)
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
 print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
-original_model = InteractE(dataset=original_dataset, embed_dim=args.embed_dim)
+original_model = InteractE(dataset=original_dataset, 
+	embed_dim=args.embed_dim, 		
+	k_h: int = 20,
+	k_w: int = 10,
+	inp_drop_p: float = 0.5,
+	hid_drop_p: float = 0.5,
+	feat_drop_p: float = 0.5,
+	num_perm: int = 1,
+	kernel_size: int = 9,
+	num_filt_conv: int = 96,
+	strategy: str='one_to_n')
+
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
 
 print("Wrapping the original model in a Kelpie explainable model...")
 # use model_to_explain to initialize the Kelpie model
 kelpie_dataset = KelpieDataset(dataset=original_dataset, entity_id=original_entity_id)
+
+# TO DO, KelpieInteractE non è ancora ultimato.
 kelpie_model = KelpieInteractE(model=original_model, dataset=kelpie_dataset)
 kelpie_model.to('cuda')
 
@@ -175,8 +212,8 @@ optimizer = KelpieInteractEOptimizer(model=kelpie_model,
                                    learning_rate=args.learning_rate,
                                    decay1=args.decay1,
                                    decay2=args.decay2,
-                                   regularizer_name="N3",
-                                   regularizer_weight=args.reg)
+                                   l2: float = 0.0,
+								   verbose: bool = True)
 
 optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
                 max_epochs=args.max_epochs)
