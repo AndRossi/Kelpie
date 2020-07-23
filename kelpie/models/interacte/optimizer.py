@@ -1,7 +1,10 @@
-from helper import *
+# from helper import *
 from ordered_set import OrderedSet
-from data_loader import *
-from model import *
+# from data_loader import *
+# from model import *
+import numpy as np
+from kelpie.evaluation import Evaluator
+import torch
 from torch import optim
 from torch.utils.data import DataLoader
 import tqdm
@@ -16,6 +19,8 @@ class InteractEOptimizer:
         optimizer_name: str ="Adam",
         batch_size: int = 128,
         learning_rate: float = 1e-4,
+        decay1: float = 0.9,
+        decay2: float = 0.99,
         l2: float = 0.0, # Decay for Adam optimizer
         verbose: bool = True):
 
@@ -26,7 +31,7 @@ class InteractEOptimizer:
         # Optimizer selection
         # build all the supported optimizers using the passed params (learning rate and decays if Adam)
         supported_optimizers = {
-            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, weight_decay=l2),
+            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, betas=(decay1, decay2), weight_decay=l2),
             'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate, weight_decay=l2)
         }
         # choose which Torch Optimizer object to use, based on the passed name
@@ -110,26 +115,26 @@ class InteractEOptimizer:
 
 class KelpieInteractEOptimizer(InteractEOptimizer):
 
-    def __init__(
-        self,
+    def __init__(self,
         model: InteractE,
         optimizer_name: str ="Adam",
-        batch_size: int = 256,
-        learning_rate: float = 1e-2,
+        batch_size: int = 128,
+        learning_rate: float = 1e-4,
+        decay1: float = 0.9,
+        decay2: float = 0.99,
         l2: float = 0.0, # Decay for Adam optimizer
-        regularizer_name: str = "dropout", #?
         verbose: bool = True):
         
-        super(KelpieComplExOptimizer, self).__init__(
+        super(KelpieInteractEOptimizer, self).__init__(
             model = model,
             optimizer_name = optimizer_name,
             batch_size = batch_size,
             learning_rate = learning_rate,
+            decay1 = decay1,
+            decay2 = decay2,
             l2 = l2,
-            regularizer_name = regularizer_name,
-            regularizer_weight = regularizer_weight,
-            verbose=verbose)
-    
+            verbose = verbose)
+
     
     def epoch(self,
             batch_size: int,
