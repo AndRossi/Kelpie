@@ -112,6 +112,12 @@ class InteractE(Model, torch.nn.Module):
 
 
 	def score(self, samples: numpy.array) -> numpy.array:
+		"""
+			This method computes and returns the plausibility scores for a collection of samples.
+
+			:param samples: a numpy array containing all the samples to score
+			:return: the computed scores, as a numpy array
+		"""
 	
 		sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
 		rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
@@ -149,6 +155,7 @@ class InteractE(Model, torch.nn.Module):
 		pred = torch.sigmoid(x)
 
 		return pred.numpy()
+
 
 	# Circular padding definition
 	def circular_padding_chw(self, batch, padding):
@@ -164,6 +171,18 @@ class InteractE(Model, torch.nn.Module):
 
 	# Forwards data throughout the network
 	def forward(self, samples: numpy.array) -> numpy.array:
+		"""
+			This method performs forward propagation for a collection of samples.
+			This method is only used in training, when an Optimizer calls it passing the current batch of samples.
+
+			This method returns all the items needed by the Optimizer to perform gradient descent in this training step.
+			Such items heavily depend on the specific Model implementation;
+			they usually include the scores for the samples (in a form usable by the ML framework, e.g. torch.Tensors)
+			but may also include other stuff (e.g. the involved embeddings themselves, that the Optimizer
+			may use to compute regularization factors)
+
+			:param samples: a numpy array containing all the samples to perform forward propagation on
+		"""
 	
 		sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
 		rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
@@ -201,6 +220,59 @@ class InteractE(Model, torch.nn.Module):
 		pred = torch.sigmoid(x)
 
 		return pred.numpy()
+
+
+	def predict_samples(self, samples: numpy.array) -> Tuple[Any, Any, Any]:
+		"""
+			This method performs prediction on a collection of samples, and returns the corresponding
+			scores, ranks and prediction lists.
+
+			All the passed samples must be DIRECT samples in the original dataset.
+			(if the Model supports inverse samples as well,
+			it should invert the passed samples while running this method)
+
+			:param samples: the direct samples to predict, in numpy array format
+			:return: this method returns three lists:
+						- the list of scores for the passed samples,
+									OR IF THE MODEL SUPPORTS INVERSE FACTS
+							the list of couples <direct sample score, inverse sample score>,
+							where the i-th score refers to the i-th sample in the input samples.
+
+						- the list of couples (head rank, tail rank)
+							where the i-th couple refers to the i-th sample in the input samples.
+
+						- the list of couples (head_predictions, tail_predictions)
+							where the i-th couple refers to the i-th sample in the input samples.
+							The head_predictions and tail_predictions for each sample
+							are numpy arrays containing all the predicted heads and tails respectively for that sample.
+		"""
+		pass
+
+
+	def predict_sample(self, sample: numpy.array) -> Tuple[Any, Any, Any]:
+		"""
+			This method performs prediction on one (direct) sample, and returns the corresponding
+			score, ranks and prediction lists.
+
+			:param sample: the sample to predict, as a numpy array.
+			:return: this method returns 3 items:
+					- the sample score
+								OR IF THE MODEL SUPPORTS INVERSE FACTS
+						the scores of the sample and of its inverse
+
+					- a couple containing the head rank and the tail rank
+
+					- a couple containing the head_predictions and tail_predictions numpy arrays;
+						> head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
+						[NB: the target head will be in this numpy array in position head_rank-1]
+						> tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
+						[NB: the target tail will be in this numpy array in position tail_rank-1]
+		"""
+
+		assert sample[1] < self.dataset.num_direct_relations
+
+		scores, ranks, predictions = self.predict_samples(numpy.array([sample]))
+		return scores[0], ranks[0], predictions[0]
 
 
 class KelpieInteractE(InteractE):
