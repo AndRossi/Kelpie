@@ -16,7 +16,7 @@ class Permutator(nn.Module):
 		self.num_perm = num_perm
 		self.reshpd_mtx_h = reshpd_mtx_h
 		self.reshpd_mtx_w = reshpd_mtx_w
-		self.embed_dim = (reshpd_mtx_h * reshpd_mtx_w) / 2	# follows the paper formula
+		self.embed_dim = (reshpd_mtx_h * reshpd_mtx_w)	# follows the paper formula
 
 		if device != '-1' and torch.cuda.is_available():
 			self.device = torch.device('cuda')
@@ -28,12 +28,16 @@ class Permutator(nn.Module):
 
     def chequer_perm(self):
 		"""
-		Function to generate the chequer permutation required for InteractE model
+		Function to generate the chequer permutation required for InteractE model.
 
 		Parameters
 		----------
+  
 		Returns
 		-------
+		A tensor (k x d), where k is the number of permutations and 
+		d is the dimension of chequer combination of embeddings.
+  
 		"""
 		# ent_perms and rel_perms are lists of permutations
 		ent_perms = np.int32([np.random.permutation(self.embed_dim) for _ in range(self.num_perm)])

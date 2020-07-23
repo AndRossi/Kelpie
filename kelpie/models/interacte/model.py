@@ -1,8 +1,8 @@
 from typing import Tuple, Any
 
+import numpy as np
 import torch
 from torch import nn
-import numpy as np
 from torch.nn import Parameter
 
 from kelpie.dataset import Dataset
@@ -48,7 +48,7 @@ class InteractE(Model, torch.nn.Module):
 		self.dataset = dataset
 		self.num_entities = dataset.num_entities		# number of entities in dataset
 		self.num_relations = dataset.num_relations		# number of relations in dataset
-		self.embed_dim = embed_dim							# embedding dimension
+		self.embed_dim = embed_dim						# embedding dimension
 		self.num_perm = num_perm						# number of permutation
 		self.kernel_size = kernel_size
 
@@ -78,7 +78,7 @@ class InteractE(Model, torch.nn.Module):
 		self.bn0 = torch.nn.BatchNorm2d(num_perm)
 
 		flat_sz_h = k_h
-		flat_sz_w = k_w
+		flat_sz_w = 2*k_w
 		self.padding = 0
 
 		# Conv layer normalization 
