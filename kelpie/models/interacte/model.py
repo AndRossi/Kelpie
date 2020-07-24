@@ -1,5 +1,6 @@
 from typing import Tuple, Any
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import Parameter, init
@@ -8,6 +9,7 @@ from torch.nn import functional as F
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
+from kelpie.models.interacte.permutator import Permutator
 
 # from helper import *
 
@@ -239,31 +241,6 @@ class InteractE(Model, nn.Module):
         pass
 
 
-    def predict_sample(self, sample: np.array) -> Tuple[Any, Any, Any]:
-        """
-            This method performs prediction on one (direct) sample, and returns the corresponding
-            score, ranks and prediction lists.
-
-            :param sample: the sample to predict, as a numpy array.
-            :return: this method returns 3 items:
-                    - the sample score
-                                OR IF THE MODEL SUPPORTS INVERSE FACTS
-                        the scores of the sample and of its inverse
-
-                    - a couple containing the head rank and the tail rank
-
-                    - a couple containing the head_predictions and tail_predictions numpy arrays;
-                        > head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
-                        [NB: the target head will be in this numpy array in position head_rank-1]
-                        > tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
-                        [NB: the target tail will be in this numpy array in position tail_rank-1]
-        """
-        pass
-        # assert sample[1] < self.dataset.num_direct_relations
-
-        # scores, ranks, predictions = self.predict_samples(np.array([sample]))
-        # return scores[0], ranks[0], predictions[0]
-
 ################
 
 class KelpieInteractE(InteractE):
@@ -308,3 +285,101 @@ class KelpieInteractE(InteractE):
         
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
+
+
+    def predict_samples(self,
+                        samples: np.array,
+                        original_mode: bool = False) -> Tuple[Any, Any, Any]:
+        """
+            This method performs prediction on a collection of samples, and returns the corresponding
+            scores, ranks and prediction lists.
+
+            All the passed samples must be DIRECT samples in the original dataset.
+            (if the Model supports inverse samples as well,
+            it should invert the passed samples while running this method)
+
+            :param samples: the direct samples to predict, in numpy array format
+            :return: this method returns three lists:
+                        - the list of scores for the passed samples,
+                                    OR IF THE MODEL SUPPORTS INVERSE FACTS
+                            the list of couples <direct sample score, inverse sample score>,
+                            where the i-th score refers to the i-th sample in the input samples.
+
+                        - the list of couples (head rank, tail rank)
+                            where the i-th couple refers to the i-th sample in the input samples.
+
+                        - the list of couples (head_predictions, tail_predictions)
+                            where the i-th couple refers to the i-th sample in the input samples.
+                            The head_predictions and tail_predictions for each sample
+                            are numpy arrays containing all the predicted heads and tails respectively for that sample.
+        """
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        # if we are in original_mode, make sure that the kelpie entity is not featured in the samples to predict
+        # otherwise, make sure that the original entity is not featured in the samples to predict
+        forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
+        assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
+        
+        # use the Model implementation method to obtain scores, ranks and prediction results.
+        # these WILL feature the forbidden entity, so we now need to filter them
+        scores, ranks, predictions = super().predict_samples(direct_samples)
+
+        # remove any reference to the forbidden entity id
+        # (that may have been included in the predicted entities)
+        for i in range(len(direct_samples)):
+            head_predictions, tail_predictions = predictions[i]
+            head_rank, tail_rank = ranks[i]
+
+            # remove the forbidden entity id from the head predictions (note: it could be absent due to filtering)
+            # and if it was before the head target decrease the head rank by 1
+            forbidden_indices = np.where(head_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                head_predictions = np.concatenate([head_predictions[:index], head_predictions[index + 1:]], axis=0)
+                if index < head_rank:
+                    head_rank -= 1
+
+            # remove the kelpie entity id from the tail predictions  (note: it could be absent due to filtering)
+            # and if it was before the tail target decrease the head rank by 1
+            forbidden_indices = np.where(tail_predictions == forbidden_entity_id)[0]
+            if len(forbidden_indices) > 0:
+                index = forbidden_indices[0]
+                tail_predictions = np.concatenate([tail_predictions[:index], tail_predictions[index + 1:]], axis=0)
+                if index < tail_rank:
+                    tail_rank -= 1
+
+            predictions[i] = (head_predictions, tail_predictions)
+            ranks[i] = (head_rank, tail_rank)
+
+        return scores, ranks, predictions
+
+
+    def predict_sample(self,
+                       sample: np.array,
+                       original_mode: bool = False) -> Tuple[Any, Any, Any]:
+        """
+            This method performs prediction on one (direct) sample, and returns the corresponding
+            score, ranks and prediction lists.
+
+            :param sample: the sample to predict, as a numpy array.
+            :return: this method returns 3 items:
+                    - the sample score
+                                OR IF THE MODEL SUPPORTS INVERSE FACTS
+                        the scores of the sample and of its inverse
+
+                    - a couple containing the head rank and the tail rank
+
+                    - a couple containing the head_predictions and tail_predictions numpy arrays;
+                        > head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
+                        [NB: the target head will be in this numpy array in position head_rank-1]
+                        > tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
+                        [NB: the target tail will be in this numpy array in position tail_rank-1]
+        """
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
+        return scores[0], ranks[0], predictions[0]
