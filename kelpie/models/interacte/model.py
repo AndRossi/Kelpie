@@ -1,6 +1,5 @@
 from typing import Tuple, Any
 
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import Parameter, init
@@ -9,7 +8,6 @@ from torch.nn import functional as F
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
-from kelpie.models.interacte.permutator import Permutator
 
 # from helper import *
 

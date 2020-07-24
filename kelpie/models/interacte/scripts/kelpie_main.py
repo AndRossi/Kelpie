@@ -18,10 +18,12 @@ parser.add_argument('--dataset',
                     help="Dataset in {}".format(datasets),
                     required=True)
 
+
 # Model
 parser.add_argument('--model_path',
                     help="Path to the model to explain the predictions of",
                     required=True)
+
 
 # Gradient Descent
 optimizers = ['Adam', 'SGD']
@@ -40,17 +42,20 @@ parser.add_argument('--learning_rate',
                     type=float,
                     help="Learning rate")
 
+
 # Adam specific settings
 parser.add_argument('--decay1',
                     default=0.9,
                     type=float,
                     help="Decay rate for the first moment estimate in Adam"
 )
+
 parser.add_argument('--decay2',
                     default=0.99,
                     type=float,
                     help="Decay rate for second moment estimate in Adam"
 )
+
 
 # Regularization
 parser.add_argument('--inp_drop_p',
@@ -100,10 +105,9 @@ parser.add_argument('--strategy',
 )
 
 parser.add_argument('--l2',
-                    default='',
+                    default = 0.0,
                     type = float,
-					default = 0.0,
-					help="Penalty for weight-decay"
+                    help="Penalty for weight-decay"
 )
 
 parser.add_argument('--verbose',
@@ -116,6 +120,8 @@ parser.add_argument('--max_epochs',
                     default=200,
                     type=int,
                     help="Number of epochs to run in post-training")
+
+
 # Samples
 parser.add_argument('--head',
                     help="Textual name of the head entity of the test fact to explain",
@@ -169,17 +175,17 @@ assert(original_sample in original_dataset.test_samples)
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
 print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
-original_model = InteractE(dataset=original_dataset, 
-	embed_dim=args.embed_dim, 		
-	k_h: int = 20,
-	k_w: int = 10,
-	inp_drop_p: float = 0.5,
-	hid_drop_p: float = 0.5,
-	feat_drop_p: float = 0.5,
-	num_perm: int = 1,
-	kernel_size: int = 9,
-	num_filt_conv: int = 96,
-	strategy: str='one_to_n')
+original_model = InteractE(dataset = original_dataset, 
+                            embed_dim = args.embed_dim, 
+                            k_h= 20,
+                            k_w = 10,
+                            inp_drop_p = 0.5,
+                            hid_drop_p = 0.5,
+                            feat_drop_p = 0.5,
+                            num_perm = 1,
+                            kernel_size = 9,
+                            num_filt_conv = 96,
+                            strategy = 'one_to_n')
 
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
@@ -206,14 +212,14 @@ kelpie_test_samples = kelpie_dataset.kelpie_test_samples
 
 print("Running post-training on the Kelpie model...")
 # build the Optimizer
-optimizer = KelpieInteractEOptimizer(model=kelpie_model,
-                                   optimizer_name=args.optimizer,
-                                   batch_size=args.batch_size,
+optimizer = KelpieInteractEOptimizer(model = kelpie_model,
+                                   optimizer_name = args.optimizer,
+                                   batch_size = args.batch_size,
                                    learning_rate=args.learning_rate,
-                                   decay1=args.decay1,
-                                   decay2=args.decay2,
-                                   l2: float = 0.0,
-								   verbose: bool = True)
+                                   decay1 = args.decay1,
+                                   decay2 = args.decay2,
+                                   l2 = 0.0,
+                                   verbose = True)
 
 optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
                 max_epochs=args.max_epochs)

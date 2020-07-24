@@ -5,11 +5,11 @@ import torch
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 from kelpie.models.interacte.model import InteractE
-from kelpie.models.interacte.optimizer import KelpieInteractEOptimizer
+from kelpie.models.interacte.optimizer import InteractEOptimizer, KelpieInteractEOptimizer
 
 # todo: when we add more models, we should move these variables to another location
 MODEL_HOME = os.path.abspath("./models/")
-ALL_MODEL_NAMES = ["ComplEx"]
+ALL_MODEL_NAMES = ["InteractE"]
 
 parser = argparse.ArgumentParser(
     description="Relational learning contraption"
@@ -25,17 +25,11 @@ parser.add_argument('--model',
                     help="Model in {}".format(ALL_MODEL_NAMES)
 )
 
-regularizers = ['N3', 'N2']
-parser.add_argument('--regularizer',
-                    choices=regularizers,
-                    default='N3',
-                    help="Regularizer in {}".format(regularizers)
-)
 
-optimizers = ['Adagrad', 'Adam', 'SGD']
+optimizers = ['Adam', 'SGD']
 parser.add_argument('--optimizer',
                     choices=optimizers,
-                    default='Adagrad',
+                    default='Adam',
                     help="Optimizer in {}".format(optimizers)
 )
 
@@ -51,7 +45,7 @@ parser.add_argument('--valid',
                     help="Number of epochs before valid."
 )
 
-parser.add_argument('--dimension',
+parser.add_argument('--embed_dim',
                     default=1000,
                     type=int,
                     help="Embedding dimension"
@@ -106,13 +100,13 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)   # type: ComplEx
+model = InteractE(dataset=dataset, embed_dim=args.embed_dim)   # type: InteractE
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))
 
 print("Training model...")
-optimizer = ComplExOptimizer(model=model,
+optimizer = InteractEOptimizer(model=model,
                              optimizer_name=args.optimizer,
                              batch_size=args.batch_size,
                              learning_rate=args.learning_rate,
