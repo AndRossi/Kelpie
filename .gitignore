@@ -16,3 +16,7 @@ stored_models
 ehthumbs.db
 Thumbs.db
 
+
+### VS Code
+.vscode
+__pycache__

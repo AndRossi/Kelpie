@@ -5,11 +5,11 @@ from torch import nn
 
 class Permutator(nn.Module):
 
-    def __init__(self,
-            	 # embed_dim: int,
-            	 num_perm: int = 1,
-            	 mtx_h: int = 20,
-            	 mtx_w: int = 10,
+	def __init__(self,
+				 # embed_dim: int,
+				 num_perm: int = 1,
+				 mtx_h: int = 20,
+				 mtx_w: int = 10,
 				 device: str = '-1'):
 
 		# self.embed_dim = embed_dim
@@ -24,20 +24,20 @@ class Permutator(nn.Module):
 			torch.backends.cudnn.deterministic = True
 		else:
 			self.device = torch.device('cpu')
-    
 
-    def chequer_perm(self):
+
+	def chequer_perm(self):
 		"""
 		Function to generate the chequer permutation required for InteractE model.
 
 		Parameters
 		----------
-  
+
 		Returns
 		-------
 		A tensor (k x d), where k is the number of permutations and 
 		d is the dimension of chequer combination of embeddings.
-  
+
 		"""
 		# ent_perms and rel_perms are lists of permutations
 		ent_perms = np.int32([np.random.permutation(self.embed_dim) for _ in range(self.num_perm)])
