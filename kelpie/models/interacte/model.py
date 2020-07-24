@@ -37,7 +37,7 @@ class InteractE(Model, nn.Module):
         feat_drop_p: float = 0.5,
         kernel_size: int = 9,
         num_filt_conv: int = 96,
-        strategy: str='one_to_n'):
+        strategy: str = 'one_to_n'):
 
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
@@ -50,7 +50,7 @@ class InteractE(Model, nn.Module):
         self.num_perm = num_perm					# number of permutation
         self.kernel_size = kernel_size
 
-        self.strategy=strategy
+        self.strategy = strategy
         
         # Inverted Entities TODO da ricontrollare
         # self.neg_ents
@@ -76,13 +76,13 @@ class InteractE(Model, nn.Module):
         flat_sz_w = 2*k_w
         self.padding = 0
 
-        # Conv layer normalization 
+        # Conv layer normalization
         self.bn1 = nn.BatchNorm2d(num_filt_conv * self.num_perm)
         
         # Flattened embedding matrix size
         self.flat_sz = flat_sz_h * flat_sz_w * num_filt_conv * self.num_perm
 
-        # Normalization 
+        # Normalization
         self.bn2 = nn.BatchNorm1d(self.embed_dim)
 
         # Matrix flattening
@@ -97,7 +97,7 @@ class InteractE(Model, nn.Module):
         # Kernel filter definition
         self.num_filt_conv = num_filt_conv
         self.register_parameter('conv_filt', Parameter(torch.zeros(num_filt_conv, 1, kernel_size, kernel_size)))
-        inti.xavier_normal_(self.conv_filt)
+        init.xavier_normal_(self.conv_filt)
 
 
     def score(self, samples: np.array) -> np.array:
@@ -184,7 +184,7 @@ class InteractE(Model, nn.Module):
         # self to access local variable.
         matrix_chequer_perm = comb_emb[:, self.chequer_perm]
         # matrix reshaped
-        stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*k_w, k_h))
+        stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*self.k_w, self.k_h))
         stack_inp = self.bn0(stack_inp)  # Normalizes
         x = self.inp_drop(stack_inp)	# Regularizes with dropout
 
