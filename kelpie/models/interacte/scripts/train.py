@@ -57,16 +57,10 @@ parser.add_argument('--batch_size',
                     help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
 )
 
-parser.add_argument('--reg',
+parser.add_argument('--weight_decay',
                     default=0,
                     type=float,
                     help="Regularization weight"
-)
-
-parser.add_argument('--init',
-                    default=1e-3,
-                    type=float,
-                    help="Initial scale"
 )
 
 parser.add_argument('--learning_rate',
@@ -90,6 +84,41 @@ parser.add_argument('--load',
                     help="path to the model to load",
                     required=False)
 
+parser.add_argument('--inp_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the input embeddings"
+)
+
+parser.add_argument('--hid_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the hidden layer"
+)
+
+parser.add_argument('--feat_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the feature matrix"
+)
+
+parser.add_argument('--kernel_size',
+                    default=9,
+                    type=int,
+                    help="Size of the kernel function window"
+)
+
+parser.add_argument('--num_filt_conv',
+                    default=96,
+                    type=int,
+                    help="Number of convolution filters"
+)
+
+parser.add_argument('--strategy',
+                    default='one_to_n',
+                    help="Choose the strategy: one_to_n"
+)
+
 args = parser.parse_args()
 
 model_path = "./models/" + "_".join(["ComplEx", args.dataset]) + ".pt"
@@ -100,20 +129,33 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = InteractE(dataset=dataset, embed_dim=args.embed_dim)   # type: InteractE
+model = InteractE(dataset=dataset,
+                            embed_dim = args.embed_dim, 
+                            k_h = 20,
+                            k_w = 10,
+                            inp_drop_p = args.inp_drop_p,
+                            hid_drop_p = args.hid_drop_p,
+                            feat_drop_p = args.feat_drop_p,
+                            num_perm = args.num_perm,
+                            kernel_size = args.kernel_size,
+                            num_filt_conv = args.num_filt_conv,
+                            strategy = args.strategy
+)   # type: InteractE
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))
 
 print("Training model...")
 optimizer = InteractEOptimizer(model=model,
-                             optimizer_name=args.optimizer,
-                             batch_size=args.batch_size,
-                             learning_rate=args.learning_rate,
-                             decay1=args.decay1,
-                             decay2=args.decay2,
-                             regularizer_name=args.regularizer,
-                             regularizer_weight=args.reg)
+                               optimizer_name = args.optimizer,
+                               batch_size = args.batch_size,
+                               learning_rate=args.learning_rate,
+                               decay_adam_1 = args.decay1,
+                               decay_adam_2 = args.decay2,
+                               weight_decay = args.weight_decay,
+                               verbose = args.verbose
+)
+
 optimizer.train(train_samples=dataset.train_samples,
                 max_epochs=args.max_epochs,
                 save_path=model_path,

@@ -16,13 +16,15 @@ parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining
 parser.add_argument('--dataset',
                     choices=datasets,
                     help="Dataset in {}".format(datasets),
-                    required=True)
+                    required=True
+)
 
 
 # Model
 parser.add_argument('--model_path',
                     help="Path to the model to explain the predictions of",
-                    required=True)
+                    required=True
+)
 
 
 # Gradient Descent
@@ -30,7 +32,8 @@ optimizers = ['Adam', 'SGD']
 parser.add_argument('--optimizer',
                     choices=optimizers,
                     default='Adam',
-                    help="Optimizer in {} to use in post-training".format(optimizers))
+                    help="Optimizer in {} to use in post-training".format(optimizers)
+)
 
 parser.add_argument('--batch_size',
                     default=128,
@@ -40,7 +43,8 @@ parser.add_argument('--batch_size',
 parser.add_argument('--learning_rate',
                     default=1e-4,
                     type=float,
-                    help="Learning rate")
+                    help="Learning rate"
+)
 
 
 # Adam specific settings
@@ -104,7 +108,7 @@ parser.add_argument('--strategy',
                     help="Choose the strategy: one_to_n"
 )
 
-parser.add_argument('--l2',
+parser.add_argument('--weight_decay',
                     default = 0.0,
                     type = float,
                     help="Penalty for weight-decay"
@@ -177,15 +181,16 @@ print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
 original_model = InteractE(dataset = original_dataset, 
                             embed_dim = args.embed_dim, 
-                            k_h= 20,
+                            k_h = 20,
                             k_w = 10,
-                            inp_drop_p = 0.5,
-                            hid_drop_p = 0.5,
-                            feat_drop_p = 0.5,
-                            num_perm = 1,
-                            kernel_size = 9,
-                            num_filt_conv = 96,
-                            strategy = 'one_to_n')
+                            inp_drop_p = args.inp_drop_p,
+                            hid_drop_p = args.hid_drop_p,
+                            feat_drop_p = args.feat_drop_p,
+                            num_perm = args.num_perm,
+                            kernel_size = args.kernel_size,
+                            num_filt_conv = args.num_filt_conv,
+                            strategy = 'one_to_n'
+)
 
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
@@ -216,11 +221,11 @@ optimizer = KelpieInteractEOptimizer(model = kelpie_model,
                                    optimizer_name = args.optimizer,
                                    batch_size = args.batch_size,
                                    learning_rate=args.learning_rate,
-                                   decay1 = args.decay1,
-                                   decay2 = args.decay2,
-                                   l2 = 0.0,
-                                   verbose = True)
-
+                                   decay_adam_1 = args.decay1,
+                                   decay_adam_2 = args.decay2,
+                                   weight_decay = args.weight_decay,
+                                   verbose = args.verbose
+)
 optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
                 max_epochs=args.max_epochs)
 

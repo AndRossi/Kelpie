@@ -23,17 +23,10 @@ parser.add_argument('--model',
                     help="Model in {}".format(ALL_MODEL_NAMES)
 )
 
-regularizers = ['N3', 'N2']
-parser.add_argument('--regularizer',
-                    choices=regularizers,
-                    default='N3',
-                    help="Regularizer in {}".format(regularizers)
-)
-
-optimizers = ['Adagrad', 'Adam', 'SGD']
+optimizers = ['Adam', 'SGD']
 parser.add_argument('--optimizer',
                     choices=optimizers,
-                    default='Adagrad',
+                    default='Adam',
                     help="Optimizer in {}".format(optimizers)
 )
 
@@ -49,7 +42,7 @@ parser.add_argument('--valid',
                     help="Number of epochs before valid."
 )
 
-parser.add_argument('--dimension',
+parser.add_argument('--embed_dim',
                     default=1000,
                     type=int,
                     help="Embedding dimension"
@@ -61,16 +54,10 @@ parser.add_argument('--batch_size',
                     help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
 )
 
-parser.add_argument('--reg',
+parser.add_argument('--weight_decay',
                     default=0,
                     type=float,
                     help="Regularization weight"
-)
-
-parser.add_argument('--init',
-                    default=1e-3,
-                    type=float,
-                    help="Initial scale"
 )
 
 parser.add_argument('--learning_rate',
@@ -91,7 +78,43 @@ parser.add_argument('--decay2',
 )
 
 parser.add_argument('--load',
-                    help="path to the model to load")
+                    help="path to the model to load"
+)
+
+parser.add_argument('--inp_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the input embeddings"
+)
+
+parser.add_argument('--hid_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the hidden layer"
+)
+
+parser.add_argument('--feat_drop_p',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the feature matrix"
+)
+
+parser.add_argument('--kernel_size',
+                    default=9,
+                    type=int,
+                    help="Size of the kernel function window"
+)
+
+parser.add_argument('--num_filt_conv',
+                    default=96,
+                    type=int,
+                    help="Number of convolution filters"
+)
+
+parser.add_argument('--strategy',
+                    default='one_to_n',
+                    help="Choose the strategy: one_to_n"
+)
 
 args = parser.parse_args()
 
@@ -103,7 +126,19 @@ print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
-model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)
+model = InteractE(dataset=dataset,
+                  embed_dim = args.embed_dim, 
+                  k_h = 20,
+                  k_w = 10,
+                  inp_drop_p = args.inp_drop_p,
+                  hid_drop_p = args.hid_drop_p,
+                  feat_drop_p = args.feat_drop_p,
+                  num_perm = args.num_perm,
+                  kernel_size = args.kernel_size,
+                  num_filt_conv = args.num_filt_conv,
+                  strategy = args.strategy
+)
+
 model.to('cuda')
 model.load_state_dict(torch.load(model_path))
 model.eval()
