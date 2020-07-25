@@ -102,6 +102,24 @@ parser.add_argument('--feat_drop_p',
                     help="Dropout regularization probability for the feature matrix"
 )
 
+parser.add_argument('--num_perm',
+                    default=1,
+                    type=int,
+                    help="Number of permutation"
+)
+
+parser.add_argument('--k_h',
+                    default=20,
+                    type=int,
+                    help="Reshaped matrix height"
+)
+
+parser.add_argument('--k_w',
+                    default=10,
+                    type=int,
+                    help="Reshaped matrix width"
+)
+
 parser.add_argument('--kernel_size',
                     default=9,
                     type=int,
@@ -130,16 +148,16 @@ dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
 print("Initializing model...")
 model = InteractE(dataset=dataset,
-                            embed_dim = args.embed_dim, 
-                            k_h = 20,
-                            k_w = 10,
-                            inp_drop_p = args.inp_drop_p,
-                            hid_drop_p = args.hid_drop_p,
-                            feat_drop_p = args.feat_drop_p,
-                            num_perm = args.num_perm,
-                            kernel_size = args.kernel_size,
-                            num_filt_conv = args.num_filt_conv,
-                            strategy = args.strategy
+                  embed_dim = args.embed_dim, 
+                  k_h = args.k_h,
+                  k_w = args.k_w,
+                  num_perm = args.num_perm,
+                  inp_drop_p = args.inp_drop_p,
+                  hid_drop_p = args.hid_drop_p,
+                  feat_drop_p = args.feat_drop_p,
+                  kernel_size = args.kernel_size,
+                  num_filt_conv = args.num_filt_conv,
+                  strategy = args.strategy
 )   # type: InteractE
 model.to('cuda')
 if args.load is not None:
