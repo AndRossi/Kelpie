@@ -7,7 +7,7 @@ from kelpie.models.interacte.model import InteractE
 
 # todo: when we add more models, we should move these variables to another location
 MODEL_HOME = os.path.abspath("./models/")
-ALL_MODEL_NAMES = ["ComplEx"]
+ALL_MODEL_NAMES = ["InteractE"]
 
 parser = argparse.ArgumentParser(
     description="Relational learning contraption"

@@ -121,7 +121,7 @@ parser.add_argument('--strategy',
 
 args = parser.parse_args()
 
-model_path = "./models/" + "_".join(["ComplEx", args.dataset]) + ".pt"
+model_path = "./models/" + "_".join(["InteractE", args.dataset]) + ".pt"
 if args.load is not None:
     model_path = args.load
 
