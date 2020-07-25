@@ -48,6 +48,18 @@ parser.add_argument('--embed_dim',
                     help="Embedding dimension"
 )
 
+parser.add_argument('--k_h',
+                    default=20,
+                    type=int,
+                    help="Reshaped matrix height"
+)
+
+parser.add_argument('--k_w',
+                    default=10,
+                    type=int,
+                    help="Reshaped matrix width"
+)
+
 parser.add_argument('--batch_size',
                     default=1000,
                     type=int,
@@ -128,8 +140,8 @@ dataset = Dataset(name=args.dataset, separator="\t", load=True)
 print("Initializing model...")
 model = InteractE(dataset=dataset,
                   embed_dim = args.embed_dim, 
-                  k_h = 20,
-                  k_w = 10,
+                  k_h = args.k_h,
+                  k_w = args.k_w,
                   inp_drop_p = args.inp_drop_p,
                   hid_drop_p = args.hid_drop_p,
                   feat_drop_p = args.feat_drop_p,

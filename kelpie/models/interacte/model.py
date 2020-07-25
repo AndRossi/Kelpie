@@ -178,7 +178,7 @@ class InteractE(Model, nn.Module):
         return self.score(samples).numpy()
 
 
-        def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
+    def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             This method performs prediction on a collection of samples, and returns the corresponding
             scores, ranks and prediction lists.
@@ -263,18 +263,18 @@ class InteractE(Model, nn.Module):
 
                 # for every triple in the samples
                 for i, (head_id, rel_id, tail_id) in enumerate(samples):
-                    tails_to_filter = self.dataset.to_filter[(head_id, rel_id)]
+                    filter_out = self.dataset.to_filter[(head_id, rel_id)]
 
                     # predicted value for the correct tail of that triple
                     target_tail_score = all_scores[i, tail_id].item()
 
-                    if tail_id not in tales_to_filter:
-                        tails_to_filter.append(tail_id)
+                    if tail_id not in filter_out:
+                        filter_out.append(tail_id)
                     
                     # scores.append(target_tail_score)
 
                     # set to -1e6 all the predicted values for all the correct tails for that Head-Rel couple
-                    all_scores[i, tails_to_filter] = -1e6
+                    all_scores[i, filter_out] = -1e6
                     # re-set the predicted value for that tail to the original value
                     all_scores[i, tail_id] = target_tail_score
 
