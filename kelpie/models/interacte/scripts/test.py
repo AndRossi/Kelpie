@@ -61,9 +61,9 @@ parser.add_argument('--k_w',
 )
 
 parser.add_argument('--batch_size',
-                    default=1000,
+                    default=128,
                     type=int,
-                    help="Number of samples in each mini-batch in SGD, Adagrad and Adam optimization"
+                    help="Number of samples in each mini-batch in SGD and Adam optimization"
 )
 
 parser.add_argument('--weight_decay',
