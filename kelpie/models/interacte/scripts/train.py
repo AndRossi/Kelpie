@@ -137,6 +137,12 @@ parser.add_argument('--strategy',
                     help="Choose the strategy: one_to_n"
 )
 
+parser.add_argument('--verbose',
+                    default=True,
+                    type=bool,
+                    help="Verbose"
+)
+
 args = parser.parse_args()
 
 model_path = "./models/" + "_".join(["InteractE", args.dataset]) + ".pt"
