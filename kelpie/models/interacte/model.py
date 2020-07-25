@@ -145,7 +145,7 @@ class InteractE(Model, nn.Module):
 
         pred = torch.sigmoid(x)
 
-        return pred.numpy()
+        return pred.cpu().numpy()
 
 
     # Circular padding definition
@@ -175,7 +175,7 @@ class InteractE(Model, nn.Module):
             :param samples: a numpy array containing all the samples to perform forward propagation on
         """
 
-        return self.score(samples).numpy()
+        return self.score(samples)
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
