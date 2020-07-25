@@ -175,70 +175,107 @@ class InteractE(Model, nn.Module):
             :param samples: a numpy array containing all the samples to perform forward propagation on
         """
 
-        sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
-        rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
-        
-        #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
-        sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
-        rel_emb	= self.ent_embed(rel_samples)	# Embeds the relationship tensor
-        
-        comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
-        # self to access local variable.
-        matrix_chequer_perm = comb_emb[:, self.chequer_perm]
-        # matrix reshaped
-        stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*self.k_w, self.k_h))
-        stack_inp = self.bn0(stack_inp)  # Normalizes
-        x = self.inp_drop(stack_inp)	# Regularizes with dropout
-
-        # Circular convolution
-        x = self.circular_padding_chw(x, self.kernel_size//2)	# Defines the kernel for the circular conv
-        x = F.conv2d(x, self.conv_filt.repeat(self.num_perm, 1, 1, 1), padding=self.padding, groups=self.num_perm) # Circular conv
-        x = self.bn1(x)	# Normalizes
-        x = F.relu(x)
-        x = self.feature_map_drop(x)	# Regularizes with dropout
-        x = x.view(-1, self.flat_sz)
-        x = self.fc(x)
-        x = self.hidden_drop(x)	# Regularizes with dropout
-        x = self.bn2(x)	# Normalizes
-        x = F.relu(x)
-        
-        if self.strategy == 'one_to_n':
-            x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
-            x += self.bias.expand_as(x)
-        else:
-            x = torch.mul(x.unsqueeze(1), self.ent_embed(self.neg_ents)).sum(dim=-1)
-            x += self.bias[self.neg_ents]
-
-        pred = torch.sigmoid(x)
-
-        return pred.numpy()
+        return self.score(samples).numpy()
 
 
-    def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
+        def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             This method performs prediction on a collection of samples, and returns the corresponding
             scores, ranks and prediction lists.
-
             All the passed samples must be DIRECT samples in the original dataset.
             (if the Model supports inverse samples as well,
             it should invert the passed samples while running this method)
-
             :param samples: the direct samples to predict, in numpy array format
             :return: this method returns three lists:
                         - the list of scores for the passed samples,
                                     OR IF THE MODEL SUPPORTS INVERSE FACTS
                             the list of couples <direct sample score, inverse sample score>,
                             where the i-th score refers to the i-th sample in the input samples.
-
                         - the list of couples (head rank, tail rank)
                             where the i-th couple refers to the i-th sample in the input samples.
-
                         - the list of couples (head_predictions, tail_predictions)
                             where the i-th couple refers to the i-th sample in the input samples.
                             The head_predictions and tail_predictions for each sample
                             are numpy arrays containing all the predicted heads and tails respectively for that sample.
         """
-        pass
+        scores, ranks, predictions = [], [], []
+
+        direct_samples = samples
+
+        # assert all samples are direct
+        assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+
+        inverse_samples = self.dataset.invert_samples(direct_samples)
+
+        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+
+        for i in range(direct_samples.shape[0]):
+            scores += [(direct_scores[i], inverse_scores[i])]
+            ranks += [(head_ranks[i], tail_ranks[i])]
+            predictions += [(head_predictions[i], tail_predictions[i])]
+
+        return scores, ranks, predictions
+
+    # TODO: in the future, this may need to be moved to model.py
+    def predict_tails(self, samples):
+        """
+            This method performs prediction on one (direct) sample, and returns the corresponding
+            score, ranks and prediction lists.
+
+            :param sample: the sample to predict, as a numpy array.
+            :return: this method returns 3 items:
+                    - the sample score
+                             OR IF THE MODEL SUPPORTS INVERSE FACTS
+                      the scores of the sample and of its inverse
+
+                    - a couple containing the head rank and the tail rank
+
+                    - a couple containing the head_predictions and tail_predictions numpy arrays;
+                        > head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
+                        [NB: the target head will be in this numpy array in position head_rank-1]
+                        > tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
+                        [NB: the target tail will be in this numpy array in position tail_rank-1]
+        """
+
+        scores, ranks, pred_out = [], [], []
+
+        for i in range(0, len(samples)):
+
+            all_scores = self.all_scores(samples)
+
+            tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all passed samples
+
+            # for every triple in the samples
+            for sample_index, (head_id, relation_id, tail_id) in enumerate(samples):
+                tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
+
+                # predicted value for the correct tail of that triple
+                target_tail_score = all_scores[sample_index, tail_id].item()
+
+                if tail_id not in tales_to_filter:
+                    tails_to_filter.append(tail_id)
+                
+                scores.append(target_tail_score)
+
+                # set to -1e6 all the predicted values for all the correct tails for that Head-Rel couple
+                all_scores[sample_number, tails_to_filter] = -1e6
+                # re-set the predicted value for that tail to the original value
+                all_scores[sample_number, tail_id] = target_tail_score
+
+        # this amounts to using ORDINAL policy
+        sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
+        sorted_indexes = sorted_indexes.cpu().numpy()
+
+        for row in sorted_indexes:
+            pred_out.append(row)
+
+        for row in range(samples.shape[0]):
+            # rank of the correct target
+            rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
+            ranks.append(rank + 1)
+
+        return scores, ranks, pred_out
 
 
 ################

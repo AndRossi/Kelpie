@@ -202,3 +202,12 @@ def score(samples: numpy.array) -> numpy.array:
 
 print(score(dataset).shape)
 print(score(dataset))  
+
+# import numpy as np
+
+# sorted_samples = np.array([[4,7,6],[1,2,5],[9,3,8]])
+# print(sorted_samples)
+
+# tail_id = np.array([4,4,6])
+
+# print(np.where(sorted_samples[0]==tail_id[0].item()))
