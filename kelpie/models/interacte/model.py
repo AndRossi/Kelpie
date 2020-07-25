@@ -110,8 +110,8 @@ class InteractE(Model, nn.Module):
             :return: the computed scores, as a numpy array
         """
 
-        sub_samples = torch.LongTensor(np.int32(samples[:, 0]))
-        rel_samples = torch.LongTensor(np.int32(samples[:, 1]))
+        sub_samples = torch.from_numpy(samples[:, 0])
+        rel_samples = torch.from_numpy(samples[:, 1])
         
         #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
         sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
