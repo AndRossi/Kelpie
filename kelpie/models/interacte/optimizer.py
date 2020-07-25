@@ -98,7 +98,7 @@ class InteractEOptimizer:
 
     # Computing the loss over a single batch
     def step_on_batch(self, loss, batch):
-        prediction, factors = self.model.forward(batch)
+        prediction = self.model.forward(batch)
         truth = batch[:, 2]
 
         # compute loss

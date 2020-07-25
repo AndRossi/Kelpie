@@ -148,7 +148,7 @@ class InteractE(Model, nn.Module):
 
         pred = torch.sigmoid(x)
 
-        return pred.cpu().numpy()
+        return pred
 
 
     # Circular padding definition
