@@ -24,6 +24,7 @@ class Hake(Model, nn.Module):
                  modulus_weight=1.0,
                  phase_weight=0.5):
 
+        # from the ComplEx implementation:
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
         nn.Module.__init__(self)
@@ -32,8 +33,8 @@ class Hake(Model, nn.Module):
         self.num_entities = dataset.num_entities  # number of entities in dataset
         self.num_relations = dataset.num_relations  # number of relations in dataset
 
-        # Hake-specific
-        self.hidden_dim = hidden_dim
+        # Hake-specific stuff, taken directly from HAKE -> models -> HAKE.__init__:
+        self.hidden_dim = hidden_dim    # = dimension
         self.batch_size = batch_size
         self.test_batch_size = test_batch_size
         self.cpu_num = cpu_num
@@ -77,6 +78,7 @@ class Hake(Model, nn.Module):
         self.pi = 3.14159262358979323846
 
 
+    # from HAKE -> models -> HAKE.func: calculates the scores / part of the loss
     def _func(self, head, rel, tail, batch_type):
 
         phase_head, mod_head = torch.chunk(head, 2, dim=2)
@@ -105,6 +107,7 @@ class Hake(Model, nn.Module):
         return self.gamma.item() - (phase_score + r_score)
 
 
+    # taken from HAKE's forward, but it's always called with batch_type = SINGLE
     def score(self, samples: np.array) -> np.array:
 
         '''
@@ -133,7 +136,8 @@ class Hake(Model, nn.Module):
 
         return self._func(head, relation, tail, BatchType.SINGLE).cpu().numpy()
 
-
+    # taken from HAKE's forward; we had to add optional args to it since we need to pass the batch_type that is to be used.
+    # (this make us able to call it with a batch_type parameter without having to change Kelpie's model interface)
     def forward(self, sample, *args, **kwargs):
         """
         Given the indexes in `sample`, extract the corresponding embeddings,
@@ -223,7 +227,7 @@ class Hake(Model, nn.Module):
         # return scores
         return self._func(head, relation, tail, batch_type)#.cpu().numpy()
 
-
+    # taken directly from Kelpie's ComplEx implementation
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
 
         direct_samples = samples
@@ -258,6 +262,7 @@ class Hake(Model, nn.Module):
         return scores, ranks, predictions
 
 
+    # Mostly taken from kelpie's ComplEx implementation, with some touch-ups in regard to calculating the scores
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             Returns filtered scores, ranks and predicted entities for each passed fact.
@@ -266,6 +271,7 @@ class Hake(Model, nn.Module):
             :return:
         """
 
+        # this is how HAKE loads its samples during evaluation
         test_dataset = DataLoader(
             TestDataset(
                 samples,
@@ -286,6 +292,7 @@ class Hake(Model, nn.Module):
 
             bar.set_description('calculating scores')
 
+            # HAKE's way of calculating the scores; since we're working in batches we have to fill up all_scores row by row
             for positive_sample, negative_sample, filter_bias, batch_type in bar:
                 positive_sample = positive_sample.cuda()
                 negative_sample = negative_sample.cuda()
@@ -294,10 +301,13 @@ class Hake(Model, nn.Module):
                 scores = self((positive_sample, negative_sample), batch_type=batch_type)
                 scores += filter_bias
 
+                # for each score row in our batch...
                 for scores_row in scores:
                     all_scores[i] = scores_row
                     # ^ 2d matrix: each row corresponds to a sample and has the scores for all entities
                     i += 1
+
+        # from here onwards the code is directly taken from Kelpie's ComplEx implementation
 
         # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
         targets = torch.zeros(size=(len(samples), 1), dtype=torch.float64).cuda()
@@ -366,7 +376,7 @@ class Hake(Model, nn.Module):
 
         return scores, ranks, predictions
 
-    # the original test_step implementation
+    # the original HAKE test_step implementation
     def test_step(self, samples: np.array):
         '''
         Evaluate the model on test or valid datasets
@@ -456,19 +466,19 @@ class Hake(Model, nn.Module):
             print('%s at step %d: %f' % (metric, step, metrics[metric]))
 
 
-
+# the whole class is taken from Kelpie's ComplEx implemetation, minus some HAKE-specific __init__ stuff
 class KelpieHake(Hake):
     def __init__(
             self,
             dataset: KelpieDataset,
             model: Hake):
 
-        Hake.__init__(self,
+        '''Hake.__init__(self,
                         dataset=dataset,
                         hidden_dim=model.hidden_dim,
                         gamma=model.gamma,
                         modulus_weight=model.modulus_weight,
-                        phase_weight=model.phase_weight)
+                        phase_weight=model.phase_weight)'''
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id

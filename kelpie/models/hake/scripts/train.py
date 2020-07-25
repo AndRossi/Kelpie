@@ -5,10 +5,12 @@ import torch
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 
-# todo: when we add more models, we should move these variables to another location
 from kelpie.models.hake.data import get_train_iterator_from_dataset
 from kelpie.models.hake.model import Hake
 from kelpie.models.hake.optimizer import HakeOptimizer
+
+# Mostly the same as Kelpie's ComplEx implementation script, except that we added some HAKE-specific parameters to it
+# and that we have to build a train_iterator from our training samples to give to the optimizer
 
 MODEL_HOME = os.path.abspath("./models/")
 ALL_MODEL_NAMES = ["Hake"]

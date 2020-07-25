@@ -5,13 +5,14 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
+# This module contains a bunch of HAKE classes that HAKE uses to load and organize data.
 
 class BatchType(Enum):
     HEAD_BATCH = 0
     TAIL_BATCH = 1
     SINGLE = 2
 
-
+# Taken straight out of HAKE's data module, except that we don't use a data reader and we instead pass the triples we want to use as a parameter
 class TrainDataset(Dataset):
     def __init__(self, triples, num_entities, num_relations, neg_size: int, batch_type: BatchType):
 
@@ -78,6 +79,7 @@ class TrainDataset(Dataset):
         batch_type = data[0][3]
         return positive_sample, negative_sample, subsample_weight, batch_type
 
+    # We added this to solve the problem regarding np.random not working properly in parallel
     @staticmethod
     def worker_init_fn(worker_id):
         np.random.seed(np.random.get_state()[1][0] + worker_id)
@@ -121,6 +123,7 @@ class TrainDataset(Dataset):
         return hr_map, tr_map, hr_freq, tr_freq
 
 
+# Taken straight out of HAKE's data module, except that we don't use a data reader and we instead pass the triples we want to use as a parameter
 class TestDataset(Dataset):
     def __init__(self, triples, num_entities, num_relations, batch_type: BatchType):
         self.triples = triples
@@ -138,10 +141,12 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
+        # this caused problems: the tmp array would contain the same entity_id in each row!
+        # also, adding a condition to the cycle that initializes tmp makes the whole process run much slower
         '''if self.batch_type == BatchType.HEAD_BATCH:
             tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.triples
                    else (-1, head) for rand_head in range(self.num_entity)]
-            tmp[head] = (0, head)
+            tmp[head] = (0, head)   # ???
         elif self.batch_type == BatchType.TAIL_BATCH:
             tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.triples
                    else (-1, tail) for rand_tail in range(self.num_entity)]
@@ -174,11 +179,13 @@ class TestDataset(Dataset):
         batch_type = data[0][3]
         return positive_sample, negative_sample, filter_bias, batch_type
 
+    # We added this to solve the problem regarding np.random not working properly in parallel
     @staticmethod
     def worker_init_fn(worker_id):
         np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 
+# straight out of HAKE's data module
 class BidirectionalOneShotIterator(object):
     def __init__(self, dataloader_head, dataloader_tail):
         self.iterator_head = self.one_shot_iterator(dataloader_head)
@@ -203,6 +210,7 @@ class BidirectionalOneShotIterator(object):
                 yield data
 
 
+# we wrote this to get a train_iterator from our samples of choice in the scripts.
 def get_train_iterator_from_dataset(triples,
                                     num_entities,
                                     num_relations,

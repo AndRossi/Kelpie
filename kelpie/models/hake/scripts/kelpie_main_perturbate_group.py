@@ -13,6 +13,9 @@ from kelpie.models.hake.data import get_train_iterator_from_dataset
 from kelpie.models.hake.model import Hake, KelpieHake
 from kelpie.models.hake.optimizer import HakeOptimizer
 
+# Mostly the same as Kelpie's ComplEx implementation script, except that we added some HAKE-specific parameters to it
+# and that we have to build a train_iterator from our training samples to give to the optimizer
+
 datasets = ALL_DATASET_NAMES
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")

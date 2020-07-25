@@ -10,9 +10,10 @@ from kelpie.models.hake.model import Hake
 
 class HakeOptimizer:
 
+    # taken from Kelpie's ComplEx implementation, with HAKE-specific stuff added on top of it
     def __init__(self,
                  model: Hake,
-                 optimizer_name: str = "Adam",
+                 optimizer_name: str = "Adam",  # default (and actually the only choice that is offered) for HAKE is Adam
                  learning_rate: float = 0.0001,
                  no_decay: bool = False,
                  max_steps: int = 100000,
@@ -41,6 +42,7 @@ class HakeOptimizer:
         self.evaluator = Evaluator(self.model)
 
 
+    # based on Kelpie's ComplEx implementation, but changed to make it work with HAKE's way of training
     def train(self,
             train_iterator,
             init_step: int = 0,
@@ -53,7 +55,8 @@ class HakeOptimizer:
         # Training Loop
         for step in range(init_step, self.max_steps):
 
-            loss = None
+            # HAKE has the concept of training steps, and not epochs; we changed that, calculating how many training steps
+            # are in an epoch (this depends on batch_size and the amount of samples in the training dataset used)
             if((self.model.num_entities * 2)%self.model.batch_size == 0):
                 actual_steps = (self.model.num_entities * 2) // self.model.batch_size
             else:
@@ -66,6 +69,7 @@ class HakeOptimizer:
                     np.random.seed()    #resets np.random seed
                     bar.set_postfix(loss="{:.6f}".format(loss.item()))
 
+            # reimplementation of HAKE's learning rate decay; virtually unchanged, other than the fact that we could be using a different optimizer
             if step >= warm_up_steps:
                 if not self.no_decay:
                     current_learning_rate = current_learning_rate / 10
@@ -93,6 +97,7 @@ class HakeOptimizer:
                 print("\t done.")
 
 
+    # this is taken straight out of HAKE's train_step method.
     def train_step(self, train_iterator):
         '''
         A single train step. Apply back-propagation and return the loss
@@ -133,7 +138,7 @@ class HakeOptimizer:
 
         return loss
 
-
+# mostly based on Kelpie's ComplEx implementation, except that it's using HAKE's loss calculations
 class KelpieHakeOptimizer(HakeOptimizer):
     def __init__(self,
                  model: Hake,

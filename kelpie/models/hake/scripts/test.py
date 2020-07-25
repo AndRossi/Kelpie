@@ -4,8 +4,9 @@ import torch
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 
-# todo: when we add more models, we should move these variables to another location
 from kelpie.models.hake.model import Hake
+
+# Mostly the same as Kelpie's ComplEx implementation script, except that we added some HAKE-specific parameters to it
 
 MODEL_HOME = os.path.abspath("./models/")
 ALL_MODEL_NAMES = ["Hake"]
