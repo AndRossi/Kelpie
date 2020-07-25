@@ -118,7 +118,7 @@ class InteractE(Model, nn.Module):
 
         #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
         sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
-        rel_emb	= self.ent_embed(rel_samples)	# Embeds the relationship tensor
+        rel_emb	= self.rel_embed(rel_samples)	# Embeds the relationship tensor
         
         comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
         # self to access local variable.
@@ -140,10 +140,10 @@ class InteractE(Model, nn.Module):
         x = F.relu(x)
         
         if self.strategy == 'one_to_n':
-            x = torch.mm(x, sub_emb.weight.transpose(1,0))
+            x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
             x += self.bias.expand_as(x)
         else:
-            x = torch.mul(x.unsqueeze(1), sub_emb(self.neg_ents)).sum(dim=-1)
+            x = torch.mul(x.unsqueeze(1), self.ent_embed(self.neg_ents)).sum(dim=-1)
             x += self.bias[self.neg_ents]
 
         pred = torch.sigmoid(x)
