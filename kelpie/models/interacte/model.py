@@ -110,9 +110,12 @@ class InteractE(Model, nn.Module):
             :return: the computed scores, as a numpy array
         """
 
-        sub_samples = torch.from_numpy(samples[:, 0])
-        rel_samples = torch.from_numpy(samples[:, 1])
+        # sub_samples = torch.from_numpy(samples[:, 0])
+        # rel_samples = torch.from_numpy(samples[:, 1])
         
+        sub_samples = samples[:, 0]
+        rel_samples = samples[:, 1]
+
         #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
         sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
         rel_emb	= self.ent_embed(rel_samples)	# Embeds the relationship tensor
@@ -252,7 +255,7 @@ class InteractE(Model, nn.Module):
 
             for i in range(0, samples.shape[0]):
 
-                all_scores = self.all_scores(samples).cuda()
+                all_scores = self.score(samples).cuda()
 
                 # tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all passed samples
 
