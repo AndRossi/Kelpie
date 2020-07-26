@@ -341,7 +341,7 @@ class InteractE(Model, nn.Module):
                     predictions.append(predicted_tails)     # as a np array!
             
                 scores.extend(batch_scores)
-                batch_start += self.batch_size
+                batch_start += batch_size
             
         ranks = ranks.cpu().numpy().tolist()
 
