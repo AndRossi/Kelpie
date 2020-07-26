@@ -84,7 +84,7 @@ class InteractEOptimizer:
         loss = torch.nn.BCELoss()
 
         # Training over batches
-        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=self.verbose) as bar:
+        with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
             batch_start = 0

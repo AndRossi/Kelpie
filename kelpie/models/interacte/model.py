@@ -254,8 +254,8 @@ class InteractE(Model, nn.Module):
         with torch.no_grad():
 
             for i in range(0, samples.shape[0]):
-
-                all_scores = self.score(samples).cuda()
+                
+                all_scores = torch.from_numpy(self.score(torch.from_numpy(samples))).cuda()
 
                 # tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all passed samples
 

@@ -145,7 +145,7 @@ parser.add_argument('--verbose',
 
 args = parser.parse_args()
 
-model_path = "./models/" + "_".join(["InteractE", args.dataset]) + ".pt"
+model_path = "./kelpie/models/" + "_".join(["InteractE", args.dataset]) + ".pt"
 if args.load is not None:
     model_path = args.load
 
