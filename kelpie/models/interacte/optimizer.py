@@ -16,14 +16,14 @@ from kelpie.models.interacte.model import InteractE
 class InteractEOptimizer:
 
     def __init__(self,
-        model: InteractE,
-        optimizer_name: str ="Adam",
-        batch_size: int = 128,
-        learning_rate: float = 1e-4,
-        decay_adam_1: float = 0.9,
-        decay_adam_2: float = 0.99,
-        weight_decay: float = 0.0, # Decay for Adam optimizer
-        verbose: bool = True):
+                 model: InteractE,
+                 optimizer_name: str ="Adam",
+                 batch_size: int = 128,
+                 learning_rate: float = 1e-4,
+                 decay_adam_1: float = 0.9,
+                 decay_adam_2: float = 0.99,
+                 weight_decay: float = 0.0, # Decay for Adam optimizer
+                 verbose: bool = True):
 
         self.model = model
         self.batch_size = batch_size
@@ -42,14 +42,13 @@ class InteractEOptimizer:
         self.evaluator = Evaluator(self.model)
 
 
-    def train(
-        self,
-        train_samples: np.array, # fact triples
-        max_epochs: int,
-        save_path: str = None,
-        evaluate_every: int = -1,
-        valid_samples: np.array = None,
-        strategy: str = 'one-to-n'):
+    def train(self,
+              train_samples: np.array, # fact triples
+              max_epochs: int,
+              save_path: str = None,
+              evaluate_every: int = -1,
+              valid_samples: np.array = None,
+              strategy: str = 'one-to-n'):
 
         batch_size = min(self.batch_size, len(train_samples))
         
@@ -76,8 +75,8 @@ class InteractEOptimizer:
 
 
     def epoch(self,
-        batch_size: int,
-        training_samples: np.array):
+              batch_size: int,
+              training_samples: np.array):
         training_samples = torch.from_numpy(training_samples).cuda()
         # at the beginning of the epoch, shuffle all samples randomly
         actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
@@ -89,12 +88,14 @@ class InteractEOptimizer:
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
-                batch = actual_samples[batch_start : batch_start + batch_size].cuda()
+                # batch = actual_samples[batch_start : batch_start + batch_size].cuda()
+                batch_end = min(batch_start + batch_size, training_samples.shape[0])
+                batch = actual_samples[batch_start : batch_end].cuda()
                 l = self.step_on_batch(loss, batch)
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
-                bar.set_postfix(loss=f'{l.item():.0f}')
+                bar.set_postfix(loss=f'{l.item():.5f}')
 
 
     # Computing the loss over a single batch
@@ -103,16 +104,14 @@ class InteractEOptimizer:
         truth = batch[:, 2]
         oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
         
-        # print('pred shape =', prediction.shape, '\t', type(prediction[0][0].item()))
-        # print('truth shape =', truth.shape, '\t', type(truth[0].item()))
-        # print('oneHot_truth shape =', oneHot_truth.shape, '\t', type(oneHot_truth[0][0].item()))
-        
         # compute loss
         l = loss(prediction, oneHot_truth)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
+        print('l before =', l.grad)
         l.backward()
+        print('l after =', l.grad)
         self.optimizer.step()
 
         # return loss
@@ -122,14 +121,14 @@ class InteractEOptimizer:
 class KelpieInteractEOptimizer(InteractEOptimizer):
 
     def __init__(self,
-        model: InteractE,
-        optimizer_name: str ="Adam",
-        batch_size: int = 128,
-        learning_rate: float = 1e-4,
-        decay_adam_1: float = 0.9,
-        decay_adam_2: float = 0.99,
-        weight_decay: float = 0.0, # Decay for Adam optimizer
-        verbose: bool = True):
+                 model: InteractE,
+                 optimizer_name: str ="Adam",
+                 batch_size: int = 128,
+                 learning_rate: float = 1e-4,
+                 decay_adam_1: float = 0.9,
+                 decay_adam_2: float = 0.99,
+                 weight_decay: float = 0.0, # Decay for Adam optimizer
+                 verbose: bool = True):
         
         super(KelpieInteractEOptimizer, self).__init__(
             model = model,
@@ -143,8 +142,8 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
 
     
     def epoch(self,
-            batch_size: int,
-            training_samples: np.array):
+              batch_size: int,
+              training_samples: np.array):
         training_samples = torch.from_numpy(training_samples).cuda()
         # at the beginning of the epoch, shuffle all samples randomly
         actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]

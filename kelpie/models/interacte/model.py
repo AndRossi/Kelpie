@@ -298,7 +298,7 @@ class InteractE(Model, nn.Module):
                 ranks = torch.cat([ranks, b_ranks], dim=0)
                 
                 batch_all_scores = batch_all_scores.cpu().numpy()
-                targets = targets.cpu().numpy() # ?? forse bisogna batchare anche questo...??
+                targets = targets.cpu().numpy()
 
                 # now that it's a nparray, save the list of all obtained scores
                 batch_scores = [targets[i, 0] for i in range(batch.shape[0])]
@@ -346,7 +346,6 @@ class InteractE(Model, nn.Module):
         ranks = ranks.cpu().numpy().tolist()
 
         return scores, ranks, predictions
-
 
 
 ################
