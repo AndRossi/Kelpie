@@ -7,6 +7,7 @@ from kelpie.evaluation import Evaluator
 import torch
 from torch import optim
 from torch.utils.data import DataLoader
+from torch.nn import functional as F
 import tqdm
 
 from kelpie.models.interacte.model import InteractE
@@ -100,9 +101,14 @@ class InteractEOptimizer:
     def step_on_batch(self, loss, batch):
         prediction = self.model.forward(batch)
         truth = batch[:, 2]
-
+        oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
+        
+        # print('pred shape =', prediction.shape, '\t', type(prediction[0][0].item()))
+        # print('truth shape =', truth.shape, '\t', type(truth[0].item()))
+        # print('oneHot_truth shape =', oneHot_truth.shape, '\t', type(oneHot_truth[0][0].item()))
+        
         # compute loss
-        l = loss(prediction, truth)
+        l = loss(prediction, oneHot_truth)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
