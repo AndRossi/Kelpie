@@ -9,21 +9,23 @@ class Permutator(nn.Module):
                     # embed_dim: int,
                     num_perm: int = 1,
                     mtx_h: int = 20,
-                    mtx_w: int = 10,
-                    device: str = '-1'):
+                    mtx_w: int = 10): #,
+                    # device: str = '-1'):
 
         # self.embed_dim = embed_dim
         self.num_perm = num_perm
         self.mtx_h = mtx_h
         self.mtx_w = mtx_w
         self.embed_dim = (mtx_h * mtx_w)	# follows the paper formula
-
-        if device != '-1' and torch.cuda.is_available():
-            self.device = torch.device('cuda')
-            torch.cuda.set_rng_state(torch.cuda.get_rng_state())
-            torch.backends.cudnn.deterministic = True
-        else:
-            self.device = torch.device('cpu')
+        
+        self.device = torch.device('cuda')
+        
+        # if device != '-1' and torch.cuda.is_available():
+        #     self.device = torch.device('cuda')
+        #     torch.cuda.set_rng_state(torch.cuda.get_rng_state())
+        #     torch.backends.cudnn.deterministic = True
+        # else:
+        #     self.device = torch.device('cpu')
 
 
     def chequer_perm(self):
@@ -32,7 +34,6 @@ class Permutator(nn.Module):
 
         Parameters
         ----------
-
         Returns
         -------
         A tensor (k x d), where k is the number of permutations and 
