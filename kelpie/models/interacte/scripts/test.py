@@ -73,7 +73,7 @@ parser.add_argument('--weight_decay',
 )
 
 parser.add_argument('--learning_rate',
-                    default=1e-1,
+                    default=1e-4,
                     type=float,
                     help="Learning rate"
 )

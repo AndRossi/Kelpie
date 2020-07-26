@@ -109,13 +109,11 @@ class InteractEOptimizer:
         
         # compute loss
         l = loss(prediction, oneHot_truth)
-        print('l =',l)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
         l.backward()
         self.optimizer.step()
-        print('l2 =',l)
 
         # return loss
         return l
