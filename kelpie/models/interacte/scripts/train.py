@@ -45,6 +45,12 @@ parser.add_argument('--valid',
                     help="Number of epochs before valid."
 )
 
+parser.add_argument('--label_smooth',
+                    default=0.1,
+                    type=float,
+                    help="Label smoothing for true labels"
+)
+
 parser.add_argument('--embed_dim',
                     default=1000,
                     type=int,
@@ -177,6 +183,7 @@ optimizer = InteractEOptimizer(model=model,
                                decay_adam_1 = args.decay1,
                                decay_adam_2 = args.decay2,
                                weight_decay = args.weight_decay,
+                               label_smooth = args.label_smooth,
                                verbose = args.verbose
 )
 

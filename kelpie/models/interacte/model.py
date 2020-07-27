@@ -152,6 +152,7 @@ class InteractE(Model, nn.Module):
             x = torch.mm(x, self.entity_embeddings.transpose(1,0))
             x += self.bias.expand_as(x)
         else:
+            # TODO to complete one-to-x strategy
             x = torch.mul(x.unsqueeze(1), self.entity_embeddings[self.neg_num]).sum(dim=-1)
             x += self.bias[self.neg_num]
 

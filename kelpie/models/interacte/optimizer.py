@@ -23,10 +23,12 @@ class InteractEOptimizer:
                  decay_adam_1: float = 0.9,
                  decay_adam_2: float = 0.99,
                  weight_decay: float = 0.0, # Decay for Adam optimizer
+                 label_smooth: float = 0.1,
                  verbose: bool = True):
 
         self.model = model
         self.batch_size = batch_size
+        self.label_smooth = label_smooth
         self.verbose = verbose
 
         # Optimizer selection
@@ -107,6 +109,8 @@ class InteractEOptimizer:
         prediction = self.model.forward(batch)
         truth = batch[:, 2]
         oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
+        # label smoothing
+        oneHot_truth = (1.0 - self.label_smooth)*oneHot_truth + (1.0 / oneHot_truth.shape[1])
         
         # compute loss
         l = loss(prediction, oneHot_truth)
