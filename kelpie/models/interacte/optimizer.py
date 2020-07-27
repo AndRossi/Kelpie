@@ -85,32 +85,39 @@ class InteractEOptimizer:
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
+            losses = []
             batch_start = 0
             while batch_start < training_samples.shape[0]:
                 # batch = actual_samples[batch_start : batch_start + batch_size].cuda()
                 batch_end = min(batch_start + batch_size, training_samples.shape[0])
                 batch = actual_samples[batch_start : batch_end].cuda()
-                # losses = []
                 l = self.step_on_batch(loss, batch)
-                # losses.append(l)
+                losses.append(l)
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
                 bar.set_postfix(loss=f'{l.item():.5f}')
-            # l = np.mean(losses)
-            # bar.set_postfix(loss=f'{l.item():.5f}')
+            l = np.mean(losses)
+            bar.set_postfix(loss=f'{l.item():.5f}')
 
 
     # Computing the loss over a single batch
     def step_on_batch(self, loss, batch):
         prediction = self.model.forward(batch)
         truth = batch[:, 2]
-        oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
+        # oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
+        multiHot_truth = torch.FloatTensor(batch.shape[0], prediction.shape[1]).cuda()
+        multiHot_truth.zero_()
+        multiHot_truth = multiHot_truth.scatter_(1, truth, 1)
+        print(multiHot_truth)
+        
         # label smoothing
-        oneHot_truth = (1.0 - self.label_smooth)*oneHot_truth + (1.0 / oneHot_truth.shape[1])
+        # oneHot_truth = (1.0 - self.label_smooth)*oneHot_truth + (1.0 / oneHot_truth.shape[1])
+        multiHot_truth = (1.0 - self.label_smooth)*multiHot_truth + (1.0 / multiHot_truth.shape[1])
         
         # compute loss
-        l = loss(prediction, oneHot_truth)
+        # l = loss(prediction, oneHot_truth)
+        l = loss(prediction, multiHot_truth)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
