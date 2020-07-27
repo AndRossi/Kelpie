@@ -10,7 +10,6 @@ class Permutator(nn.Module):
                     num_perm: int = 1,
                     mtx_h: int = 20,
                     mtx_w: int = 10): #,
-                    # device: str = '-1'):
 
         # self.embed_dim = embed_dim
         self.num_perm = num_perm
@@ -19,13 +18,6 @@ class Permutator(nn.Module):
         self.embed_dim = (mtx_h * mtx_w)	# follows the paper formula
         
         self.device = torch.device('cuda')
-        
-        # if device != '-1' and torch.cuda.is_available():
-        #     self.device = torch.device('cuda')
-        #     torch.cuda.set_rng_state(torch.cuda.get_rng_state())
-        #     torch.backends.cudnn.deterministic = True
-        # else:
-        #     self.device = torch.device('cpu')
 
 
     def chequer_perm(self):
@@ -46,31 +38,36 @@ class Permutator(nn.Module):
 
         comb_idx = [] # matrix of size k x 
         for k in range(self.num_perm): 
-            temp = [] # riga corrente della matrice
+            temp = [] # current row of the matrix
             ent_idx, rel_idx = 0, 0
 
-            # ciclo sulle righe della matriche risultante
+            # for all row in the matrix
             for i in range(self.mtx_h):
-                # ciclo sulle colonne della matriche risultante
+                # for all column in the matrix
                 for j in range(self.mtx_w):
                     # if k is even
                     if k % 2 == 0:
+                        # if i is even
                         if i % 2 == 0:
                             temp.append(ent_perms[k, ent_idx])
                             ent_idx += 1
                             temp.append(rel_perms[k, rel_idx] + self.embed_dim)
                             rel_idx += 1
+                        # if i is odd
                         else:
                             temp.append(rel_perms[k, rel_idx] + self.embed_dim)
                             rel_idx += 1
                             temp.append(ent_perms[k, ent_idx])
                             ent_idx += 1
+                    # if k is odd
                     else:
+                        # if i is even
                         if i % 2 == 0:
                             temp.append(rel_perms[k, rel_idx] + self.embed_dim)
                             rel_idx += 1
                             temp.append(ent_perms[k, ent_idx])
                             ent_idx += 1
+                        # if i is odd
                         else:
                             temp.append(ent_perms[k, ent_idx])
                             ent_idx += 1
