@@ -85,7 +85,7 @@ parser.add_argument('--load',
                     required=False)
 
 parser.add_argument('--inp_drop_p',
-                    default=0.5,
+                    default=0.2,
                     type=float,
                     help="Dropout regularization probability for the input embeddings"
 )
