@@ -109,9 +109,7 @@ class InteractEOptimizer:
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
-        print('l before =', l.grad)
         l.backward()
-        print('l after =', l.grad)
         self.optimizer.step()
 
         # return loss
