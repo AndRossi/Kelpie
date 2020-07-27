@@ -200,16 +200,16 @@ class InteractE(Model, nn.Module):
             it should invert the passed samples while running this method)
             :param samples: the direct samples to predict, in numpy array format
             :return: this method returns three lists:
-                        - the list of scores for the passed samples,
-                                    OR IF THE MODEL SUPPORTS INVERSE FACTS
-                            the list of couples <direct sample score, inverse sample score>,
-                            where the i-th score refers to the i-th sample in the input samples.
-                        - the list of couples (head rank, tail rank)
-                            where the i-th couple refers to the i-th sample in the input samples.
-                        - the list of couples (head_predictions, tail_predictions)
-                            where the i-th couple refers to the i-th sample in the input samples.
-                            The head_predictions and tail_predictions for each sample
-                            are numpy arrays containing all the predicted heads and tails respectively for that sample.
+                    - the list of scores for the passed samples,
+                      OR IF THE MODEL SUPPORTS INVERSE FACTS
+                      the list of couples <direct sample score, inverse sample score>,
+                      where the i-th score refers to the i-th sample in the input samples.
+                    - the list of couples (head rank, tail rank)
+                      where the i-th couple refers to the i-th sample in the input samples.
+                    - the list of couples (head_predictions, tail_predictions)
+                      where the i-th couple refers to the i-th sample in the input samples.
+                      The head_predictions and tail_predictions for each sample
+                      are numpy arrays containing all the predicted heads and tails respectively for that sample.
         """
         
         # output data structures
@@ -223,7 +223,7 @@ class InteractE(Model, nn.Module):
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
-        #obtain scores, ranks and predictions both for direct and inverse samples
+        # obtain scores, ranks and predictions both for direct and inverse samples
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
@@ -242,26 +242,26 @@ class InteractE(Model, nn.Module):
 
     def predict_tails(self, samples, batch_size:int=128):
         """
-            This method takes as an input a tensor of 'direct' samples,
-            runs head and tail prediction on each of them
-            and returns
-                - the obtained scores for direct and inverse version of each sample,
-                - the obtained head and tail ranks for each sample
-                - the list of predicted entities for each sample
-            :param samples: a torch.Tensor containing all the DIRECT samples to predict.
-                            They will be automatically inverted to perform head prediction
-
-            :return: three dicts mapping each passed direct sample (in Tuple format) respectively to
-                        - the scores of that direct sample and of the corresponding inverse sample;
-                        - the head and tail rank for that sample;
-                        - the head and tail predictions for that sample
+        This method receives in input a collection of samples
+        and returns filtered scores, ranks and predicted entities for each passed fact.
+        
+        Parameters
+        ----------
+        :samples: A numpy.array of triples (head, relation, tail) to predict.
+        The triples can also be "inverse triples" with (tail, inverse_relation_id, head).
+        
+        Returns
+        ----------
+        This method returns three lists:
+        - the list of tail scores, where the i-th score refers to the i-th sample.
+        - the list of tail ranks, where the i-th rank refers to the i-th sample.
+        - the list of tail predictions, where the i-th prediction refers to the i-th sample
+            and contains all the predicted tails for that i-th sample.
         """
-
         scores, predictions = [], []
         ranks = torch.Tensor()
 
         with torch.no_grad():
-            # targets = torch.Tensor()
             
             batch_start = 0
             while batch_start < samples.shape[0]:
@@ -269,88 +269,43 @@ class InteractE(Model, nn.Module):
                 batch_end = min(batch_start + batch_size, samples.shape[0])
                 batch = torch.from_numpy(samples[batch_start : batch_end]).cuda()
                 
-                targets = torch.zeros(size=(batch.shape[0], 1)).cuda()
-                
+                targets = torch.zeros(size=(batch.shape[0], 1)).cuda()  # initialize with ZEROS
                 b_ranks = torch.ones(batch.shape[0])    # initialize with ONES
+                
                 batch_all_scores = self.score(batch)
-
-                # tail_indexes = torch.tensor(samples[:, 2]).cuda()  # tails of all passed samples
-
-                # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
-                for i, (_, _, tail_id) in enumerate(batch):
-                    targets[i, 0] = batch_all_scores[i, tail_id].item()
 
                 # for every triple in the batch
                 for i, (head_id, rel_id, tail_id) in enumerate(batch):
+                    # extract the predicted score of the correct tail for the actual fact <h,r,t>
+                    targets[i, 0] = batch_all_scores[i, tail_id].item()
+                    
+                    # filter_out contains ALL labels known for this <h,r>
                     filter_out = self.dataset.to_filter[(head_id, rel_id)]
-
-                    # predicted value for the correct tail of that triple
-                    target_tail_score = batch_all_scores[i, tail_id].item()
-
                     if tail_id not in filter_out:
                         filter_out.append(tail_id)
                     
-                    # scores.append(target_tail_score)
-
-                    # set to -1e6 all the predicted values for all the correct tails for that Head-Rel couple
-                    batch_all_scores[i, filter_out] = -1e6
-                    # # re-set the predicted value for that tail to the original value
-                    # all_scores[i, tail_id] = target_tail_score
-
-                #print('all_scores =', type(all_scores), all_scores)
-                #print('targets =', type(targets), targets)
-                # print('ranks =', type(ranks), ranks)
-                # summa = torch.sum((batch_all_scores >= targets[batch_start:batch_end, :]).float(), dim=1).cpu()
-                # print('sum =', type(summa), summa)
+                    # set to -1e6 all known cases for this Head-Rel couple, this corresponds to the filtered scenario
+                    batch_all_scores[i, torch.LongTensor(filter_out)] = -1e6
+                    # re-set the predicted value for that tail to the original value
+                    # batch_all_scores[i, tail_id] = targets[i, 0]
                 
-                # fill the b_ranks data structure and convert it to a Python list
-                b_ranks += torch.sum((batch_all_scores >= targets).float(), dim=1).cpu()    #b_ranks was initialized with ONES
+                # find the rank for every target tail
+                b_ranks += torch.sum((batch_all_scores >= targets).float(), dim=1).cpu()
                 ranks = torch.cat([ranks, b_ranks], dim=0)
                 
-                batch_all_scores = batch_all_scores.cpu().numpy()
+                # take the score of all the correct tails
                 targets = targets.cpu().numpy()
+                b_scores = [targets[i, 0] for i in range(batch.shape[0])]
+                scores.extend(b_scores)
+                
+                # sort all the scores and take the predictions
+                _, sorted_args = torch.sort(batch_all_scores, dim=1, descending=True)
+                sorted_args = sorted_args.cpu().numpy()
 
-                # now that it's a nparray, save the list of all obtained scores
-                batch_scores = [targets[i, 0] for i in range(batch.shape[0])]
-
-                for i, (head_id, rel_id, tail_id) in enumerate(batch):
-                    filter_out = self.dataset.to_filter[(head_id, rel_id)]
-                    if tail_id not in filter_out:
-                        filter_out.append(tail_id)
-
-                    predicted_tails = np.where(batch_all_scores[i] > -1e6)[0]
-
-                    # get all not filtered tails and corresponding scores for current fact
-                    #predicted_tails = np.where(all_scores[i] != -1e6)
-                    predicted_tails_scores = batch_all_scores[i, predicted_tails] #for cur_tail in predicted_tails]
-
-                    # note: the target tail score and the tail id are in the same position in their respective lists!
-                    #predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
-                    #predicted_tails = np.append(predicted_tails, [tail_id])
-
-                    # sort the scores and predicted tails list in the same way
-                    permutation = np.argsort(-predicted_tails_scores)
-
-                    predicted_tails_scores = predicted_tails_scores[permutation]
-                    predicted_tails = predicted_tails[permutation]
-
-                    # include the score of the target tail in the predictions list
-                    # after ALL entities with greater or equal scores (MIN policy)
-                    j = 0
-                    while j < len(predicted_tails_scores) and predicted_tails_scores[j] >= batch_scores[i]:
-                        j += 1
-
-                    predicted_tails_scores = np.concatenate((predicted_tails_scores[:j],
-                                                            np.array([batch_scores[i]]),
-                                                            predicted_tails_scores[j:]))
-                    predicted_tails = np.concatenate((predicted_tails[:j],
-                                                    np.array([tail_id]),
-                                                    predicted_tails[j:]))
-
-                    # add to the results data structure
-                    predictions.append(predicted_tails)     # as a np array!
-            
-                scores.extend(batch_scores)
+                for r in sorted_args:
+                    predictions.append(r)
+                
+                # update batch_start offset
                 batch_start += batch_size
             
         ranks = ranks.cpu().numpy().tolist()
