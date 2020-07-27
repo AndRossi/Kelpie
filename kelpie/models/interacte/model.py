@@ -41,6 +41,7 @@ class InteractE(Model, nn.Module):
                  kernel_size: int = 9,
                  num_filt_conv: int = 96,
                  strategy: str = 'one_to_n',
+                 neg_num: int = 0,
                  init_random = True):
 
         # initialize this object both as a Model and as a nn.Module
@@ -56,8 +57,8 @@ class InteractE(Model, nn.Module):
 
         self.strategy = strategy
         
-        # Inverted Entities TODO da ricontrollare
-        # self.neg_ents
+        # Number of negative samples to use for loss calculation in one-to-x train strategy
+        self.neg_num = neg_num
         
         # # Subject and relationship embeddings;
         # # xavier_normal_ distributes the embeddings weight values by the said distribution
@@ -72,10 +73,11 @@ class InteractE(Model, nn.Module):
         # (on which torch.Embeddings can not be used as they do not allow the post-training mechanism).
         # We have verified that this does not affect performances in any way.
         if init_random:
+            # num_relation is x2 since we need to embed direct and inverse relationships
             self.entity_embeddings = Parameter(torch.empty(self.num_entities, self.embed_dim).cuda(), requires_grad=True)
             self.relation_embeddings = Parameter(torch.empty(self.num_relations*2, self.embed_dim).cuda(), requires_grad=True)
 
-            # initialize only the entity_embeddings and relation embeddings wih xavier method
+            # initialize only the entity_embeddings and relation embeddings with xavier method
             xavier_normal_(self.entity_embeddings)
             xavier_normal_(self.relation_embeddings)
 
@@ -150,8 +152,8 @@ class InteractE(Model, nn.Module):
             x = torch.mm(x, self.entity_embeddings.transpose(1,0))
             x += self.bias.expand_as(x)
         else:
-            x = torch.mul(x.unsqueeze(1), self.entity_embeddings[self.neg_ents]).sum(dim=-1)
-            x += self.bias[self.neg_ents]
+            x = torch.mul(x.unsqueeze(1), self.entity_embeddings[self.neg_num]).sum(dim=-1)
+            x += self.bias[self.neg_num]
 
         pred = torch.sigmoid(x)
 

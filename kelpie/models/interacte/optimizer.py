@@ -48,7 +48,7 @@ class InteractEOptimizer:
               save_path: str = None,
               evaluate_every: int = -1,
               valid_samples: np.array = None,
-              strategy: str = 'one-to-n'):
+              strategy: str = 'one-to-x'):
 
         batch_size = min(self.batch_size, len(train_samples))
         
@@ -91,11 +91,15 @@ class InteractEOptimizer:
                 # batch = actual_samples[batch_start : batch_start + batch_size].cuda()
                 batch_end = min(batch_start + batch_size, training_samples.shape[0])
                 batch = actual_samples[batch_start : batch_end].cuda()
+                # losses = []
                 l = self.step_on_batch(loss, batch)
+                # losses.append(l)
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
                 bar.set_postfix(loss=f'{l.item():.5f}')
+            # l = np.mean(losses)
+            # bar.set_postfix(loss=f'{l.item():.5f}')
 
 
     # Computing the loss over a single batch
