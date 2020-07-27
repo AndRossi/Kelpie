@@ -202,8 +202,8 @@ original_model = InteractE(dataset = original_dataset,
                             num_perm = args.num_perm,
                             kernel_size = args.kernel_size,
                             num_filt_conv = args.num_filt_conv,
-                            strategy = args.strategy
-)
+                            strategy = args.strategy,
+                            init_random=True)
 
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')

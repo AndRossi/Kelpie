@@ -163,8 +163,8 @@ model = InteractE(dataset=dataset,
                   feat_drop_p = args.feat_drop_p,
                   kernel_size = args.kernel_size,
                   num_filt_conv = args.num_filt_conv,
-                  strategy = args.strategy
-)   # type: InteractE
+                  strategy = args.strategy,
+                  init_random=True)   # type: InteractE
 model.to('cuda')
 if args.load is not None:
     model.load_state_dict(torch.load(model_path))

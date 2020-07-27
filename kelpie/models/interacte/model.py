@@ -3,8 +3,9 @@ from typing import Tuple, Any
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import Parameter, init
+from torch.nn import Parameter
 from torch.nn import functional as F
+from torch.nn.init import xavier_normal_
 
 from kelpie.dataset import Dataset
 from kelpie.kelpie_dataset import KelpieDataset
@@ -29,17 +30,18 @@ class InteractE(Model, nn.Module):
 
     """
     def __init__(self,
-        dataset: Dataset,
-        embed_dim: int,
-        k_h: int = 20,
-        k_w: int = 10,
-        num_perm: int = 1,
-        inp_drop_p: float = 0.2,
-        hid_drop_p: float = 0.5,
-        feat_drop_p: float = 0.5,
-        kernel_size: int = 9,
-        num_filt_conv: int = 96,
-        strategy: str = 'one_to_n'):
+                 dataset: Dataset,
+                 embed_dim: int,
+                 k_h: int = 20,
+                 k_w: int = 10,
+                 num_perm: int = 1,
+                 inp_drop_p: float = 0.2,
+                 hid_drop_p: float = 0.5,
+                 feat_drop_p: float = 0.5,
+                 kernel_size: int = 9,
+                 num_filt_conv: int = 96,
+                 strategy: str = 'one_to_n',
+                 init_random = True):
 
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
@@ -57,13 +59,25 @@ class InteractE(Model, nn.Module):
         # Inverted Entities TODO da ricontrollare
         # self.neg_ents
         
-        # Subject and relationship embeddings;
-        # xavier_normal_ distributes the embeddings weight values by the said distribution
-        self.ent_embed = nn.Embedding(self.num_entities, self.embed_dim, padding_idx=None) 
-        init.xavier_normal_(self.ent_embed.weight)
-        # num_relation is x2 since we need to embed direct and inverse relationships
-        self.rel_embed = nn.Embedding(self.num_relations*2, self.embed_dim, padding_idx=None)
-        init.xavier_normal_(self.rel_embed.weight)
+        # # Subject and relationship embeddings;
+        # # xavier_normal_ distributes the embeddings weight values by the said distribution
+        # self.entity_embeddings = nn.Embedding(self.num_entities, self.embed_dim, padding_idx=None) 
+        # xavier_normal_(self.entity_embeddings.weight)
+        # # num_relation is x2 since we need to embed direct and inverse relationships
+        # self.relation_embeddings = nn.Embedding(self.num_relations*2, self.embed_dim, padding_idx=None)
+        # xavier_normal_(self.relation_embeddings.weight)
+        
+        # create the embeddings for entities and relations as Parameters.
+        # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieComplEx model,
+        # (on which torch.Embeddings can not be used as they do not allow the post-training mechanism).
+        # We have verified that this does not affect performances in any way.
+        if init_random:
+            self.entity_embeddings = Parameter(torch.empty(self.num_entities, self.embed_dim).cuda(), requires_grad=True)
+            self.relation_embeddings = Parameter(torch.empty(self.num_relations*2, self.embed_dim).cuda(), requires_grad=True)
+
+            # initialize only the entity_embeddings and relation embeddings wih xavier method
+            xavier_normal_(self.entity_embeddings)
+            xavier_normal_(self.relation_embeddings)
 
         # Dropout regularization for input layer, hidden layer and embedding matrix
         self.inp_drop = nn.Dropout(inp_drop_p)
@@ -99,7 +113,7 @@ class InteractE(Model, nn.Module):
         # Kernel filter definition
         self.num_filt_conv = num_filt_conv
         self.register_parameter('conv_filt', Parameter(torch.zeros(num_filt_conv, 1, kernel_size, kernel_size)))
-        init.xavier_normal_(self.conv_filt)
+        xavier_normal_(self.conv_filt)
 
 
     def score(self, samples: np.array) -> np.array:
@@ -110,15 +124,8 @@ class InteractE(Model, nn.Module):
             :return: the computed scores, as a numpy array
         """
 
-        # sub_samples = torch.from_numpy(samples[:, 0])
-        # rel_samples = torch.from_numpy(samples[:, 1])
-        
-        sub_samples = samples[:, 0]
-        rel_samples = samples[:, 1]
-
-        #score = sigmoid(torch.cat(ReLU(conv_circ(embedding_matrix, kernel_tensor)))weights)*embedding_o
-        sub_emb	= self.ent_embed(sub_samples)	# Embeds the subject tensor
-        rel_emb	= self.rel_embed(rel_samples)	# Embeds the relationship tensor
+        sub_emb	= self.entity_embeddings[samples[:, 0]]	    # Embeds the subject tensor
+        rel_emb	= self.relation_embeddings[samples[:, 1]]	# Embeds the relationship tensor
         
         comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
         # self to access local variable.
@@ -140,10 +147,10 @@ class InteractE(Model, nn.Module):
         x = F.relu(x)
         
         if self.strategy == 'one_to_n':
-            x = torch.mm(x, self.ent_embed.weight.transpose(1,0))
+            x = torch.mm(x, self.entity_embeddings.transpose(1,0))
             x += self.bias.expand_as(x)
         else:
-            x = torch.mul(x.unsqueeze(1), self.ent_embed(self.neg_ents)).sum(dim=-1)
+            x = torch.mul(x.unsqueeze(1), self.entity_embeddings[self.neg_ents]).sum(dim=-1)
             x += self.bias[self.neg_ents]
 
         pred = torch.sigmoid(x)
@@ -363,11 +370,6 @@ class KelpieInteractE(InteractE):
         #params:        	Hyperparameters of the model
         #chequer_perm:   	Reshaping to be used by the model
 
-        # InteractE.__init__(self,
-        # 	dataset=dataset,
-        # 	dimension=model.dimension,
-        # 	init_random=False,
-        # 	init_size=init_size)
         InteractE.__init__(self,
                            dataset=dataset,
                            embed_dim=model.embed_dim,
@@ -379,14 +381,15 @@ class KelpieInteractE(InteractE):
                            feat_drop_p=model.feature_map_drop,
                            kernel_size=model.kernel_size,
                            num_filt_conv=model.num_filt_conv,
-                           strategy=model.strategy)
+                           strategy=model.strategy,
+                           init_random=False)
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
-        frozen_entity_embeddings = model.ent_embed.clone().detach()
-        frozen_relation_embeddings = model.rel_embed.clone().detach()
+        frozen_entity_embeddings = model.entity_embeddings.clone().detach()
+        frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension).cuda(), requires_grad=True)
         
