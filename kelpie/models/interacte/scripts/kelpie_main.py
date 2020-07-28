@@ -8,17 +8,15 @@ from kelpie.models.interacte.model import InteractE, KelpieInteractE
 from kelpie.evaluation import Evaluator, KelpieEvaluator
 from kelpie.models.interacte.optimizer import KelpieInteractEOptimizer
 
-datasets = ALL_DATASET_NAMES
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
 # Input dataset
 parser.add_argument('--dataset',
-                    choices=datasets,
-                    help="Dataset in {}".format(datasets),
+                    choices=ALL_DATASET_NAMES,
+                    help="Dataset in {}".format(ALL_DATASET_NAMES),
                     required=True
 )
-
 
 # Model
 parser.add_argument('--model_path',
@@ -26,6 +24,17 @@ parser.add_argument('--model_path',
                     required=True
 )
 
+parser.add_argument('--max_epochs',
+                    default=200,
+                    type=int,
+                    help="Number of epochs to run in post-training"
+)
+
+parser.add_argument('--valid',
+                    default=-1,
+                    type=float,
+                    help="Number of epochs before valid"
+)
 
 # Gradient Descent
 optimizers = ['Adam', 'SGD']
@@ -38,7 +47,8 @@ parser.add_argument('--optimizer',
 parser.add_argument('--batch_size',
                     default=128,
                     type=int,
-                    help="Batch size to use in post-training")
+                    help="Batch size to use in post-training"
+)
 
 parser.add_argument('--learning_rate',
                     default=1e-4,
@@ -46,6 +56,11 @@ parser.add_argument('--learning_rate',
                     help="Learning rate"
 )
 
+parser.add_argument('--label_smooth',
+                    default=0.1,
+                    type=float,
+                    help="Label smoothing for true labels"
+)
 
 # Adam specific settings
 parser.add_argument('--decay1',
@@ -55,26 +70,31 @@ parser.add_argument('--decay1',
 )
 
 parser.add_argument('--decay2',
-                    default=0.99,
+                    default=0.999,
                     type=float,
                     help="Decay rate for second moment estimate in Adam"
 )
 
+parser.add_argument('--weight_decay',
+                    default = 0.0,
+                    type = float,
+                    help="Penalty for weight-decay"
+)
 
 # Regularization
-parser.add_argument('--inp_drop_p',
-                    default=0.5,
+parser.add_argument('--inp_drop',
+                    default=0.2,
                     type=float,
                     help="Dropout regularization probability for the input embeddings"
 )
 
-parser.add_argument('--hid_drop_p',
+parser.add_argument('--hid_drop',
                     default=0.5,
                     type=float,
                     help="Dropout regularization probability for the hidden layer"
 )
 
-parser.add_argument('--feat_drop_p',
+parser.add_argument('--feat_drop',
                     default=0.5,
                     type=float,
                     help="Dropout regularization probability for the feature matrix"
@@ -83,11 +103,11 @@ parser.add_argument('--feat_drop_p',
 parser.add_argument('--num_perm',
                     default=1,
                     type=int,
-                    help="Number of permutation"
+                    help="Number of permutations"
 )
 
 parser.add_argument('--embed_dim',
-                    default=1000,
+                    default=400,
                     type=int,
                     help="Factorization rank."
 )
@@ -116,15 +136,11 @@ parser.add_argument('--num_filt_conv',
                     help="Number of convolution filters"
 )
 
+strategies = ['one-to-n']
 parser.add_argument('--strategy',
+                    choices=strategies,
                     default='one_to_n',
-                    help="Choose the strategy: one_to_n"
-)
-
-parser.add_argument('--weight_decay',
-                    default = 0.0,
-                    type = float,
-                    help="Penalty for weight-decay"
+                    help="Strategy in {}".format(strategies)
 )
 
 parser.add_argument('--verbose',
@@ -133,30 +149,27 @@ parser.add_argument('--verbose',
                     help="Verbose"
 )
 
-parser.add_argument('--max_epochs',
-                    default=200,
-                    type=int,
-                    help="Number of epochs to run in post-training")
-
-
 # Samples
 parser.add_argument('--head',
                     help="Textual name of the head entity of the test fact to explain",
-                    required=True)
+                    required=True
+)
 
 parser.add_argument('--relation',
                     help="Textual name of the relation of the test fact to explain",
-                    required=True)
+                    required=True
+)
 
 parser.add_argument('--tail',
                     help="Textual name of the tail entity of the test fact to explain",
-                    required=True)
+                    required=True
+)
 
 parser.add_argument('--perspective',
                     choices=['head', 'tail'],
                     default='head',
-                    help="Explanation perspective in {}".format(['head', 'tail']))
-
+                    help="Explanation perspective in {}".format(['head', 'tail'])
+)
 
 #   E.G.    explain  why  /m/02mjmr (Barack Obama)  is predicted as the head for
 #   /m/02mjmr (Barack Obama) 	/people/person/ethnicity	/m/033tf_ (Irish American)
@@ -190,20 +203,21 @@ assert(original_sample in original_dataset.test_samples)
 
 
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
+
 print("Loading model at location %s..." % args.model_path)
 # instantiate and load the original model from filesystem
-original_model = InteractE(dataset = original_dataset, 
-                            embed_dim = args.embed_dim, 
-                            k_h = args.k_h,
-                            k_w = args.k_w,
-                            inp_drop_p = args.inp_drop_p,
-                            hid_drop_p = args.hid_drop_p,
-                            feat_drop_p = args.feat_drop_p,
-                            num_perm = args.num_perm,
-                            kernel_size = args.kernel_size,
-                            num_filt_conv = args.num_filt_conv,
-                            strategy = args.strategy,
-                            init_random=True)
+original_model = InteractE(dataset = original_dataset,
+                           embed_dim = args.embed_dim, 
+                           k_h = args.k_h,
+                           k_w = args.k_w,
+                           num_perm = args.num_perm,
+                           inp_drop = args.inp_drop,
+                           hid_drop = args.hid_drop,
+                           feat_drop = args.feat_drop,
+                           kernel_size = args.kernel_size,
+                           num_filt_conv = args.num_filt_conv,
+                           strategy = args.strategy,
+                           init_random=True)
 
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
@@ -211,8 +225,6 @@ original_model.to('cuda')
 print("Wrapping the original model in a Kelpie explainable model...")
 # use model_to_explain to initialize the Kelpie model
 kelpie_dataset = KelpieDataset(dataset=original_dataset, entity_id=original_entity_id)
-
-# TO DO, KelpieInteractE non è ancora ultimato.
 kelpie_model = KelpieInteractE(model=original_model, dataset=kelpie_dataset)
 kelpie_model.to('cuda')
 
@@ -231,13 +243,14 @@ kelpie_test_samples = kelpie_dataset.kelpie_test_samples
 print("Running post-training on the Kelpie model...")
 # build the Optimizer
 optimizer = KelpieInteractEOptimizer(model = kelpie_model,
-                                   optimizer_name = args.optimizer,
-                                   batch_size = args.batch_size,
-                                   learning_rate=args.learning_rate,
-                                   decay_adam_1 = args.decay1,
-                                   decay_adam_2 = args.decay2,
-                                   weight_decay = args.weight_decay,
-                                   verbose = args.verbose
+                                     optimizer_name = args.optimizer,
+                                     batch_size = args.batch_size,
+                                     learning_rate=args.learning_rate,
+                                     decay_adam_1 = args.decay1,
+                                     decay_adam_2 = args.decay2,
+                                     weight_decay = args.weight_decay,
+                                     label_smooth=args.label_smooth,
+                                     verbose = args.verbose
 )
 optimizer.train(train_samples=kelpie_dataset.kelpie_train_samples,
                 max_epochs=args.max_epochs)

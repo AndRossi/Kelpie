@@ -1,20 +1,18 @@
-from ordered_set import OrderedSet
+import tqdm
 import numpy as np
-from kelpie.evaluation import Evaluator
 import torch
 from torch import optim
-from torch.utils.data import DataLoader
 from torch.nn import functional as F
-import tqdm
 
-from kelpie.models.interacte.model import InteractE
+from kelpie.models.interacte.model import InteractE, KelpieInteractE
+from kelpie.evaluation import Evaluator
 
 
 class InteractEOptimizer:
 
     def __init__(self,
                  model: InteractE,
-                 optimizer_name: str ="Adam",
+                 optimizer_name: str = "Adam",
                  batch_size: int = 128,
                  learning_rate: float = 1e-4,
                  decay_adam_1: float = 0.9,
@@ -46,17 +44,20 @@ class InteractEOptimizer:
               max_epochs: int,
               save_path: str = None,
               evaluate_every: int = -1,
-              valid_samples: np.array = None,
-              strategy: str = 'one-to-x'):
+              valid_samples: np.array = None):
 
-        batch_size = min(self.batch_size, len(train_samples))
-        
-        cur_loss = 0
+        # extract the direct and inverse train facts
+        training_samples = np.vstack( (train_samples, self.model.dataset.invert_samples(train_samples)) )
+
+        batch_size = min(self.batch_size, len(training_samples))
         
         for e in range(max_epochs):
-            cur_loss = self.epoch(batch_size, train_samples)
+            self.epoch(batch_size, training_samples)
 
             if evaluate_every > 0 and valid_samples is not None and (e + 1) % evaluate_every == 0:
+                # self.model.eval()
+                # with torch.no_grad():
+                #     mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
                 mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
 
                 print("\tValidation Hits@1: %f" % h1)
@@ -85,39 +86,36 @@ class InteractEOptimizer:
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
             bar.set_description(f'train loss')
 
-            losses = []
+            # losses = []
             batch_start = 0
             while batch_start < training_samples.shape[0]:
-                # batch = actual_samples[batch_start : batch_start + batch_size].cuda()
                 batch_end = min(batch_start + batch_size, training_samples.shape[0])
                 batch = actual_samples[batch_start : batch_end].cuda()
+                
                 l = self.step_on_batch(loss, batch)
-                losses.append(l)
+                # losses.append(l)
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
                 bar.set_postfix(loss=f'{l.item():.5f}')
-            l = np.mean(losses)
-            bar.set_postfix(loss=f'{l.item():.5f}')
+                
+            # l = np.mean(losses)
+            # bar.set_postfix(loss=f'{l.item():.5f}')
 
 
     # Computing the loss over a single batch
     def step_on_batch(self, loss, batch):
         prediction = self.model.forward(batch)
         truth = batch[:, 2]
-        # oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
-        multiHot_truth = torch.FloatTensor(batch.shape[0], prediction.shape[1]).cuda()
-        multiHot_truth.zero_()
-        multiHot_truth = multiHot_truth.scatter_(1, truth, 1)
-        print(multiHot_truth)
+        oneHot_truth = F.one_hot(truth, prediction.shape[1]).type(torch.FloatTensor).cuda()
+        # multiHot_truth = torch.FloatTensor(batch.shape[0], prediction.shape[1]).cuda()
+        # multiHot_truth = multiHot_truth.zero_().scatter_(1, truth, 1)
         
         # label smoothing
-        # oneHot_truth = (1.0 - self.label_smooth)*oneHot_truth + (1.0 / oneHot_truth.shape[1])
-        multiHot_truth = (1.0 - self.label_smooth)*multiHot_truth + (1.0 / multiHot_truth.shape[1])
+        oneHot_truth = (1.0 - self.label_smooth)*oneHot_truth + (1.0 / oneHot_truth.shape[1])
         
         # compute loss
-        # l = loss(prediction, oneHot_truth)
-        l = loss(prediction, multiHot_truth)
+        l = loss(prediction, oneHot_truth)
         
         # compute loss gradients and run optimization step
         self.optimizer.zero_grad()
@@ -131,24 +129,25 @@ class InteractEOptimizer:
 class KelpieInteractEOptimizer(InteractEOptimizer):
 
     def __init__(self,
-                 model: InteractE,
-                 optimizer_name: str ="Adam",
+                 model: KelpieInteractE,
+                 optimizer_name: str = "Adam",
                  batch_size: int = 128,
                  learning_rate: float = 1e-4,
                  decay_adam_1: float = 0.9,
                  decay_adam_2: float = 0.99,
                  weight_decay: float = 0.0, # Decay for Adam optimizer
+                 label_smooth: float = 0.1,
                  verbose: bool = True):
         
-        super(KelpieInteractEOptimizer, self).__init__(
-            model = model,
-            optimizer_name = optimizer_name,
-            batch_size = batch_size,
-            learning_rate = learning_rate,
-            decay_adam_1 = decay_adam_1,
-            decay_adam_2 = decay_adam_2,
-            weight_decay = weight_decay,
-            verbose = verbose)
+        super(KelpieInteractEOptimizer, self).__init__(model = model,
+                                                       optimizer_name = optimizer_name,
+                                                       batch_size = batch_size,
+                                                       learning_rate = learning_rate,
+                                                       decay_adam_1 = decay_adam_1,
+                                                       decay_adam_2 = decay_adam_2,
+                                                       weight_decay = weight_decay,
+                                                       label_smooth = label_smooth,
+                                                       verbose = verbose)
 
     
     def epoch(self,
@@ -164,7 +163,9 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
-                batch = actual_samples[batch_start: batch_start + batch_size].cuda()
+                batch_end = min(batch_start + batch_size, training_samples.shape[0])
+                batch = actual_samples[batch_start : batch_end].cuda()
+                
                 l = self.step_on_batch(loss, batch)
 
                 # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
@@ -172,6 +173,6 @@ class KelpieInteractEOptimizer(InteractEOptimizer):
                 # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
                 self.model.update_embeddings()
 
-                batch_start += self.batch_size
+                batch_start += batch_size
                 bar.update(batch.shape[0])
-                bar.set_postfix(loss=f'{l.item():.0f}')
+                bar.set_postfix(loss=f'{l.item():.5f}')

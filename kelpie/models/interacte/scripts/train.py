@@ -5,26 +5,25 @@ import torch
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 from kelpie.models.interacte.model import InteractE
-from kelpie.models.interacte.optimizer import InteractEOptimizer, KelpieInteractEOptimizer
+from kelpie.models.interacte.optimizer import InteractEOptimizer
+
 
 # todo: when we add more models, we should move these variables to another location
-MODEL_HOME = os.path.abspath("./models/")
+MODEL_HOME = os.path.abspath("./stored_models/")
 ALL_MODEL_NAMES = ["InteractE"]
 
-parser = argparse.ArgumentParser(
-    description="Relational learning contraption"
-)
+parser = argparse.ArgumentParser()
 
 parser.add_argument('--dataset',
                     choices=ALL_DATASET_NAMES,
-                    help="Dataset in {}".format(ALL_DATASET_NAMES)
+                    help="Dataset in {}".format(ALL_DATASET_NAMES),
+                    required=True
 )
 
 parser.add_argument('--model',
                     choices=ALL_MODEL_NAMES,
                     help="Model in {}".format(ALL_MODEL_NAMES)
 )
-
 
 optimizers = ['Adam', 'SGD']
 parser.add_argument('--optimizer',
@@ -34,25 +33,19 @@ parser.add_argument('--optimizer',
 )
 
 parser.add_argument('--max_epochs',
-                    default=50,
+                    default=500,
                     type=int,
-                    help="Number of epochs."
+                    help="Number of epochs"
 )
 
 parser.add_argument('--valid',
                     default=-1,
                     type=float,
-                    help="Number of epochs before valid."
-)
-
-parser.add_argument('--label_smooth',
-                    default=0.1,
-                    type=float,
-                    help="Label smoothing for true labels"
+                    help="Number of epochs before valid"
 )
 
 parser.add_argument('--embed_dim',
-                    default=1000,
+                    default=400,
                     type=int,
                     help="Embedding dimension"
 )
@@ -75,43 +68,22 @@ parser.add_argument('--learning_rate',
                     help="Learning rate"
 )
 
+parser.add_argument('--label_smooth',
+                    default=0.1,
+                    type=float,
+                    help="Label smoothing for true labels"
+)
+
 parser.add_argument('--decay1',
                     default=0.9,
                     type=float,
                     help="Decay rate for the first moment estimate in Adam"
 )
+
 parser.add_argument('--decay2',
                     default=0.999,
                     type=float,
                     help="Decay rate for second moment estimate in Adam"
-)
-
-parser.add_argument('--load',
-                    help="path to the model to load",
-                    required=False)
-
-parser.add_argument('--inp_drop_p',
-                    default=0.2,
-                    type=float,
-                    help="Dropout regularization probability for the input embeddings"
-)
-
-parser.add_argument('--hid_drop_p',
-                    default=0.5,
-                    type=float,
-                    help="Dropout regularization probability for the hidden layer"
-)
-
-parser.add_argument('--feat_drop_p',
-                    default=0.5,
-                    type=float,
-                    help="Dropout regularization probability for the feature matrix"
-)
-
-parser.add_argument('--num_perm',
-                    default=1,
-                    type=int,
-                    help="Number of permutation"
 )
 
 parser.add_argument('--k_h',
@@ -126,6 +98,30 @@ parser.add_argument('--k_w',
                     help="Reshaped matrix width"
 )
 
+parser.add_argument('--num_perm',
+                    default=1,
+                    type=int,
+                    help="Number of permutations"
+)
+
+parser.add_argument('--inp_drop',
+                    default=0.2,
+                    type=float,
+                    help="Dropout regularization probability for the input embeddings"
+)
+
+parser.add_argument('--hid_drop',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the hidden layer"
+)
+
+parser.add_argument('--feat_drop',
+                    default=0.5,
+                    type=float,
+                    help="Dropout regularization probability for the feature matrix"
+)
+
 parser.add_argument('--kernel_size',
                     default=9,
                     type=int,
@@ -138,9 +134,11 @@ parser.add_argument('--num_filt_conv',
                     help="Number of convolution filters"
 )
 
+strategies = ['one-to-n']
 parser.add_argument('--strategy',
+                    choices=strategies,
                     default='one_to_n',
-                    help="Choose the strategy: one_to_n"
+                    help="Strategy in {}".format(strategies)
 )
 
 parser.add_argument('--verbose',
@@ -149,9 +147,14 @@ parser.add_argument('--verbose',
                     help="Verbose"
 )
 
+parser.add_argument('--load',
+                    help="Path to the model to load",
+                    required=False
+)
+
 args = parser.parse_args()
 
-model_path = "./kelpie/models/" + "_".join(["InteractE", args.dataset]) + ".pt"
+model_path = "./stored_models/" + "_".join(["InteractE", args.dataset]) + ".pt"
 if args.load is not None:
     model_path = args.load
 
@@ -164,9 +167,9 @@ model = InteractE(dataset=dataset,
                   k_h = args.k_h,
                   k_w = args.k_w,
                   num_perm = args.num_perm,
-                  inp_drop_p = args.inp_drop_p,
-                  hid_drop_p = args.hid_drop_p,
-                  feat_drop_p = args.feat_drop_p,
+                  inp_drop = args.inp_drop,
+                  hid_drop = args.hid_drop,
+                  feat_drop = args.feat_drop,
                   kernel_size = args.kernel_size,
                   num_filt_conv = args.num_filt_conv,
                   strategy = args.strategy,
@@ -186,7 +189,6 @@ optimizer = InteractEOptimizer(model=model,
                                label_smooth = args.label_smooth,
                                verbose = args.verbose
 )
-
 optimizer.train(train_samples=dataset.train_samples,
                 max_epochs=args.max_epochs,
                 save_path=model_path,

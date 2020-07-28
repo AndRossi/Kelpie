@@ -12,22 +12,18 @@ from kelpie.kelpie_dataset import KelpieDataset
 from kelpie.model import Model
 from kelpie.models.interacte.permutator import Permutator
 
-# from helper import *
-
 
 class InteractE(Model, nn.Module):
     """
-    Proposed method in the paper. Refer Section 6 of the paper for mode details
+        The InteractE class provides a Model implementation in PyTorch for the InteractE system.
+        This implementation adheres to paper "InteractE: Improving Convolution-based Knowledge Graph
+        Embeddings by Increasing Feature Interactions", and is largely inspired by the official
+        implementation provided by the authors S. Vashishth, S. Sanyal, V. Nitin, N. Agrawal, P. Talukdar
+        at https://github.com/malllabiisc/InteractE.
 
-    Parameters
-    ----------
-    params:        	Hyperparameters of the model
-    chequer_perm:   Reshaping to be used by the model
-
-    Returns
-    -------
-    The InteractE model instance
-
+        In training or evaluation, our InteractE class requires samples to be passed as 2-dimensional np.arrays.
+        Each row corresponds to a sample and contains the integer ids of its head, relation and tail.
+        Only *direct* samples should be passed to the model.
     """
     def __init__(self,
                  dataset: Dataset,
@@ -35,9 +31,9 @@ class InteractE(Model, nn.Module):
                  k_h: int = 20,
                  k_w: int = 10,
                  num_perm: int = 1,
-                 inp_drop_p: float = 0.2,
-                 hid_drop_p: float = 0.5,
-                 feat_drop_p: float = 0.5,
+                 inp_drop: float = 0.2,
+                 hid_drop: float = 0.5,
+                 feat_drop: float = 0.5,
                  kernel_size: int = 9,
                  num_filt_conv: int = 96,
                  strategy: str = 'one_to_n',
@@ -54,19 +50,10 @@ class InteractE(Model, nn.Module):
         self.embed_dim = embed_dim					# embedding dimension
         self.num_perm = num_perm					# number of permutation
         self.kernel_size = kernel_size
-
         self.strategy = strategy
         
         # Number of negative samples to use for loss calculation in one-to-x train strategy
         self.neg_num = neg_num
-        
-        # # Subject and relationship embeddings;
-        # # xavier_normal_ distributes the embeddings weight values by the said distribution
-        # self.entity_embeddings = nn.Embedding(self.num_entities, self.embed_dim, padding_idx=None) 
-        # xavier_normal_(self.entity_embeddings.weight)
-        # # num_relation is x2 since we need to embed direct and inverse relationships
-        # self.relation_embeddings = nn.Embedding(self.num_relations*2, self.embed_dim, padding_idx=None)
-        # xavier_normal_(self.relation_embeddings.weight)
         
         # create the embeddings for entities and relations as Parameters.
         # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieComplEx model,
@@ -77,14 +64,14 @@ class InteractE(Model, nn.Module):
             self.entity_embeddings = Parameter(torch.empty(self.num_entities, self.embed_dim).cuda(), requires_grad=True)
             self.relation_embeddings = Parameter(torch.empty(self.num_relations*2, self.embed_dim).cuda(), requires_grad=True)
 
-            # initialize only the entity_embeddings and relation embeddings with xavier method
+            # initialize entity_embeddings and relation_embeddings with xavier method
             xavier_normal_(self.entity_embeddings)
             xavier_normal_(self.relation_embeddings)
 
         # Dropout regularization for input layer, hidden layer and embedding matrix
-        self.inp_drop = nn.Dropout(inp_drop_p)
-        self.hidden_drop = nn.Dropout(hid_drop_p)
-        self.feature_map_drop = nn.Dropout2d(feat_drop_p)
+        self.input_drop = nn.Dropout(inp_drop)
+        self.hidden_drop = nn.Dropout(hid_drop)
+        self.feature_map_drop = nn.Dropout2d(feat_drop)
         # Embedding matrix normalization
         self.bn0 = nn.BatchNorm2d(self.num_perm)
 
@@ -96,16 +83,13 @@ class InteractE(Model, nn.Module):
 
         # Conv layer normalization
         self.bn1 = nn.BatchNorm2d(num_filt_conv * self.num_perm)
-        
         # Flattened embedding matrix size
         self.flat_sz = flat_sz_h * flat_sz_w * num_filt_conv * self.num_perm
 
         # Normalization
         self.bn2 = nn.BatchNorm1d(self.embed_dim)
-
         # Matrix flattening
         self.fc = nn.Linear(self.flat_sz, self.embed_dim)
-        
         # Chequered permutation
         self.chequer_perm = Permutator(num_perm=self.num_perm, mtx_h=k_h, mtx_w=k_w).chequer_perm()
 
@@ -118,34 +102,53 @@ class InteractE(Model, nn.Module):
         xavier_normal_(self.conv_filt)
 
 
+    def circular_padding_chw(self, batch, padding):
+        """
+        Circular padding definition
+        """
+        upper_pad	= batch[..., -padding:, :]
+        lower_pad	= batch[..., :padding, :]
+        temp		= torch.cat([upper_pad, batch, lower_pad], dim=2)
+
+        left_pad	= temp[..., -padding:]
+        right_pad	= temp[..., :padding]
+        padded		= torch.cat([left_pad, temp, right_pad], dim=3)
+        return padded
+
+
     def score(self, samples: np.array) -> np.array:
         """
             This method computes and returns the plausibility scores for a collection of samples.
 
-            :param samples: a numpy array containing all the samples to score
-            :return: the computed scores, as a numpy array
+            Parameters
+            ----------
+            :samples: a numpy array containing all the samples to score
+            
+            Returns
+            ----------
+            The computed scores, as a numpy array
         """
 
         sub_emb	= self.entity_embeddings[samples[:, 0]]	    # Embeds the subject tensor
         rel_emb	= self.relation_embeddings[samples[:, 1]]	# Embeds the relationship tensor
-        
         comb_emb = torch.cat([sub_emb, rel_emb], dim=1)
-        # self to access local variable.
+        
+        # get the chequered permutations and generate checkered reshaping matrices
         matrix_chequer_perm = comb_emb[:, self.chequer_perm]
-        # matrix reshaped
         stack_inp = matrix_chequer_perm.reshape((-1, self.num_perm, 2*self.k_w, self.k_h))
-        stack_inp = self.bn0(stack_inp)  # Normalizes
-        x = self.inp_drop(stack_inp)	# Regularizes with dropout
+        stack_inp = self.bn0(stack_inp)    # Normalizes
+        x = self.input_drop(stack_inp)     # Regularizes with dropout
         # Circular convolution
         x = self.circular_padding_chw(x, self.kernel_size//2)	# Defines the kernel for the circular conv
         x = F.conv2d(x, self.conv_filt.repeat(self.num_perm, 1, 1, 1), padding=self.padding, groups=self.num_perm) # Circular conv
-        x = self.bn1(x)	# Normalizes
+        x = self.bn1(x)     # Normalizes
         x = F.relu(x)
-        x = self.feature_map_drop(x)	# Regularizes with dropout
+        x = self.feature_map_drop(x)    # Regularizes with dropout
+        # flattening of convoluted matrices
         x = x.view(-1, self.flat_sz)
         x = self.fc(x)
-        x = self.hidden_drop(x)	# Regularizes with dropout
-        x = self.bn2(x)	# Normalizes
+        x = self.hidden_drop(x)     # Regularizes with dropout
+        x = self.bn2(x)     # Normalizes
         x = F.relu(x)
         
         if self.strategy == 'one_to_n':
@@ -161,18 +164,6 @@ class InteractE(Model, nn.Module):
         return pred
 
 
-    # Circular padding definition
-    def circular_padding_chw(self, batch, padding):
-        upper_pad	= batch[..., -padding:, :]
-        lower_pad	= batch[..., :padding, :]
-        temp		= torch.cat([upper_pad, batch, lower_pad], dim=2)
-
-        left_pad	= temp[..., -padding:]
-        right_pad	= temp[..., :padding]
-        padded		= torch.cat([left_pad, temp, right_pad], dim=3)
-        return padded
-
-
     # Forwards data throughout the network
     def forward(self, samples: np.array) -> np.array:
         """
@@ -183,9 +174,11 @@ class InteractE(Model, nn.Module):
             Such items heavily depend on the specific Model implementation;
             they usually include the scores for the samples (in a form usable by the ML framework, e.g. torch.Tensors)
             but may also include other stuff (e.g. the involved embeddings themselves, that the Optimizer
-            may use to compute regularization factors)
+            may use to compute regularization factors).
 
-            :param samples: a numpy array containing all the samples to perform forward propagation on
+            Parameters
+            ----------
+            :samples: a numpy array containing all the samples to perform forward propagation on
         """
 
         return self.score(samples)
@@ -193,32 +186,28 @@ class InteractE(Model, nn.Module):
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
-            This method performs prediction on a collection of samples, and returns the corresponding
-            scores, ranks and prediction lists.
-            All the passed samples must be DIRECT samples in the original dataset.
-            (if the Model supports inverse samples as well,
-            it should invert the passed samples while running this method)
-            :param samples: the direct samples to predict, in numpy array format
-            :return: this method returns three lists:
-                    - the list of scores for the passed samples,
-                      OR IF THE MODEL SUPPORTS INVERSE FACTS
-                      the list of couples <direct sample score, inverse sample score>,
-                      where the i-th score refers to the i-th sample in the input samples.
-                    - the list of couples (head rank, tail rank)
-                      where the i-th couple refers to the i-th sample in the input samples.
-                    - the list of couples (head_predictions, tail_predictions)
-                      where the i-th couple refers to the i-th sample in the input samples.
-                      The head_predictions and tail_predictions for each sample
-                      are numpy arrays containing all the predicted heads and tails respectively for that sample.
+            This method performs prediction on a collection of 'direct' samples,
+            and returns the corresponding scores, ranks and prediction lists.
+            
+            Parameters
+            ----------
+            :samples: the direct samples to predict, in numpy array format
+            
+            Returns
+            ----------
+            This method returns three lists:
+            >- the list couples (direct sample scores, inverse sample scores) for each sample;
+            >- the list of couples (head ranks, tail ranks) for each sample;
+            >- the list of couples (head predictions, tail predictions) for each sample.
         """
         
         # output data structures
         scores, ranks, predictions = [], [], []
 
-        direct_samples = samples
-
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
+        
+        direct_samples = samples
 
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
@@ -242,21 +231,27 @@ class InteractE(Model, nn.Module):
 
     def predict_tails(self, samples, batch_size:int=128):
         """
-        This method receives in input a collection of samples
-        and returns filtered scores, ranks and predicted entities for each passed fact.
-        
-        Parameters
-        ----------
-        :samples: A numpy.array of triples (head, relation, tail) to predict.
-        The triples can also be "inverse triples" with (tail, inverse_relation_id, head).
-        
-        Returns
-        ----------
-        This method returns three lists:
-        - the list of tail scores, where the i-th score refers to the i-th sample.
-        - the list of tail ranks, where the i-th rank refers to the i-th sample.
-        - the list of tail predictions, where the i-th prediction refers to the i-th sample
+            This method receives in input a collection of samples and returns the
+            corresponding scores, ranks and predicted entities for each passed fact.
+            
+            Parameters
+            ----------
+            :samples: A numpy.array of triples (head, relation, tail) to predict.
+            The triples can also be "inverse triples" with (tail, inverse_relation_id, head).
+            
+            Returns
+            ----------
+            This method returns three lists:
+            >- the list of tail scores, where the i-th score refers to the i-th sample;
+            >- the list of tail ranks, where the i-th rank refers to the i-th sample;
+            >- the list of tail predictions, where the i-th prediction refers to the i-th sample
             and contains all the predicted tails for that i-th sample.
+            
+            Head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
+            [NB: the target head will be in this numpy array in position head_rank-1].\\
+            Tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
+            [NB: the target tail will be in this numpy array in position tail_rank-1].
+        
         """
         scores, predictions = [], []
         ranks = torch.Tensor()
@@ -283,11 +278,8 @@ class InteractE(Model, nn.Module):
                     filter_out = self.dataset.to_filter[(head_id, rel_id)]
                     if tail_id not in filter_out:
                         filter_out.append(tail_id)
-                    
                     # set to -1e6 all known cases for this Head-Rel couple, this corresponds to the filtered scenario
                     batch_all_scores[i, torch.LongTensor(filter_out)] = -1e6
-                    # re-set the predicted value for that tail to the original value
-                    # batch_all_scores[i, tail_id] = targets[i, 0]
                 
                 # find the rank for every target tail
                 b_ranks += torch.sum((batch_all_scores >= targets).float(), dim=1).cpu()
@@ -317,16 +309,9 @@ class InteractE(Model, nn.Module):
 
 class KelpieInteractE(InteractE):
     # Constructor
-    def __init__(
-            self,
-            dataset: KelpieDataset,
-            model: InteractE
-        ):
-
-        #Parameters
-        #----------
-        #params:        	Hyperparameters of the model
-        #chequer_perm:   	Reshaping to be used by the model
+    def __init__(self,
+                 dataset: KelpieDataset,
+                 model: InteractE):
 
         InteractE.__init__(self,
                            dataset=dataset,
@@ -334,9 +319,9 @@ class KelpieInteractE(InteractE):
                            k_h=model.k_h,
                            k_w=model.k_w,
                            num_perm=model.num_perm,
-                           inp_drop_p=model.inp_drop,
-                           hid_drop_p=model.hidden_drop,
-                           feat_drop_p=model.feature_map_drop,
+                           inp_drop=model.inp_drop,
+                           hid_drop=model.hidden_drop,
+                           feat_drop=model.feature_map_drop,
                            kernel_size=model.kernel_size,
                            num_filt_conv=model.num_filt_conv,
                            strategy=model.strategy,
@@ -346,40 +331,37 @@ class KelpieInteractE(InteractE):
         self.original_entity_id = dataset.original_entity_id
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
+        # extract the values of the trained embeddings for entities and relations and freeze them
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension).cuda(), requires_grad=True)
+        # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
+        # because the whole approach of the project is to obtain the parameters model params with parameters() method
+        # and to pass them to the Optimizer for optimization.
+        #
+        # If I used .cuda() outside the Parameter, like
+        #       self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
+        # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
+
+        # Therefore kelpie_entity_embedding would not be a Parameter anymore.
+        
+        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.embed_dim).cuda(), requires_grad=True)
         
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
 
 
+    # Override
     def predict_samples(self,
                         samples: np.array,
                         original_mode: bool = False) -> Tuple[Any, Any, Any]:
         """
-            This method performs prediction on a collection of samples, and returns the corresponding
-            scores, ranks and prediction lists.
-
-            All the passed samples must be DIRECT samples in the original dataset.
-            (if the Model supports inverse samples as well,
-            it should invert the passed samples while running this method)
-
-            :param samples: the direct samples to predict, in numpy array format
-            :return: this method returns three lists:
-                        - the list of scores for the passed samples,
-                                    OR IF THE MODEL SUPPORTS INVERSE FACTS
-                            the list of couples <direct sample score, inverse sample score>,
-                            where the i-th score refers to the i-th sample in the input samples.
-
-                        - the list of couples (head rank, tail rank)
-                            where the i-th couple refers to the i-th sample in the input samples.
-
-                        - the list of couples (head_predictions, tail_predictions)
-                            where the i-th couple refers to the i-th sample in the input samples.
-                            The head_predictions and tail_predictions for each sample
-                            are numpy arrays containing all the predicted heads and tails respectively for that sample.
+        This method overrides the Model predict_samples method
+        by adding the possibility to run predictions in original_mode
+        which means,
+        :param samples: the DIRECT samples. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
         """
 
         direct_samples = samples
@@ -426,28 +408,23 @@ class KelpieInteractE(InteractE):
         return scores, ranks, predictions
 
 
+    # Override
     def predict_sample(self,
                        sample: np.array,
-                       original_mode: bool = False) -> Tuple[Any, Any, Any]:
+                       original_mode: bool = False):
         """
-            This method performs prediction on one (direct) sample, and returns the corresponding
-            score, ranks and prediction lists.
-
-            :param sample: the sample to predict, as a numpy array.
-            :return: this method returns 3 items:
-                    - the sample score
-                                OR IF THE MODEL SUPPORTS INVERSE FACTS
-                        the scores of the sample and of its inverse
-
-                    - a couple containing the head rank and the tail rank
-
-                    - a couple containing the head_predictions and tail_predictions numpy arrays;
-                        > head_predictions contains all entities predicted as heads, sorted by decreasing plausibility
-                        [NB: the target head will be in this numpy array in position head_rank-1]
-                        > tail_predictions contains all entities predicted as tails, sorted by decreasing plausibility
-                        [NB: the target tail will be in this numpy array in position tail_rank-1]
+        Override the
+        :param sample: the DIRECT sample. Will be inverted to perform head prediction
+        :param original_mode:
+        :return:
         """
+        
         assert sample[1] < self.dataset.num_direct_relations
 
         scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
         return scores[0], ranks[0], predictions[0]
+
+
+    def update_embeddings(self):
+        with torch.no_grad():
+            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding

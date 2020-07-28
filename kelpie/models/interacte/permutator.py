@@ -6,10 +6,10 @@ from torch import nn
 class Permutator(nn.Module):
 
     def __init__(self,
-                    # embed_dim: int,
-                    num_perm: int = 1,
-                    mtx_h: int = 20,
-                    mtx_w: int = 10): #,
+                 # embed_dim: int,
+                 num_perm: int = 1,
+                 mtx_h: int = 20,
+                 mtx_w: int = 10):
 
         # self.embed_dim = embed_dim
         self.num_perm = num_perm
@@ -44,7 +44,7 @@ class Permutator(nn.Module):
             # for all row in the matrix
             for i in range(self.mtx_h):
                 # for all column in the matrix
-                for j in range(self.mtx_w):
+                for _ in range(self.mtx_w):
                     # if k is even
                     if k % 2 == 0:
                         # if i is even
