@@ -196,6 +196,7 @@ optimizer.train(train_samples=dataset.train_samples,
                 valid_samples=dataset.valid_samples)
 
 print("\nEvaluating model...")
+model.eval()
 mrr, h1 = Evaluator(model=model).eval(samples=dataset.test_samples, write_output=False)
 print("\tTest Hits@1: %f" % h1)
 print("\tTest Mean Reciprocal Rank: %f" % mrr)
