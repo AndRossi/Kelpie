@@ -52,6 +52,7 @@ class InteractEOptimizer:
         batch_size = min(self.batch_size, len(training_samples))
         
         for e in range(max_epochs):
+            self.model.train()
             self.epoch(batch_size, training_samples)
 
             if evaluate_every > 0 and valid_samples is not None and (e + 1) % evaluate_every == 0:
