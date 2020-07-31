@@ -83,5 +83,11 @@ class KelpieDataset(Dataset):
     @staticmethod
     def _replace_entity_in_samples(samples, old_entity_id, new_entity_id):
         result = numpy.copy(samples)
-        result[result == old_entity_id] = new_entity_id
+
+        for i in range(len(result)):
+            if result[i, 0] == old_entity_id:
+                result[i, 0] = new_entity_id
+            if result[i, 2] == old_entity_id:
+                result[i, 2] = new_entity_id
+
         return result

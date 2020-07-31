@@ -4,9 +4,9 @@ from collections import defaultdict
 
 import numpy
 
-#DATA_PATH = os.path.abspath("/Users/andrea/kelpie/data")
-#DATA_PATH = os.path.abspath("/home/nvidia/workspace/dbgroup/andrea/kelpie/data")
-DATA_PATH = os.path.abspath("/home/nvidia/workspace/dbgroup/agiw/gruppo1/Kelpie/data")
+from kelpie.config import ROOT
+
+DATA_PATH = os.path.join(ROOT, "data")
 FB15K = "FB15k"
 FB15K_237 = "FB15k-237"
 WN18 = "WN18"
@@ -18,9 +18,9 @@ ALL_DATASET_NAMES = [FB15K, FB15K_237, WN18, WN18RR, YAGO3_10]
 class Dataset:
 
     def __init__(self,
-                 name:str,
-                 separator:str="\t",
-                 load:bool=True):
+                 name: str,
+                 separator: str = "\t",
+                 load: bool = True):
         """
             Dataset constructor.
             This method will initialize the Dataset and its structures.
