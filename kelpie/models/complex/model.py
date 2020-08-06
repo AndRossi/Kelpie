@@ -77,9 +77,31 @@ class ComplEx(Model, nn.Module):
         rel = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the heads
         rhs = self.entity_embeddings[samples[:, 2]]      # list of entity embeddings for the tails of the facts
 
-        lhs = lhs[:, :self.dimension], lhs[:, self.dimension:]   # split head embeddings into real and imaginary components
-        rel = rel[:, :self.dimension], rel[:, self.dimension:]   # split relation embeddings into real and imaginary components
-        rhs = rhs[:, :self.dimension], rhs[:, self.dimension:]   # split tail embeddings into real and imaginary components
+        return self.score_embeddings(lhs, rel, rhs).detach().cpu().numpy()
+
+    def score_embeddings(self,
+                         head_embeddings: torch.Tensor,
+                         rel_embeddings: torch.Tensor,
+                         tail_embeddings: torch.Tensor):
+        """
+            Compute scores for the passed triples of head, relation and tail embeddings.
+            :param head_embeddings: a torch.Tensor containing the embeddings representing the head entities
+            :param rel_embeddings: a torch.Tensor containing the embeddings representing the relations
+            :param tail_embeddings: a torch.Tensor containing the embeddings representing the tail entities
+
+            :return: a numpy array containing the scores computed for the passed triples of embeddings
+        """
+
+        # NOTE: this method is extremely important, because apart from being called by the ComplEx score(samples) method
+        # it is also used to perform the operations of paper "Data Poisoning Attack against Knowledge Graph Embedding"
+        # that we use as a baseline and as a heuristic for our work.
+
+        # split the head embedding into real and imaginary components
+        lhs = head_embeddings[:, :self.dimension], head_embeddings[:, self.dimension:]
+        # split the relation embedding into real and imaginary components
+        rel =  rel_embeddings[:, :self.dimension],  rel_embeddings[:, self.dimension:]
+        # split the tail embedding into real and imaginary components
+        rhs = tail_embeddings[:, :self.dimension], tail_embeddings[:, self.dimension:]
 
         # Bilinear product lhs * rel * rhs in complex scenario:
         #   lhs => lhs[0] + i*lhs[1]
@@ -101,7 +123,9 @@ class ComplEx(Model, nn.Module):
             (lhs[0] * rel[0] - lhs[1] * rel[1]) * rhs[0] +
             (lhs[0] * rel[1] + lhs[1] * rel[0]) * rhs[1],
             1, keepdim=True
-        ).cpu().numpy()
+        )
+
+
 
     def forward(self, samples: np.array):
         """
@@ -434,3 +458,4 @@ class KelpieComplEx(ComplEx):
     def update_embeddings(self):
         with torch.no_grad():
             self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
+

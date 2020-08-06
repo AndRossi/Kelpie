@@ -102,7 +102,7 @@ class Model:
             :return: this method returns 3 items:
                     - the sample score
                              OR IF THE MODEL SUPPORTS INVERSE FACTS
-                      the scores of the sample and of its inverse
+                      a couple containing the scores of the sample and of its inverse
 
                     - a couple containing the head rank and the tail rank
 
