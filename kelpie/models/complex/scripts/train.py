@@ -1,14 +1,16 @@
 import argparse
 import os
 
+import numpy
 import torch
+
+from kelpie.config import MODEL_PATH
 from kelpie.dataset import ALL_DATASET_NAMES, Dataset
 from kelpie.evaluation import Evaluator
 from kelpie.models.complex.model import ComplEx
 from kelpie.models.complex.optimizer import ComplExOptimizer
 
 # todo: when we add more models, we should move these variables to another location
-MODEL_HOME = os.path.abspath("./models/")
 ALL_MODEL_NAMES = ["ComplEx"]
 
 parser = argparse.ArgumentParser(
@@ -98,9 +100,19 @@ parser.add_argument('--load',
 
 args = parser.parse_args()
 
-model_path = "./models/" + "_".join(["ComplEx", args.dataset]) + ".pt"
+#deterministic!
+seed = 42
+numpy.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.set_rng_state(torch.cuda.get_rng_state())
+torch.backends.cudnn.deterministic = True
+
 if args.load is not None:
     model_path = args.load
+else:
+    model_path = os.path.join(MODEL_PATH, "_".join(["ComplEx", args.dataset]) + ".pt")
+    if not os.path.isdir(MODEL_PATH):
+        os.makedirs(MODEL_PATH)
 
 print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
