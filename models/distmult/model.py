@@ -160,20 +160,18 @@ class DistMult(Model, nn.Module):
                         - the head and tail predictions for that sample
         """
 
+        scores, ranks, predictions = [], [], []     # output data structures
         direct_samples = samples
 
-        # make sure that all the passed samples are "direct" samples
+        # assert all samples are direct
         assert np.all(direct_samples[:, 1] < self.dataset.num_direct_relations)
-
-        # output data structures
-        scores, ranks, predictions = [], [], []
 
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
         #obtain scores, ranks and predictions both for direct and inverse samples
-        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
 
         for i in range(direct_samples.shape[0]):
             # add to the scores list a couple containing the scores of the direct and of the inverse sample

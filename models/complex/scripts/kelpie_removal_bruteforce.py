@@ -221,6 +221,7 @@ direct_score, inverse_score, direct_rank, inverse_rank = run_kelpie(kelpie_train
 outlines.append("\t".join(["NO FACTS SKIPPED",
                            str(direct_score), str(inverse_score), str(direct_rank), str(inverse_rank)]) + "\n")
 
+results = []
 for i in range(len(perturbed_list)):
     samples = perturbed_list[i]
 
@@ -240,10 +241,15 @@ for i in range(len(perturbed_list)):
 
     cur_direct_score, cur_inverse_score, cur_direct_rank, cur_inverse_rank = run_kelpie(samples)
 
-    direct_diff = cur_direct_score - direct_score
-    inverse_diff = cur_inverse_score - inverse_score
+    direct_diff = direct_score - cur_direct_score
+    inverse_diff = inverse_score - cur_inverse_score
 
+    results.append((skipped_facts[0], cur_direct_score, cur_inverse_score, cur_direct_rank, cur_inverse_rank, direct_diff + inverse_diff))
     outlines.append("\t".join([skipped_facts[0], str(cur_direct_score), str(cur_inverse_score), str(cur_direct_rank), str(cur_inverse_rank)]) + "\n")
 
+
+results = sorted(results, key=lambda x: x[-1], reverse=True)
+print("\t".join(["NO FACTS SKIPPED", str(direct_score), str(inverse_score), str(direct_rank), str(inverse_rank)]))
+print(results[:10])
 with open("output.txt", "w") as outfile:
     outfile.writelines(outlines)

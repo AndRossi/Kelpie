@@ -110,7 +110,7 @@ class TuckER(Model, nn.Module):
         """
             For each of the passed samples, compute scores for all possible entities.
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
-            :return: a 2-dimensional numpy array that, for each sample, contains a row with the for each passed sample
+            :return: a 2-dimensional numpy array that, for each sample, contains a row with the score for each possible target tail
         """
 
         head_indexes, relation_indexes = samples[:, 0], samples[:, 1]
@@ -166,26 +166,32 @@ class TuckER(Model, nn.Module):
                             The head_predictions and tail_predictions for each sample
                             are numpy arrays containing all the predicted heads and tails respectively for that sample.
         """
-        scores, ranks, predictions = [], [], []
 
+        scores, ranks, predictions = [], [], []     # output data structures
         direct_samples = samples
 
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
 
+        # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
+        #obtain scores, ranks and predictions both for direct and inverse samples
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
 
         for i in range(direct_samples.shape[0]):
+            # add to the scores list a couple containing the scores of the direct and of the inverse sample
             scores += [(direct_scores[i], inverse_scores[i])]
-            ranks += [(head_ranks[i], tail_ranks[i])]
-            predictions += [(head_predictions[i], tail_predictions[i])]
+
+            # add to the ranks list a couple containing the ranks of the head and of the tail
+            ranks.append((int(head_ranks[i]), int(tail_ranks[i])))
+
+            # add to the prediction list a couple containing the lists of predictions
+            predictions.append((head_predictions[i], tail_predictions[i]))
 
         return scores, ranks, predictions
 
-    # TODO: in the future, this may need to be moved to model.py
     def predict_tails(self, samples):
         """
         This method receives in input a batch of samples
@@ -214,11 +220,11 @@ class TuckER(Model, nn.Module):
 
             tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
 
-            # for every triple in the samples
+            # for each sample to predict
             for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
                 tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
 
-                # predicted value for the correct tail of that triple
+                # score obtained by the correct tail of the sample
                 target_tail_score = all_scores[sample_number, tail_id].item()
                 scores.append(target_tail_score)
 

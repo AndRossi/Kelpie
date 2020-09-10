@@ -454,11 +454,5 @@ class KelpieComplEx(ComplEx):
         return scores[0], ranks[0], predictions[0]
 
     def update_embeddings(self):
-
-        print(self.entity_embeddings[self.kelpie_entity_id])
-        print(self.kelpie_entity_embedding)
         with torch.no_grad():
             self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
-        print(self.entity_embeddings[self.kelpie_entity_id])
-        print(self.kelpie_entity_embedding)
-

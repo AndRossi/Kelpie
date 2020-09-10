@@ -1,9 +1,9 @@
 import argparse
 import os
 import torch
-from kelpie.dataset import ALL_DATASET_NAMES, Dataset
-from kelpie.evaluation import Evaluator
-from kelpie.models.complex.model import ComplEx
+from dataset import ALL_DATASET_NAMES, Dataset
+from evaluation import Evaluator
+from models.complex.model import ComplEx
 
 # todo: when we add more models, we should move these variables to another location
 MODEL_HOME = os.path.abspath("./models/")
@@ -53,7 +53,7 @@ model.eval()
 
 print("\nEvaluating model...")
 
-head, relation, tail = "/m/0174qm", "/location/location/containedby", "/m/02jx1"
+head, relation, tail = "/m/026lgs", "/film/film/language", "/m/02h40lc"
 head_id, relation_id, tail_id = dataset.entity_name_2_id[head], dataset.relation_name_2_id[relation], dataset.entity_name_2_id[tail]
 (direct_score, inverse_score), \
 (head_rank, tail_rank), \
