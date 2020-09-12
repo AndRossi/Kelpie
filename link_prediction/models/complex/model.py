@@ -1,12 +1,10 @@
-from typing import Tuple, Any
-
 import torch
 from torch import nn
 import numpy as np
 from torch.nn import Parameter
 
-from dataset import Dataset, KelpieDataset
-from model import Model
+from dataset import *
+from model import *
 
 
 class ComplEx(Model, nn.Module):
@@ -27,15 +25,14 @@ class ComplEx(Model, nn.Module):
 
     def __init__(self,
                  dataset: Dataset,
-                 dimension: int,
-                 init_random = True,
-                 init_size: float = 1e-3):
+                 hyperparameters: dict,
+                 init_random = True):
         """
             Constructor for ComplEx model.
 
             :param dataset: the ComplExDataset on which to train and evaluate the model
-            :param dimension: embedding dimension
-            :param init_size: factor to use to make the embedding values smaller at initialization
+            :param hyperparameters: hyperparameters dictionary.
+                                    Must contain at least EMBEDDING_DIMENSION and INIT_SCALE
         """
 
         # note: the init_random parameter is important because when initializing a KelpieComplEx,
@@ -46,9 +43,10 @@ class ComplEx(Model, nn.Module):
         nn.Module.__init__(self)
 
         self.dataset = dataset
-        self.num_entities = dataset.num_entities     # number of entities in dataset
-        self.num_relations = dataset.num_relations   # number of relations in dataset
-        self.dimension = dimension                   # embedding dimension
+        self.num_entities = dataset.num_entities                # number of entities in dataset
+        self.num_relations = dataset.num_relations              # number of relations in dataset
+        self.dimension = hyperparameters[EMBEDDING_DIMENSION]   # embedding dimension
+        self.init_scale = hyperparameters[INIT_SCALE]
 
         # create the embeddings for entities and relations as Parameters.
         # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieComplEx model,
@@ -62,8 +60,8 @@ class ComplEx(Model, nn.Module):
 
             # initialization step to make the embedding values smaller in the embedding space
             with torch.no_grad():
-                self.entity_embeddings *= init_size
-                self.relation_embeddings *= init_size
+                self.entity_embeddings *= self.init_scale
+                self.relation_embeddings *= self.init_scale
 
 
     def score(self, samples: np.array) -> np.array:
@@ -123,8 +121,6 @@ class ComplEx(Model, nn.Module):
             (lhs[0] * rel[1] + lhs[1] * rel[0]) * rhs[1],
             1, keepdim=True
         )
-
-
 
     def forward(self, samples: np.array):
         """
@@ -348,14 +344,13 @@ class KelpieComplEx(ComplEx):
     def __init__(
             self,
             dataset: KelpieDataset,
-            model: ComplEx,
-            init_size: float = 1e-3):
+            model: ComplEx):
 
         ComplEx.__init__(self,
                          dataset=dataset,
-                         dimension=model.dimension,
-                         init_random=False,
-                         init_size=init_size)
+                         hyperparameters={EMBEDDING_DIMENSION: model.dimension,
+                                          INIT_SCALE: model.init_scale},
+                         init_random=False)
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id
@@ -376,7 +371,7 @@ class KelpieComplEx(ComplEx):
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
         self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension).cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
-            self.kelpie_entity_embedding *= init_size
+            self.kelpie_entity_embedding *= self.init_scale
 
         self.relation_embeddings = frozen_relation_embeddings
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)

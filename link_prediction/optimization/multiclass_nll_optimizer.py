@@ -1,12 +1,11 @@
 import tqdm
-import torch
 import numpy as np
 from torch import nn
 from torch import optim
 
-from model import Model
-from evaluation import Evaluator
-from regularization.regularizers import N3, N2
+from link_prediction.evaluation.evaluation import Evaluator
+from link_prediction.regularization.regularizers import N3, N2
+from model import *
 
 
 class MultiClassNLLptimizer:
@@ -26,36 +25,37 @@ class MultiClassNLLptimizer:
 
     def __init__(self,
                  model: Model,
-                 optimizer_name: str = "Adagrad",
-                 batch_size :int = 256,
-                 learning_rate: float = 1e-2,
-                 decay1 :float = 0.9,
-                 decay2 :float = 0.99,
-                 regularizer_name: str = "N3",
-                 regularizer_weight: float = 5e-2,
+                 hyperparameters: dict,
                  verbose: bool = True):
+
         self.model = model
-        self.batch_size = batch_size
         self.verbose = verbose
+
+        self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
+        self.batch_size = hyperparameters[BATCH_SIZE]
+        self.learning_rate = hyperparameters[LEARNING_RATE]
+        self.decay1, self.decay2 = hyperparameters[DECAY_1], hyperparameters[DECAY_2]
+        self.regularizer_name = hyperparameters[REGULARIZER_NAME]
+        self.regularizer_weight = hyperparameters[REGULARIZER_WEIGHT]
 
         # build all the supported optimizers using the passed params (learning rate and decays if Adam)
         supported_optimizers = {
-            'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=learning_rate),
-            'Adam': optim.Adam(params=self.model.parameters(), lr=learning_rate, betas=(decay1, decay2)),
-            'SGD': optim.SGD(params=self.model.parameters(), lr=learning_rate)
+            'Adagrad': optim.Adagrad(params=self.model.parameters(), lr=self.learning_rate),
+            'Adam': optim.Adam(params=self.model.parameters(), lr=self.learning_rate, betas=(self.decay1, self.decay2)),
+            'SGD': optim.SGD(params=self.model.parameters(), lr=self.learning_rate)
         }
 
         # build all the supported regularizers using the passed regularizer_weight
         supported_regularizers = {
-            'N3': N3(weight=regularizer_weight),
-            'N2': N2(weight=regularizer_weight)
+            'N3': N3(weight=self.regularizer_weight),
+            'N2': N2(weight=self.regularizer_weight)
         }
 
         # choose the Torch Optimizer object to use, based on the passed name
-        self.optimizer = supported_optimizers[optimizer_name]
+        self.optimizer = supported_optimizers[self.optimizer_name]
 
         # choose the regularizer
-        self.regularizer = supported_regularizers[regularizer_name]
+        self.regularizer = supported_regularizers[self.regularizer_name]
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
@@ -140,23 +140,11 @@ class MultiClassNLLptimizer:
 class KelpieMultiClassNLLptimizer(MultiClassNLLptimizer):
     def __init__(self,
                  model: Model,      # TODO: actually this has to be a Kelpie model
-                 optimizer_name: str = "Adagrad",
-                 batch_size :int = 256,
-                 learning_rate: float = 1e-2,
-                 decay1 :float = 0.9,
-                 decay2 :float = 0.99,
-                 regularizer_name: str = "N3",
-                 regularizer_weight: float = 5e-2,
+                 hyperparameters: dict,
                  verbose: bool = True):
 
         super(KelpieMultiClassNLLptimizer, self).__init__(model=model,
-                                                          optimizer_name=optimizer_name,
-                                                          batch_size=batch_size,
-                                                          learning_rate=learning_rate,
-                                                          decay1=decay1,
-                                                          decay2=decay2,
-                                                          regularizer_name=regularizer_name,
-                                                          regularizer_weight=regularizer_weight,
+                                                          hyperparameters=hyperparameters,
                                                           verbose=verbose)
 
     def epoch(self,

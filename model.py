@@ -1,7 +1,26 @@
 from typing import Any, Tuple
 import numpy
+import torch
 
 from dataset import Dataset
+
+# KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
+DIMENSION = "dimension"
+ENTITY_DIMENSION = "entity_dimension"
+RELATION_DIMENSION = "relation_dimension"
+INPUT_DROPOUT = "input_dropout"
+HIDDEN_DROPOUT_1 = "hidden_dropout_1"
+HIDDEN_DROPOUT_2 = "hidden_dropout_2"
+INIT_SCALE = "init_scale"
+OPTIMIZER_NAME = "optimizer_name"
+BATCH_SIZE = "batch_size"
+LEARNING_RATE = "learning_rate"
+DECAY = "decay"
+DECAY_1 = "decay_1" # Adam decay 1
+DECAY_2 = "decay_2" # Adam decay 2
+REGULARIZER_NAME = "regularizer"
+REGULARIZER_WEIGHT = "regularizer_weight"
+LABEL_SMOOTHING = "label_smoothing"
 
 class Model:
 
@@ -117,3 +136,15 @@ class Model:
 
         scores, ranks, predictions = self.predict_samples(numpy.array([sample]))
         return scores[0], ranks[0], predictions[0]
+
+
+#class KelpieModel(Model):
+    # this is necessary for any model that relies on BatchNorm1d,
+    # because in post-training BatchNorm1d must NOT be put in train mode
+    #Override
+    #def train(self, mode=True):
+    #    self.training = mode
+    #    for module in self.children():
+    #        if not isinstance(module, torch.nn.BatchNorm1d):
+    #            module.train(mode)
+    #    return self

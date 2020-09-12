@@ -1,14 +1,12 @@
 import copy
-from typing import Tuple, Any
-
 import torch
 from torch import nn
 import numpy as np
 from torch.nn import Parameter
 from torch.nn.init import xavier_normal_
 
-from dataset import Dataset, KelpieDataset
-from model import Model
+from dataset import KelpieDataset
+from model import *
 
 
 class TuckER(Model, nn.Module):
@@ -26,23 +24,19 @@ class TuckER(Model, nn.Module):
 
     def __init__(self,
                  dataset: Dataset,
-                 entity_dimension: int,
-                 relation_dimension:int,
-                 input_dropout : float = 0.0,
-                 hidden_dropout_1: float = 0.0,
-                 hidden_dropout_2: float = 0.0,
+                 hyperparameters: dict,
                  init_random = True):
         """
             Constructor for TuckER model.
 
             :param dataset: the Dataset on which to train and evaluate the model
-            :param entity_dimension: entity embedding dimension
-            :param relation_dimension: relation embedding dimension
-            :param input_dropout: input layer dropout rate
-            :param hidden_dropout_1: dropout rate after the first hidden layer
-            :param hidden_dropout_2: dropout rate after the second hidden layer
+            :param hyperparameters: dict with the model hyperparamters. Must contain at least:
+                        ENTITY_DIMENSION: entity embedding dimension
+                        RELATION_DIMENSION: relation embedding dimension
+                        INPUT_DROPOUT: input layer dropout rate
+                        HIDDEN_DROPOUT_1: dropout rate after the first hidden layer
+                        HIDDEN_DROPOUT_2: dropout rate after the second hidden layer
         """
-
         # note: the init_random parameter is important because when initializing a KelpieTuckER,
         #       self.entity_embeddings and self.relation_embeddings must not be initialized as Parameters!
 
@@ -53,14 +47,17 @@ class TuckER(Model, nn.Module):
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of relations in dataset
-        self.entity_dimension = entity_dimension     # entity embedding dimension
-        self.relation_dimension = relation_dimension # relation embedding dimension
+        self.entity_dimension = hyperparameters[ENTITY_DIMENSION]     # entity embedding dimension
+        self.relation_dimension = hyperparameters[RELATION_DIMENSION] # relation embedding dimension
+        self.input_dropout_rate = hyperparameters[INPUT_DROPOUT]
+        self.hidden_dropout_1_rate = hyperparameters[HIDDEN_DROPOUT_1]
+        self.hidden_dropout_2_rate = hyperparameters[HIDDEN_DROPOUT_1]
 
-        self.input_dropout = torch.nn.Dropout(input_dropout)
-        self.hidden_dropout1 = torch.nn.Dropout(hidden_dropout_1)
-        self.hidden_dropout2 = torch.nn.Dropout(hidden_dropout_2)
-        self.batch_norm_1 = torch.nn.BatchNorm1d(entity_dimension)
-        self.batch_norm_2 = torch.nn.BatchNorm1d(entity_dimension)
+        self.input_dropout = torch.nn.Dropout(self.input_dropout_rate)
+        self.hidden_dropout1 = torch.nn.Dropout(self.hidden_dropout_1_rate)
+        self.hidden_dropout2 = torch.nn.Dropout(self.hidden_dropout_2_rate)
+        self.batch_norm_1 = torch.nn.BatchNorm1d(self.entity_dimension)
+        self.batch_norm_2 = torch.nn.BatchNorm1d(self.entity_dimension)
 
         # create the embeddings for entities and relations as Parameters.
         # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieTuckER model,
@@ -255,19 +252,14 @@ class KelpieTuckER(TuckER):
             self,
             dataset: KelpieDataset,
             model: TuckER,
-            entity_dimension: int,
-            relation_dimension: int,
-            input_dropout: float,
-            hidden_dropout_1: float,
-            hidden_dropout_2: float
             ):
         TuckER.__init__(self,
                         dataset=dataset,
-                        entity_dimension=entity_dimension,
-                        relation_dimension=relation_dimension,
-                        input_dropout=input_dropout,
-                        hidden_dropout_1=hidden_dropout_1,
-                        hidden_dropout_2=hidden_dropout_2,
+                        hyperparameters={ENTITY_DIMENSION: model.entity_dimension,
+                                         RELATION_DIMENSION: model.relation_dimension,
+                                         INPUT_DROPOUT: model.input_dropout_rate,
+                                         HIDDEN_DROPOUT_1: model.hidden_dropout_1_rate,
+                                         HIDDEN_DROPOUT_2: model.hidden_dropout_2_rate},
                         init_random=False)  # NOTE: this is important! if it is set to True,
                                             # self.entity_embeddings and self.relation_embeddings will be initialized as Parameters
                                             # and it will not be possible to overwrite them with mere Tensors
@@ -315,7 +307,7 @@ class KelpieTuckER(TuckER):
         """
         This method overrides the Model predict_samples method
         by adding the possibility to run predictions in original_mode
-        which means,
+        which means ...
         :param samples: the DIRECT samples. Will be inverted to perform head prediction
         :param original_mode:
         :return:

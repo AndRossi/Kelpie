@@ -1,21 +1,18 @@
-from typing import Tuple, Any
-
 import torch
 from torch import nn
 import numpy as np
 from torch.nn import Parameter
 
-from dataset import Dataset, KelpieDataset
-from model import Model
+from dataset import KelpieDataset
+from model import *
 
 
-class DistMult(Model, nn.Module):
+class TransE(Model, nn.Module):
     """
-        The DistMult class provides a Model implementation in PyTorch for the DistMult system.
-        This implementation is inspired by the work of authors Lacroix, Usunier and Obozinski with bilinear models
-        such as ComplEx and CP in their paper "Canonical Tensor Decomposition for Knowledge Base Completion".
+        The TransE class provides a Model implementation in PyTorch for the TransE system.
+        We hardcode L1 norm in this implementation, because it has been observed to yield the best results.
 
-        In training or evaluation, our DistMult class requires samples to be passed as 2-dimensional np.arrays.
+        In training or evaluation, our TransE class requires samples to be passed as 2-dimensional np.arrays.
         Each row corresponds to a sample and contains the integer ids of its head, relation and tail.
         Only *direct* samples should be passed to the model.
 
@@ -26,15 +23,15 @@ class DistMult(Model, nn.Module):
 
     def __init__(self,
                  dataset: Dataset,
-                 dimension: int,
-                 init_random = True,
-                 init_size: float = 1e-3):
+                 hyperparameters: dict,
+                 init_random = True):
         """
-            Constructor for DistMult model.
+            Constructor for TransE model.
 
             :param dataset: the Dataset on which to train and evaluate the model
-            :param dimension: embedding dimension
-            :param init_size: factor to use to make the embedding values smaller at initialization
+            :param hyperparameters: a dict containing the model hyperparameters. It must contain at least:
+                        - dimension: embedding dimension
+                        - init_scale: factor to use to make the embedding values smaller at initialization
         """
 
         # note: the init_random parameter is important because when initializing a KelpieComplEx,
@@ -47,7 +44,8 @@ class DistMult(Model, nn.Module):
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of all relations in dataset (including the inverted ones)
-        self.dimension = dimension                   # embedding dimension
+        self.dimension = hyperparameters[DIMENSION]  # embedding dimension
+        self.init_scale = hyperparameters[INIT_SCALE]
 
         # create the embeddings for entities and relations as Parameters, using the passed dimension as size.
         # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieDistMult model,
@@ -59,8 +57,8 @@ class DistMult(Model, nn.Module):
 
             # initialization step to make the embedding values smaller in the embedding space
             with torch.no_grad():
-                self.entity_embeddings *= init_size
-                self.relation_embeddings *= init_size
+                self.entity_embeddings *= self.init_scale
+                self.relation_embeddings *= self.init_scale
 
 
     def score(self, samples: np.array) -> np.array:
@@ -87,26 +85,27 @@ class DistMult(Model, nn.Module):
 
             :return: a numpy array containing the scores computed for the passed triples of embeddings
         """
-
-        # NOTE: this method is extremely important, because apart from being called by the DistMult score(samples) method
+        # NOTE: this method is extremely important, because apart from being called by the Transe score(samples) method
         # it is also used to perform the operations of paper "Data Poisoning Attack against Knowledge Graph Embedding"
         # that we use as a baseline and as a heuristic for our work.
-
-        return torch.sum((head_embeddings * rel_embeddings * tail_embeddings), 1, keepdim=True)
+        return torch.sum(torch.abs(head_embeddings + rel_embeddings - tail_embeddings), dim=1, keepdim=True)
 
     def all_scores(self, samples: np.array):
         """
             For each of the passed samples, compute scores for all possible tail entities.
+
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
-            :return: a 2-dimensional numpy array that, for each sample, contains a row with the for each passed sample
-                     and a column for each possible tail
+            :return: a 2-dimensional numpy array with a row for each passed sample and a column for each possible tail;
+                     in any position, it contains the score for the sample of that row, computed with the tail of that column
         """
 
         head_embeddings = self.entity_embeddings[samples[:, 0]]     # list of entity embeddings for the heads of the facts
         rel_embeddings = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the heads
-        to_score_embeddings = self.entity_embeddings                # list of all entity embeddings
 
-        return (head_embeddings * rel_embeddings) @ to_score_embeddings.transpose(0, 1)
+        translation_outputs = head_embeddings + rel_embeddings
+
+        all_scores = torch.stack([torch.sum(torch.abs(translation_outputs - cur_tail), dim=1) for cur_tail in self.entity_embeddings]).transpose(0, 1)
+        return all_scores
 
     def forward(self, samples: np.array):
         """
@@ -121,26 +120,13 @@ class DistMult(Model, nn.Module):
         rel_embeddings = self.relation_embeddings[samples[:, 1]]     # list of relation embeddings for the relations of the heads
         tail_embeddings = self.entity_embeddings[samples[:, 2]]       # list of entity embeddings for the tails of the facts
 
-        to_score_embeddings = self.entity_embeddings
-
+        translation_outputs = head_embeddings + rel_embeddings
         # this returns two factors
         #   factor 1 is one matrix with the scores for the fact
-        #
-        #   factor 2 is 3 matrices that will then be used for regularization:
-        #           matrix 1: for each head entity get the real and imaginary component,
-        #                           square each of their elements
-        #                           sum the resulting vectors
-        #                           squareroot the elements of the resulting vector
-        #           matrix 2: for each relation get the real and imaginary component,
-        #                           square each of their elements
-        #                           sum the resulting vectors
-        #                           squareroot the elements of the resulting vector
-        #           matrix 3: for each tail entity get the real and imaginary component,
-        #                           square each of their elements
-        #                           sum the resulting vectors
-        #                           squareroot the elements of the resulting vector
-        return ((head_embeddings * rel_embeddings) @ to_score_embeddings.transpose(0, 1)), \
-               (torch.sqrt(head_embeddings ** 2), torch.sqrt(rel_embeddings ** 2), torch.sqrt(tail_embeddings ** 2))
+        #   factor 2 contains the absolute values of the head embeddings, relation embeddings and tail embeddings,
+        #            to use for regularization:
+        return (torch.stack([torch.sum(torch.abs(translation_outputs - cur_tail), dim=1) for cur_tail in self.entity_embeddings]).transpose(0, 1),
+               (torch.abs(head_embeddings), torch.abs(rel_embeddings), torch.abs(tail_embeddings)))
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
@@ -160,18 +146,20 @@ class DistMult(Model, nn.Module):
                         - the head and tail predictions for that sample
         """
 
-        scores, ranks, predictions = [], [], []     # output data structures
         direct_samples = samples
 
-        # assert all samples are direct
+        # make sure that all the passed samples are "direct" samples
         assert np.all(direct_samples[:, 1] < self.dataset.num_direct_relations)
+
+        # output data structures
+        scores, ranks, predictions = [], [], []
 
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
         #obtain scores, ranks and predictions both for direct and inverse samples
-        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
         for i in range(direct_samples.shape[0]):
             # add to the scores list a couple containing the scores of the direct and of the inverse sample
@@ -269,18 +257,17 @@ class DistMult(Model, nn.Module):
 
 ################
 
-class KelpieDistMult(DistMult):
+class KelpieTransE(TransE):
     def __init__(
             self,
             dataset: KelpieDataset,
-            model: DistMult,
-            init_size: float = 1e-3):
+            model: TransE):
 
-        DistMult.__init__(self,
-                         dataset=dataset,
-                         dimension=model.dimension,
-                         init_random=False,
-                         init_size=init_size)
+        TransE.__init__(self,
+                        dataset=dataset,
+                        hyperparameters={DIMENSION: model.dimension,
+                                         INIT_SCALE: model.init_scale},
+                         init_random=False)
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id
@@ -302,7 +289,7 @@ class KelpieDistMult(DistMult):
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
-            self.kelpie_entity_embedding *= init_size
+            self.kelpie_entity_embedding *= self.init_scale
 
         self.relation_embeddings = frozen_relation_embeddings
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)

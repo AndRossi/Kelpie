@@ -1,13 +1,13 @@
-import time
-
 import tqdm
 import torch
 import numpy as np
 from torch import optim
 from collections import defaultdict
 
-from models.tucker.model import TuckER, KelpieTuckER
-from evaluation import Evaluator
+from link_prediction.evaluation.evaluation import Evaluator
+from link_prediction.models.tucker.model import TuckER
+from model import *
+
 
 class BCEOptimizer:
     """
@@ -24,24 +24,37 @@ class BCEOptimizer:
     """
 
     def __init__(self,
-                 model: TuckER,
-                 batch_size: int = 128,
-                 learning_rate: float = 0.03,
-                 decay: float = 1.0,
-                 label_smoothing: float = 0.1,
+                 model: Model,
+                 hyperparameters: dict,
                  verbose: bool = True):
-        self.model = model
+
+        """
+            BCEOptimizer initializer.
+            :param model: the model to train
+            :param hyperparameters: a dict with the optimization hyperparameters. It must contain at least:
+                    - BATCH SIZE
+                    - LEARNING RATE
+                    - DECAY
+                    - LABEL SMOOTHING
+            :param verbose:
+        """
+
+        #batch_size: int = 128,
+        #learning_rate: float = 0.03,
+        #decay: float = 1.0,
+        #label_smoothing: float = 0.1,
+
+        self.model = model #type:TuckER
         self.dataset = self.model.dataset
-        self.batch_size = batch_size
-        self.label_smoothing = label_smoothing
-        self.verbose = verbose
-        self.learning_rate=learning_rate
-        self.decay_rate = decay
+        self.batch_size = hyperparameters[BATCH_SIZE]
+        self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
+        self.learning_rate = hyperparameters[LEARNING_RATE]
+        self.decay = hyperparameters[DECAY]
         self.verbose = verbose
 
         self.loss = torch.nn.BCELoss()
-        self.optimizer = optim.Adam(params=self.model.parameters(), lr=learning_rate)
-        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, decay)
+        self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)  # we only support ADAM for BCE
+        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, self.decay)
 
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
@@ -123,7 +136,7 @@ class BCEOptimizer:
                 bar.update(batch_size)
                 bar.set_postfix(loss=str(round(l.item(), 6)))
 
-            if self.decay_rate:
+            if self.decay:
                 self.scheduler.step()
 
 
@@ -139,18 +152,12 @@ class BCEOptimizer:
 
 class KelpieBCEOptimizer(BCEOptimizer):
     def __init__(self,
-                 model:KelpieTuckER,
-                 batch_size: int = 128,
-                 learning_rate: float = 0.0005,
-                 decay: float = 1.0,
-                 label_smoothing: float = 0.1,
+                 model:Model,
+                 hyperparameters: dict,
                  verbose: bool = True):
 
         super(KelpieBCEOptimizer, self).__init__(model=model,
-                                                 batch_size=batch_size,
-                                                 learning_rate=learning_rate,
-                                                 decay=decay,
-                                                 label_smoothing=label_smoothing,
+                                                 hyperparameters=hyperparameters,
                                                  verbose=verbose)
 
         self.optimizer = optim.Adam(params=self.model.parameters())
@@ -184,5 +191,5 @@ class KelpieBCEOptimizer(BCEOptimizer):
                 bar.update(batch_size)
                 bar.set_postfix(loss=str(round(l.item(), 6)))
 
-            if self.decay_rate:
+            if self.decay:
                 self.scheduler.step()
