@@ -1,15 +1,19 @@
 import copy
+from typing import Tuple, Any
+
 import torch
 from torch import nn
 import numpy as np
 from torch.nn import Parameter
 from torch.nn.init import xavier_normal_
 
-from dataset import KelpieDataset
-from model import *
+from dataset import KelpieDataset, Dataset
+from model import Model, KelpieModel, \
+    ENTITY_DIMENSION, RELATION_DIMENSION, INPUT_DROPOUT, HIDDEN_DROPOUT_1, HIDDEN_DROPOUT_2
 
 
-class TuckER(Model, nn.Module):
+
+class TuckER(Model):
     """
         The TuckER class provides a Model implementation in PyTorch for the TuckER system.
         This implementation adheres to paper "TuckER: Tensor Factorization for Knowledge Graph Completion",
@@ -244,10 +248,12 @@ class TuckER(Model, nn.Module):
 
         return scores, ranks, pred_out
 
+    def kelpie_model_class(self):
+        return KelpieTuckER
 
 ################
 
-class KelpieTuckER(TuckER):
+class KelpieTuckER(KelpieModel, TuckER):
     def __init__(
             self,
             dataset: KelpieDataset,
@@ -265,9 +271,9 @@ class KelpieTuckER(TuckER):
                                             # and it will not be possible to overwrite them with mere Tensors
                                             # such as the one resulting from torch.cat(...) and as frozen_relation_embeddings
 
-        self.model = model
-        self.original_entity_id = dataset.original_entity_id
-        self.kelpie_entity_id = dataset.kelpie_entity_id
+        KelpieModel.__init__(self,
+                             model=model,
+                             dataset=dataset)
 
         # extract the values of the trained embeddings for entities, relations and core, and freeze them.
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
@@ -285,7 +291,6 @@ class KelpieTuckER(TuckER):
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, self.entity_dimension).cuda(), requires_grad=True)
-
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
         self.core_tensor = frozen_core
@@ -325,7 +330,7 @@ class KelpieTuckER(TuckER):
 
         # use the TuckER implementation method to obtain scores, ranks and prediction results.
         # these WILL feature the forbidden entity, so we now need to filter them
-        scores, ranks, predictions = super().predict_samples(direct_samples)
+        scores, ranks, predictions = TuckER.predict_samples(self, direct_samples)
 
         # remove any reference to the forbidden entity id
         # (that may have been included in the predicted entities)
@@ -372,15 +377,3 @@ class KelpieTuckER(TuckER):
 
         scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
         return scores[0], ranks[0], predictions[0]
-
-    #Override
-    def train(self, mode=True):
-        self.training = mode
-        for module in self.children():
-            if not isinstance(module, torch.nn.BatchNorm1d):
-                module.train(mode)
-        return self
-
-    def update_embeddings(self):
-        with torch.no_grad():
-            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding

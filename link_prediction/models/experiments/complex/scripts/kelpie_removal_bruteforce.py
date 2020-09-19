@@ -249,7 +249,7 @@ for i in range(len(perturbed_list)):
 
 
 results = sorted(results, key=lambda x: x[-1], reverse=True)
-print("\t".join(["NO FACTS SKIPPED", str(direct_score), str(inverse_score), str(direct_rank), str(inverse_rank)]))
+print("\t".join(["NO FACTS SKIPPED",str(direct_score), str(inverse_score), str(direct_rank), str(inverse_rank)]))
 print(results[:10])
 with open("output.txt", "w") as outfile:
     outfile.writelines(outlines)

@@ -1,29 +1,29 @@
 from typing import Any, Tuple
 import numpy
 import torch
-
-from dataset import Dataset
+from torch import nn
+from dataset import Dataset, KelpieDataset
 
 # KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
-DIMENSION = "dimension"
-ENTITY_DIMENSION = "entity_dimension"
-RELATION_DIMENSION = "relation_dimension"
-INPUT_DROPOUT = "input_dropout"
-HIDDEN_DROPOUT_1 = "hidden_dropout_1"
-HIDDEN_DROPOUT_2 = "hidden_dropout_2"
-INIT_SCALE = "init_scale"
-OPTIMIZER_NAME = "optimizer_name"
-BATCH_SIZE = "batch_size"
-LEARNING_RATE = "learning_rate"
-DECAY = "decay"
-DECAY_1 = "decay_1" # Adam decay 1
-DECAY_2 = "decay_2" # Adam decay 2
-REGULARIZER_NAME = "regularizer"
-REGULARIZER_WEIGHT = "regularizer_weight"
-LABEL_SMOOTHING = "label_smoothing"
+DIMENSION = "dimension"                         # embedding dimension, when both entity and relation embeddings have same dimension
+ENTITY_DIMENSION = "entity_dimension"           # entity embedding dimension, when entity and relation embeddings have different dimensions
+RELATION_DIMENSION = "relation_dimension"       # relation embedding dimension, when entity and relation embeddings have different dimensions
+INPUT_DROPOUT = "input_dropout"                 # dropout rate for the input embeddings
+HIDDEN_DROPOUT_1 = "hidden_dropout_1"           # dropout rate after the first hidden layer
+HIDDEN_DROPOUT_2 = "hidden_dropout_2"           # dropout rate after the second hidden layer
+INIT_SCALE = "init_scale"                       # downscale to operate on the initial, randomly generated embeddings
+OPTIMIZER_NAME = "optimizer_name"               # name of the optimization technique: Adam, Adagrad, SGD
+BATCH_SIZE = "batch_size"                       # training batch size
+EPOCHS = "epochs"                               # training epochs
+LEARNING_RATE = "learning_rate"                 # learning rate
+DECAY = "decay"                                 #
+DECAY_1 = "decay_1"                             # Adam decay 1
+DECAY_2 = "decay_2"                             # Adam decay 2
+REGULARIZER_NAME = "regularizer"                # name of the regularization technique: N3
+REGULARIZER_WEIGHT = "regularizer_weight"       # weight for the regularization in the loss
+LABEL_SMOOTHING = "label_smoothing"             # label smoothing value
 
-class Model:
-
+class Model(nn.Module):
     """
         The Model class provides the interface that any LP model should implement.
 
@@ -43,23 +43,10 @@ class Model:
 
         Whenever a Model method requires samples, it accepts them in the form of 2-dimensional numpy.arrays,
         where each row corresponds to a sample and contains the integer ids of its head, relation and tail.
-
-        NOTE:
-            Some models just handle samples as they appear in the original dataset files, while
-            some others may also invert them and learn/use inverse versions of the original relations and samples.
-
-            This aspect is part of the model implementation, and should be kept hidden from the other modules.
-            Therefore prediction methods (e.g. predict_samples, predict_sample) can only accept direct facts as an input
-            (and may ask the dataset to invert them to obtain the head predictions for the original fact).
-            This does NOT apply to other methods, such as score and forward.
-
-            The sole exception to this principle is the use of Optimizers.
-            Optimizers should have specific implementations for the various models,
-            so they are aware of the implementation details of "their" models
-            (and can decide to include inverse samples to the model, e.g. this happens all the time in training).
     """
 
     def __init__(self, dataset: Dataset):
+        nn.Module.__init__(self)
         self.dataset = dataset
 
     def score(self, samples: numpy.array) -> numpy.array:
@@ -137,14 +124,93 @@ class Model:
         scores, ranks, predictions = self.predict_samples(numpy.array([sample]))
         return scores[0], ranks[0], predictions[0]
 
+    def kelpie_model_class(self):
+        """
+            This method provides the KelpieModel implementation class corresponding to this specific Model class.
+            E.g. ComplEx.kelpie_model_class() -> KelpieComplEx.__class__
 
-#class KelpieModel(Model):
-    # this is necessary for any model that relies on BatchNorm1d,
-    # because in post-training BatchNorm1d must NOT be put in train mode
-    #Override
-    #def train(self, mode=True):
-    #    self.training = mode
-    #    for module in self.children():
-    #        if not isinstance(module, torch.nn.BatchNorm1d):
-    #            module.train(mode)
-    #    return self
+            When called on a KelpieModel subclass, it raises an exception.
+
+            :return: The KelpieModel class that corresponds to the Model Class running this method
+            :raise: an Exception if called on a KelpieModel subclass
+        """
+        pass
+
+
+class KelpieModel(Model):
+    """
+        The KelpieModel class provides the interface that any post-trainable LP model should implement.
+
+        The main functions of KelpieModel are thus identical to Model
+        (which is why KelpieModel extends Model).
+
+        In addition to that, a KelpieModels also
+    """
+
+    def __init__(self,
+                 dataset: KelpieDataset,
+                 model: Model):
+
+        Model.__init__(self,
+                       dataset=dataset)
+
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
+
+    # override
+    def predict_samples(self,
+                        samples: numpy.array,
+                        original_mode: bool = False):
+        """
+        This method interface overrides the superclass method by adding the option to run predictions in original_mode,
+        which means ignoring in any circumstances the additional "fake" kelpie entity.
+
+        :param samples: the DIRECT samples. They will be inverted to perform head prediction
+        :param original_mode: a boolean flag specifying whether to work in original_mode or to use the kelpie entity
+
+        :return: a numpy array containing
+        """
+        pass
+
+
+    # Override
+    def predict_sample(self,
+                       sample: numpy.array,
+                       original_mode: bool = False):
+        """
+        This method interface overrides the superclass method by adding the option to run predictions in original_mode,
+        which means ignoring in any circumstances the additional "fake" kelpie entity.
+
+        :param sample: the DIRECT sample. It will be inverted to perform head prediction
+        :param original_mode: a boolean flag specifying whether to work in original_mode or to use the kelpie entity
+
+        :return:
+        """
+
+    # this is necessary
+    def update_embeddings(self):
+        with torch.no_grad():
+            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
+
+    #override
+    def train(self, mode=True):
+        """
+        This method overrides the traditional train() implementation of torch.nn.Module,
+        in which a.train() sets all children of a to train mode.
+
+        In KelpieModels, in post-training any BatchNorm1d layers must NOT be put in train mode,
+        because even in post-training they MUST remain constant.
+
+        So this method overrides the traditional train() by skipping any BatchNorm1d children
+        :param mode:
+        :return:
+        """
+        self.training = mode
+        for module in self.children():
+            if not isinstance(module, torch.nn.BatchNorm1d):
+                module.train(mode)
+        return self
+
+    def kelpie_model_class(self):
+        raise Exception(self.__class__.name  + " is a KelpieModel.")

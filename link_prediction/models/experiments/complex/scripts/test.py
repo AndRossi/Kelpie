@@ -2,8 +2,9 @@ import argparse
 import torch
 
 from dataset import ALL_DATASET_NAMES, Dataset
-from evaluation import Evaluator
-from models.complex.model import ComplEx
+from link_prediction.evaluation.evaluation import Evaluator
+from link_prediction.models.complex import ComplEx
+from model import DIMENSION, INIT_SCALE
 
 parser = argparse.ArgumentParser(
     description="Kelpie"
@@ -20,7 +21,7 @@ parser.add_argument('--dimension',
                     help="Embedding dimension"
 )
 
-parser.add_argument('--init',
+parser.add_argument('--init_scale',
                     default=1e-3,
                     type=float,
                     help="Initial scale"
@@ -43,8 +44,9 @@ model_path = args.load
 print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
+hyperparameters = {DIMENSION: args.dimension, INIT_SCALE: args.init_scale}
 print("Initializing model...")
-model = ComplEx(dataset=dataset, dimension=args.dimension, init_random=True, init_size=args.init)   # type: ComplEx
+model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)   # type: ComplEx
 model.to('cuda')
 model.load_state_dict(torch.load(model_path))
 model.eval()

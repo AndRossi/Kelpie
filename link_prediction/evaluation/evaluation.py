@@ -1,7 +1,6 @@
 import html
 
-from model import Model
-from models.complex.model import KelpieComplEx
+from model import Model, KelpieModel
 import numpy as np
 
 class Evaluator:
@@ -83,7 +82,7 @@ class Evaluator:
 
 class KelpieEvaluator(Evaluator):
 
-    def __init__(self, model: KelpieComplEx):
+    def __init__(self, model: KelpieModel):
         super().__init__(model)
         self.model = model
 

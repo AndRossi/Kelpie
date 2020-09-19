@@ -1,14 +1,15 @@
+import torch
 import tqdm
 import numpy as np
-from torch import nn
-from torch import optim
+from torch import optim, nn
 
 from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.regularization.regularizers import N3, N2
-from model import *
+from model import Model, OPTIMIZER_NAME, BATCH_SIZE, EPOCHS, LEARNING_RATE, DECAY_1, REGULARIZER_NAME, \
+    REGULARIZER_WEIGHT, DECAY_2, KelpieModel
 
 
-class MultiClassNLLptimizer:
+class MultiClassNLLOptimizer:
     """
         This optimizer relies on Multiclass Negative Log Likelihood loss.
         It is heavily inspired by paper ""
@@ -19,7 +20,8 @@ class MultiClassNLLptimizer:
         When passing them to the loss...
 
         In our implementation, it is used by the following models:
-            - TuckER
+            - ComplEx
+            - DistMult
 
     """
 
@@ -33,6 +35,7 @@ class MultiClassNLLptimizer:
 
         self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
         self.batch_size = hyperparameters[BATCH_SIZE]
+        self.epochs = hyperparameters[EPOCHS]
         self.learning_rate = hyperparameters[LEARNING_RATE]
         self.decay1, self.decay2 = hyperparameters[DECAY_1], hyperparameters[DECAY_2]
         self.regularizer_name = hyperparameters[REGULARIZER_NAME]
@@ -62,7 +65,6 @@ class MultiClassNLLptimizer:
 
     def train(self,
               train_samples: np.array,
-              max_epochs: int,
               save_path: str = None,
               evaluate_every:int =-1,
               valid_samples:np.array = None):
@@ -75,7 +77,7 @@ class MultiClassNLLptimizer:
         batch_size = min(self.batch_size, len(training_samples))
 
         cur_loss = 0
-        for e in range(max_epochs):
+        for e in range(self.epochs):
             cur_loss = self.epoch(batch_size, training_samples)
 
             if evaluate_every > 0 and valid_samples is not None and \
@@ -137,15 +139,15 @@ class MultiClassNLLptimizer:
         return l
 
 
-class KelpieMultiClassNLLptimizer(MultiClassNLLptimizer):
+class KelpieMultiClassNLLOptimizer(MultiClassNLLOptimizer):
     def __init__(self,
-                 model: Model,      # TODO: actually this has to be a Kelpie model
+                 model: KelpieModel,
                  hyperparameters: dict,
                  verbose: bool = True):
-
-        super(KelpieMultiClassNLLptimizer, self).__init__(model=model,
-                                                          hyperparameters=hyperparameters,
-                                                          verbose=verbose)
+        MultiClassNLLOptimizer.__init__(self,
+                                        model=model,
+                                        hyperparameters=hyperparameters,
+                                        verbose=verbose)
 
     def epoch(self,
               batch_size: int,

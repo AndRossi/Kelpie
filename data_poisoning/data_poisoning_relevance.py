@@ -1,7 +1,6 @@
 import numpy
 from dataset import Dataset
-from models.complex.model import ComplEx
-
+from link_prediction.models.complex.model import ComplEx
 
 def compute_fact_relevance(model: ComplEx,
                            dataset: Dataset,
@@ -30,6 +29,9 @@ def compute_fact_relevance(model: ComplEx,
 
     # extract all training samples containing the entity to explain, and compute their scores
     samples_containing_entity_to_explain = numpy.array([(h, r, t) for (h, r, t) in dataset.train_samples if entity_to_explain_id in [h, t]])
+    if len(samples_containing_entity_to_explain) == 0:
+        return None
+
     original_scores = model.score(samples_containing_entity_to_explain)
 
     # extract the embeddings for the head entities, relations, and tail entities

@@ -3,10 +3,8 @@ import torch
 import numpy as np
 from torch import optim
 from collections import defaultdict
-
 from link_prediction.evaluation.evaluation import Evaluator
-from link_prediction.models.tucker.model import TuckER
-from model import *
+from model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
 
 
 class BCEOptimizer:
@@ -36,6 +34,7 @@ class BCEOptimizer:
                     - LEARNING RATE
                     - DECAY
                     - LABEL SMOOTHING
+                    - EPOCHS
             :param verbose:
         """
 
@@ -44,12 +43,13 @@ class BCEOptimizer:
         #decay: float = 1.0,
         #label_smoothing: float = 0.1,
 
-        self.model = model #type:TuckER
+        self.model = model  #type:Model
         self.dataset = self.model.dataset
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
         self.learning_rate = hyperparameters[LEARNING_RATE]
         self.decay = hyperparameters[DECAY]
+        self.epochs = hyperparameters[EPOCHS]
         self.verbose = verbose
 
         self.loss = torch.nn.BCELoss()
@@ -61,7 +61,6 @@ class BCEOptimizer:
 
     def train(self,
               train_samples: np.array,
-              max_epochs: int,
               save_path: str = None,
               evaluate_every:int =-1,
               valid_samples:np.array = None):
@@ -76,7 +75,7 @@ class BCEOptimizer:
 
         self.model.cuda()
 
-        for e in range(1, max_epochs+1):
+        for e in range(1, self.epochs+1):
             self.epoch(er_vocab=er_vocab, er_vocab_pairs=er_vocab_pairs, batch_size=self.batch_size)
 
             if evaluate_every > 0 and valid_samples is not None and e % evaluate_every == 0:
