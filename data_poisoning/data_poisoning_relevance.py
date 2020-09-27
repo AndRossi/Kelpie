@@ -1,6 +1,6 @@
 import numpy
 from dataset import Dataset
-from link_prediction.models.complex.model import ComplEx
+from link_prediction.models.complex import ComplEx
 
 def compute_fact_relevance(model: ComplEx,
                            dataset: Dataset,
@@ -12,9 +12,9 @@ def compute_fact_relevance(model: ComplEx,
     entity_to_explain_id = head_id if perspective == "head" else tail_id
 
     # get the embedding of the head entity, of the relation, and of the tail entity of the fact to explain
-    head_embedding = model.entity_embeddings[head_id].detach().reshape(1, model.dimension*2)
-    relation_embedding = model.relation_embeddings[relation_id].detach().reshape(1, model.dimension*2)
-    tail_embedding = model.entity_embeddings[tail_id].detach().reshape(1, model.dimension*2)
+    head_embedding = model.entity_embeddings[head_id].detach().reshape(1, model.dimension)
+    relation_embedding = model.relation_embeddings[relation_id].detach().reshape(1, model.dimension)
+    tail_embedding = model.entity_embeddings[tail_id].detach().reshape(1, model.dimension)
 
     # set the requires_grad flag of the embedding of the entity to explain to true
     entity_to_explain_embedding = head_embedding if perspective == "head" else tail_embedding

@@ -1,17 +1,32 @@
+from typing import Type
+
 import numpy
 import torch
 
 from dataset import KelpieDataset, Dataset
 from link_prediction.evaluation.evaluation import KelpieEvaluator
-from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiClassNLLOptimizer
 from link_prediction.perturbation import kelpie_perturbation
 from model import Model, KelpieModel
+from optimizer import Optimizer
+
+
+class ExplanationEngine:
+    def __init__(self,
+                 model: Model,
+                 dataset: Dataset,
+                 hyperparameters: dict):
+        self.model = model
+        self.model.to('cuda')   # it this hasn't been done yet, load the model in GPU
+        self.dataset = dataset
+        self.hyperparameters = hyperparameters
+
 
 class PostTrainingEngine:
 
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
+                 post_training_optimizer_class: Type,
                  hyperparameters: dict):
         """
             PostTrainingEngine constructor.
@@ -26,14 +41,14 @@ class PostTrainingEngine:
             raise Exception("The model passed to the PostTrainingEngine is already a post-trainable KelpieModel.")
 
         self.model = model
+        self.kelpie_optimizer_class = post_training_optimizer_class
         self.model.to('cuda')   # it this hasn't been done yet, load the model in GPU
         self.dataset = dataset
         self.hyperparameters = hyperparameters
 
-    # TODO: somehow make perturbation policy parametric
-    def run(self,
-            sample_to_explain: numpy.array,
-            perspective: str):
+    def run_removal(self,
+                    sample_to_explain: numpy.array,
+                    perspective: str):
 
         # the behaviour of the engine must be deterministic!
         seed = 42
@@ -52,12 +67,15 @@ class PostTrainingEngine:
 
         print("### BASE POST-TRAINING")
         post_trained_model = self.post_train(kelpie_dataset=kelpie_dataset,
-                                             kelpie_train_samples=kelpie_dataset.kelpie_train_samples)
+                                             kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
 
-        direct_score, inverse_score, head_rank, tail_rank = self.test_kelpie_model(testing_model=post_trained_model,
-                                                                                   sample_to_explain=sample_to_explain,
-                                                                                   perspective=perspective)
+        # check how the post-trained "clone" performs on the sample to explain
+        #direct_score, inverse_score, head_rank, tail_rank = self.test_kelpie_model(testing_model=post_trained_model, sample_to_explain=sample_to_explain, perspective=perspective)
+        (direct_score, inverse_score), \
+        (head_rank, tail_rank), _ = post_trained_model.predict_sample(sample=sample_to_explain,
+                                                                      original_mode=True)
 
+        # introduce perturbation
         print("Perturbing entities...")
         perturbed_list, skipped_list = kelpie_perturbation.perturbate_samples(kelpie_dataset.kelpie_train_samples)
 
@@ -79,10 +97,12 @@ class PostTrainingEngine:
             for x in skipped_facts:
                 print("\t" + x)
 
-            cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset, kelpie_train_samples=cur_training_samples)
-            cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank = self.test_kelpie_model(testing_model=cur_kelpie_model,
-                                                                                                       sample_to_explain=sample_to_explain,
-                                                                                                       perspective=perspective)
+            cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset,
+                                               kelpie_train_samples=cur_training_samples)
+            (cur_direct_score, cur_inverse_score), \
+            (cur_head_rank, cur_tail_rank), _ = self.test_kelpie_model_on_sample(model=cur_kelpie_model,
+                                                                     sample=sample_to_explain,
+                                                                     perspective=perspective)
             direct_diff = direct_score - cur_direct_score
             inverse_diff = inverse_score - cur_inverse_score
             results.append((skipped_facts[0], cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, direct_diff + inverse_diff))
@@ -92,7 +112,6 @@ class PostTrainingEngine:
         print(results[:10])
 
 
-    # todo: rename in a better way. This does not return the post-trained model, but just its results on the sample to explain
     def post_train(self,
                    kelpie_dataset: KelpieDataset,
                    kelpie_train_samples: numpy.array):
@@ -103,15 +122,32 @@ class PostTrainingEngine:
         :return:
         """
         print("Post-training the Kelpie model...")
-        kelpie_model_clazz = self.model.kelpie_model_class()
-        kelpie_model = kelpie_model_clazz(model=self.model, dataset=kelpie_dataset)
+        kelpie_model_class = self.model.kelpie_model_class()
+        kelpie_model = kelpie_model_class(model=self.model, dataset=kelpie_dataset)
         kelpie_model.to('cuda')
 
         # todo: use the optimizer that works with the specific model.
         # todo: Maybe have it parametric? or maybe just have an official model-optimizer map in model.py?
-        optimizer = KelpieMultiClassNLLOptimizer(model=kelpie_model, hyperparameters=self.hyperparameters)
+        # todo: or maybe just pass the Optimizer class to the Engine at creation...
+        optimizer = self.kelpie_optimizer_class(model=kelpie_model, hyperparameters=self.hyperparameters)
         optimizer.train(train_samples=kelpie_train_samples)
         return kelpie_model
+
+
+    def test_kelpie_model_on_sample(self,
+                          model: KelpieModel,
+                          sample: numpy.array,
+                          perspective: str):
+
+        # convert the sample into a "kelpie sample", that is, transform either its head or its tail in the kelpie entity
+        kelpie_entity_id = model.kelpie_entity_id
+        kelpie_sample = numpy.array((kelpie_entity_id, sample[1], sample[2])) if perspective == "head" \
+            else numpy.array((sample[0], sample[1], kelpie_entity_id))
+
+        # results on kelpie fact
+        scores, ranks, predictions = model.predict_sample(sample=kelpie_sample, original_mode=False)
+        return scores, ranks, predictions
+
 
     def test_kelpie_model(self,
                           testing_model: KelpieModel,

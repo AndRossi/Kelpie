@@ -42,9 +42,11 @@ class ComplEx(Model):
         Model.__init__(self, dataset)
 
         self.dataset = dataset
-        self.num_entities = dataset.num_entities        # number of entities in dataset
-        self.num_relations = dataset.num_relations      # number of relations in dataset
-        self.dimension = hyperparameters[DIMENSION]     # embedding dimension
+        self.num_entities = dataset.num_entities            # number of entities in dataset
+        self.num_relations = dataset.num_relations          # number of relations in dataset
+        self.dimension = 2*hyperparameters[DIMENSION]       # embedding dimension; it is 2* the passed dimension because each element must have both a real and an imaginary value
+        self.real_dimension = hyperparameters[DIMENSION]    # dimension of the real part of each embedding
+
         self.init_scale = hyperparameters[INIT_SCALE]
 
         # create the embeddings for entities and relations as Parameters.
@@ -54,8 +56,8 @@ class ComplEx(Model):
         # Each entity embedding and relation embedding is instantiated with size 2 * dimension because
         # for each entity and relation we store real and imaginary parts as separate elements
         if init_random:
-            self.entity_embeddings = Parameter(torch.rand(self.num_entities, 2 * self.dimension).cuda(), requires_grad=True)
-            self.relation_embeddings = Parameter(torch.rand(self.num_relations, 2 * self.dimension).cuda(), requires_grad=True)
+            self.entity_embeddings = Parameter(torch.rand(self.num_entities, self.dimension).cuda(), requires_grad=True)
+            self.relation_embeddings = Parameter(torch.rand(self.num_relations, self.dimension).cuda(), requires_grad=True)
 
             # initialization step to make the embedding values smaller in the embedding space
             with torch.no_grad():
@@ -93,11 +95,11 @@ class ComplEx(Model):
         # that we use as a baseline and as a heuristic for our work.
 
         # split the head embedding into real and imaginary components
-        lhs = head_embeddings[:, :self.dimension], head_embeddings[:, self.dimension:]
+        lhs = head_embeddings[:, :self.real_dimension], head_embeddings[:, self.real_dimension:]
         # split the relation embedding into real and imaginary components
-        rel =  rel_embeddings[:, :self.dimension],  rel_embeddings[:, self.dimension:]
+        rel =  rel_embeddings[:, :self.real_dimension],  rel_embeddings[:, self.real_dimension:]
         # split the tail embedding into real and imaginary components
-        rhs = tail_embeddings[:, :self.dimension], tail_embeddings[:, self.dimension:]
+        rhs = tail_embeddings[:, :self.real_dimension], tail_embeddings[:, self.real_dimension:]
 
         # Bilinear product lhs * rel * rhs in complex scenario:
         #   lhs => lhs[0] + i*lhs[1]
@@ -121,6 +123,20 @@ class ComplEx(Model):
             1, keepdim=True
         )
 
+    def all_scores(self, samples: np.array) -> np.array:
+        """
+            For each of the passed samples, compute scores for all possible tail entities.
+            :param samples: a 2-dimensional numpy array containing the samples to score, one per row
+            :return: a 2-dimensional numpy array that, for each sample, contains a row for each passed sample
+                     and a column for each possible tail
+        """
+
+        # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
+        # and compute the scores using any possible entity as a tail
+        q = self._get_queries(samples)
+        rhs = self._get_rhs()
+        return q @ rhs  # 2d matrix: each row corresponds to a sample and has the scores for all entities
+
     def forward(self, samples: np.array):
         """
             Perform forward propagation on the passed samples
@@ -134,12 +150,12 @@ class ComplEx(Model):
         rel = self.relation_embeddings[samples[:, 1]]     # list of relation embeddings for the relations of the heads
         rhs = self.entity_embeddings[samples[:, 2]]       # list of entity embeddings for the tails of the facts
 
-        lhs = lhs[:, :self.dimension], lhs[:, self.dimension:]
-        rel = rel[:, :self.dimension], rel[:, self.dimension:]
-        rhs = rhs[:, :self.dimension], rhs[:, self.dimension:]
+        lhs = lhs[:, :self.real_dimension], lhs[:, self.real_dimension:]
+        rel = rel[:, :self.real_dimension], rel[:, self.real_dimension:]
+        rhs = rhs[:, :self.real_dimension], rhs[:, self.real_dimension:]
 
         to_score = self.entity_embeddings
-        to_score = to_score[:, :self.dimension], to_score[:, self.dimension:]
+        to_score = to_score[:, :self.real_dimension], to_score[:, self.real_dimension:]
 
         # this returns two factors
         #   factor 1 is one matrix with the scores for the fact
@@ -198,8 +214,8 @@ class ComplEx(Model):
         relation_embeddings = self.relation_embeddings[samples[:, 1]]
 
         # split both head embeddings and relation embeddings into real and imaginary parts
-        head_embeddings = head_embeddings[:, :self.dimension], head_embeddings[:, self.dimension:]
-        relation_embeddings = relation_embeddings[:, :self.dimension], relation_embeddings[:, self.dimension:]
+        head_embeddings = head_embeddings[:, :self.real_dimension], head_embeddings[:, self.real_dimension:]
+        relation_embeddings = relation_embeddings[:, :self.real_dimension], relation_embeddings[:, self.real_dimension:]
 
         # obtain a tensor that, in each row, has the partial score factor of the head and relation for one fact
         return torch.cat([
@@ -265,11 +281,8 @@ class ComplEx(Model):
 
         with torch.no_grad():
 
-            # for each fact <cur_head, cur_rel, cur_tail> to predict, get all (cur_head, cur_rel) couples
-            # and compute the scores using any possible entity as a tail
-            q = self._get_queries(samples)
-            rhs = self._get_rhs()
-            all_scores = q @ rhs    # 2d matrix: each row corresponds to a sample and has the scores for all entities
+            # compute scores for each sample for all possible tails
+            all_scores = self.all_scores(samples)
 
             # from the obtained scores, extract the the scores of the actual facts <cur_head, cur_rel, cur_tail>
             targets = torch.zeros(size=(len(samples), 1)).cuda()
@@ -350,7 +363,7 @@ class KelpieComplEx(KelpieModel, ComplEx):
 
         ComplEx.__init__(self,
                          dataset=dataset,
-                         hyperparameters={DIMENSION: model.dimension,
+                         hyperparameters={DIMENSION: model.real_dimension,
                                           INIT_SCALE: model.init_scale},
                          init_random=False)
 
@@ -367,11 +380,11 @@ class KelpieComplEx(KelpieModel, ComplEx):
         # and to pass them to the Optimizer for optimization.
         #
         # If I used .cuda() outside the Parameter, like
-        #       self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension), requires_grad=True).cuda()
+        #       self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension), requires_grad=True).cuda()
         # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
 
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, 2*self.dimension).cuda(), requires_grad=True)
+        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
             self.kelpie_entity_embedding *= self.init_scale
 

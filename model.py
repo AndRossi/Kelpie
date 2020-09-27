@@ -58,6 +58,17 @@ class Model(nn.Module):
         """
         pass
 
+    # override
+    def all_scores(self, samples: numpy.array):
+        """
+            This method computes, For each of the passed samples, the score for all possible tail entities.
+            :param samples: a 2-dimensional numpy array containing the samples to score, one per row
+            :return: a 2-dimensional numpy array that, for each sample, contains a row for each passed sample
+                     and a column for each possible tail
+        """
+
+        pass
+
     def forward(self, samples: numpy.array):
         """
             This method performs forward propagation for a collection of samples.

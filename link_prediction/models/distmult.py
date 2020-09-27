@@ -97,7 +97,7 @@ class DistMult(Model):
         """
             For each of the passed samples, compute scores for all possible tail entities.
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
-            :return: a 2-dimensional numpy array that, for each sample, contains a row with the for each passed sample
+            :return: a 2-dimensional numpy array that, for each sample, contains a row for each passed sample
                      and a column for each possible tail
         """
 
@@ -265,6 +265,7 @@ class DistMult(Model):
                 predictions.append(predicted_tails)     # as a np array!
 
         return scores, ranks, predictions
+
 
     def kelpie_model_class(self):
         return KelpieDistMult
