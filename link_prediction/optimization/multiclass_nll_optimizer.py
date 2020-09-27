@@ -3,13 +3,12 @@ import tqdm
 import numpy as np
 from torch import optim, nn
 
-from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.regularization.regularizers import N3, N2
 from model import Model, OPTIMIZER_NAME, BATCH_SIZE, EPOCHS, LEARNING_RATE, DECAY_1, REGULARIZER_NAME, \
     REGULARIZER_WEIGHT, DECAY_2, KelpieModel
+from optimizer import Optimizer
 
-
-class MultiClassNLLOptimizer:
+class MultiClassNLLOptimizer(Optimizer):
     """
         This optimizer relies on Multiclass Negative Log Likelihood loss.
         It is heavily inspired by paper ""
@@ -30,8 +29,7 @@ class MultiClassNLLOptimizer:
                  hyperparameters: dict,
                  verbose: bool = True):
 
-        self.model = model
-        self.verbose = verbose
+        Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
         self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
         self.batch_size = hyperparameters[BATCH_SIZE]
@@ -59,9 +57,6 @@ class MultiClassNLLOptimizer:
 
         # choose the regularizer
         self.regularizer = supported_regularizers[self.regularizer_name]
-
-        # create the evaluator to use between epochs
-        self.evaluator = Evaluator(self.model)
 
     def train(self,
               train_samples: np.array,

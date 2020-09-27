@@ -3,11 +3,11 @@ import torch
 import numpy as np
 from torch import optim
 from collections import defaultdict
-from link_prediction.evaluation.evaluation import Evaluator
 from model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
+from optimizer import Optimizer
 
 
-class BCEOptimizer:
+class BCEOptimizer(Optimizer):
     """
         This optimizer relies on BCE loss.
         Instead of considering each training sample as the "unit" for training,
@@ -25,7 +25,6 @@ class BCEOptimizer:
                  model: Model,
                  hyperparameters: dict,
                  verbose: bool = True):
-
         """
             BCEOptimizer initializer.
             :param model: the model to train
@@ -38,26 +37,21 @@ class BCEOptimizer:
             :param verbose:
         """
 
+        Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
         #batch_size: int = 128,
         #learning_rate: float = 0.03,
         #decay: float = 1.0,
         #label_smoothing: float = 0.1,
 
-        self.model = model  #type:Model
-        self.dataset = self.model.dataset
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
         self.learning_rate = hyperparameters[LEARNING_RATE]
         self.decay = hyperparameters[DECAY]
         self.epochs = hyperparameters[EPOCHS]
-        self.verbose = verbose
 
         self.loss = torch.nn.BCELoss()
         self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)  # we only support ADAM for BCE
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, self.decay)
-
-        # create the evaluator to use between epochs
-        self.evaluator = Evaluator(self.model)
 
     def train(self,
               train_samples: np.array,
