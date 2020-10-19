@@ -16,6 +16,12 @@ YAGO3_10 = "YAGO3-10"
 
 ALL_DATASET_NAMES = [FB15K, FB15K_237, WN18, WN18RR, YAGO3_10]
 
+# relation types
+ONE_TO_ONE="1-1"
+ONE_TO_MANY="1-N"
+MANY_TO_ONE="N-1"
+MANY_TO_MANY="N-N"
+
 class Dataset:
 
     def __init__(self,
@@ -62,6 +68,9 @@ class Dataset:
         # either in train samples, or in valid samples, or in test samples
         self.to_filter = defaultdict(lambda: list())
 
+        # map each relation to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
+        self.relation_2_type = []
+
         # number of distinct entities and relations in this dataset.
         # num_direct_relations is used by extensions of Dataset that may support inverse relations as well
         self.num_entities, self.num_relations, self.num_direct_relations = -1, -1, -1
@@ -80,6 +89,9 @@ class Dataset:
             self.train_triples, self.train_samples = self._read_triples(self.train_path, self.separator)
             self.valid_triples, self.valid_samples = self._read_triples(self.valid_path, self.separator)
             self.test_triples, self.test_samples = self._read_triples(self.test_path, self.separator)
+
+            # this is used for fast access
+            self.train_samples_set = {(h, r, t) for (h, r, t) in self.train_samples}
 
             # update the overall number of distinct entities and distinct relations in the dataset
             self.num_entities = len(self.entities)
@@ -100,15 +112,16 @@ class Dataset:
                 self.to_filter[(head_id, relation_id)].append(tail_id)
                 self.to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
 
+            # compute relation types
+            self.relation_2_type = self._compute_relation_2_type()
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """
-        Private method to read the triples from a textual file,
-        and to use the obtained triples to progressively fill the dataset data structures in the meantime.
-
-        :param triples_path:
-        :param separator:
-        :return:
+        Private method to read the triples (that is, facts and samples) from a textual file
+        :param triples_path: the path of the file to read the triples from
+        :param separator: the separator used in the file to read to separate head, relation and tail of each triple
+        :return: a 2D numpy array containing the read facts,
+                 and a 2D numpy array containing the corresponding samples
         """
         textual_triples = []
         data_triples = []
@@ -155,13 +168,41 @@ class Dataset:
     def invert_samples(self, samples: numpy.array):
         output = numpy.copy(samples)
 
-        tmp = numpy.copy(output[:, 0])
         output[:, 0] = output[:, 2]
-        output[:, 2] = tmp
+        output[:, 2] = samples[:, 0]
         output[:, 1] += self.num_direct_relations
 
         return output
 
+    def _compute_relation_2_type(self):
+        if len(self.to_filter) == 0:
+            raise Exception("The dataset has not been loaded yet, so it is not possible to compute relation types yet.")
+
+        relation_2_heads_nums = defaultdict(lambda: list())
+        relation_2_tails_nums = defaultdict(lambda: list())
+
+        for (x, relation) in self.to_filter:
+            if relation >= self.num_direct_relations:
+                relation_2_heads_nums[relation - self.num_direct_relations].append(len(self.to_filter[(x, relation)]))
+            else:
+                relation_2_tails_nums[relation].append(len(self.to_filter[(x, relation)]))
+
+        relation_2_type = {}
+
+        for relation in relation_2_heads_nums:
+            average_heads_per_tail = numpy.average(relation_2_heads_nums[relation])
+            average_tails_per_head = numpy.average(relation_2_tails_nums[relation])
+
+            if average_heads_per_tail > 1.2 and average_tails_per_head > 1.2:
+                relation_2_type[relation] = MANY_TO_MANY
+            elif average_heads_per_tail > 1.2 and average_tails_per_head <= 1.2:
+                relation_2_type[relation] = MANY_TO_ONE
+            elif average_heads_per_tail <= 1.2 and average_tails_per_head > 1.2:
+                relation_2_type[relation] = ONE_TO_MANY
+            else:
+                relation_2_type[relation] = ONE_TO_ONE
+
+        return relation_2_type
 
     def get_id_for_entity_name(self, entity_name: str):
         return self.entity_name_2_id[entity_name]
@@ -175,6 +216,89 @@ class Dataset:
     def get_name_for_relation_id(self, relation_id: int):
         return self.relation_id_2_name[relation_id]
 
+    def add_training_samples(self, samples_to_add: numpy.array):
+        self.train_samples = numpy.vstack((self.train_samples, samples_to_add))
+
+        for (head, rel, tail) in samples_to_add:
+            self.train_samples_set.add((head, rel, tail))
+            self.to_filter[(head, rel)].append(tail)
+            self.to_filter[(tail, rel + self.num_direct_relations)].append(head)
+
+    def remove_training_samples(self, samples_to_remove: numpy.array):
+        """
+        This method quietly removes a bunch of samples from the training set of this dataset.
+        If asked to remove samples that are not present in the training set, this method does nothing and returns False.
+        :param samples_to_remove: the samples to remove as a 2D numpy array
+                                  in which each row corresponds to one sample to remove
+
+        :return: a 1D array of boolean values as long as passed array of samples to remove;
+                 in each position i, it contains True if the i-th passed sample to remove
+                 was actually included in the training set, so it was possible to remove it; False otherwise.
+        """
+
+        indices_to_remove = []
+        removed_samples = []
+        output = []
+        for sample_to_remove in samples_to_remove:
+            head, rel, tail = sample_to_remove
+
+            if (head, rel, tail) in self.train_samples_set:
+                index = numpy.where(numpy.all(self.train_samples == sample_to_remove, axis=1))
+                indices_to_remove.append(index[0])
+                removed_samples.append(self.train_samples[index[0]])
+
+                self.to_filter[(head, rel)].remove(tail)
+                self.to_filter[(tail, rel + self.num_direct_relations)].remove(head)
+                self.train_samples_set.remove((head, rel, tail))
+                output.append(True)
+            else:
+                output.append(False)
+
+        self.train_samples = numpy.delete(self.train_samples, indices_to_remove, axis=0)
+        return output
+
+    def remove_training_sample(self, sample_to_remove: numpy.array):
+        """
+        This method quietly removes a sample from the training set of this dataset.
+        If asked to remove a sample that is not present in the training set, this method does nothing and returns False.
+        :param sample_to_remove: the sample to remove
+
+        :return: True if the passed sample was actually included in the training set, so it was possible to remove it;
+                 False otherwise.
+        """
+
+        head, rel, tail = sample_to_remove
+
+        if (head, rel, tail) in self.train_samples_set:
+            index = numpy.where(numpy.all(self.train_samples == sample_to_remove, axis=1))
+            self.train_samples = numpy.delete(self.train_samples, index[0], axis=0)
+
+            self.to_filter[(head, rel)].remove(tail)
+            self.to_filter[(tail, rel + self.num_direct_relations)].remove(head)
+            self.train_samples_set.remove((head, rel, tail))
+            return True
+        return False
+
+    @staticmethod
+    def replace_entity_in_sample(sample, old_entity: int, new_entity:int, as_numpy=True):
+        h, r, t = sample
+        if h == old_entity:
+            h = new_entity
+        if t == old_entity:
+            t = new_entity
+        return numpy.array([h, r, t]) if as_numpy else (h, r, t)
+
+    @staticmethod
+    def replace_entity_in_samples(samples, old_entity: int, new_entity:int, as_numpy=True):
+        result = []
+        for (h, r, t) in samples:
+            if h == old_entity:
+                h = new_entity
+            if t == old_entity:
+                t = new_entity
+            result.append((h, r, t))
+
+        return numpy.array(result) if as_numpy else result
 
 def home_folder_for(dataset_name:str):
     dataset_home = os.path.join(DATA_PATH, dataset_name)
@@ -235,9 +359,9 @@ class KelpieDataset(Dataset):
 
         # build the train, valid and test samples (both direct and inverse) for the kelpie entity
         # by replacing the original entity id with the kelpie entity id
-        self.kelpie_train_samples = self._replace_entity_in_samples(self.original_train_samples, self.original_entity_id, self.kelpie_entity_id)
-        self.kelpie_valid_samples = self._replace_entity_in_samples(self.original_valid_samples, self.original_entity_id, self.kelpie_entity_id)
-        self.kelpie_test_samples = self._replace_entity_in_samples(self.original_test_samples, self.original_entity_id, self.kelpie_entity_id)
+        self.kelpie_train_samples = Dataset.replace_entity_in_samples(self.original_train_samples, self.original_entity_id, self.kelpie_entity_id)
+        self.kelpie_valid_samples = Dataset.replace_entity_in_samples(self.original_valid_samples, self.original_entity_id, self.kelpie_entity_id)
+        self.kelpie_test_samples = Dataset.replace_entity_in_samples(self.original_test_samples, self.original_entity_id, self.kelpie_entity_id)
 
         # update the to_filter sets to include the filter lists for the facts with the Kelpie entity
         for (entity_id, relation_id) in dataset.to_filter:
@@ -256,18 +380,33 @@ class KelpieDataset(Dataset):
             elif self.original_entity_id in self.to_filter[(entity_id, relation_id)]:
                 self.to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
 
+    # override
+    def add_training_samples(self, samples_to_add: numpy.array):
+        # todo: add documentation. the samples to add still contain the original entity id, and this method converts it
+
+        for sample in samples_to_add:
+            assert self.original_entity_id == sample[0] or self.original_entity_id == sample[2]
+
+        for (head, rel, tail) in samples_to_add:
+            self.to_filter[(head, rel)].append(tail)
+            self.to_filter[(tail, rel + self.num_direct_relations)].append(head)
+
+        kelpie_samples_to_add = []
+        for cur_sample in samples_to_add:
+            (cur_head, cur_rel, cur_tail) = cur_sample
+            if cur_head == self.original_entity_id:
+                kelpie_samples_to_add.append([self.kelpie_entity_id, cur_rel, cur_tail])
+                self.to_filter[(self.kelpie_entity_id, cur_rel)].append(cur_tail)
+                self.to_filter[(cur_tail, cur_rel + self.num_direct_relations)].append(self.kelpie_entity_id)
+            else:
+                kelpie_samples_to_add.append([cur_head, cur_rel, self.kelpie_entity_id])
+                self.to_filter[(cur_head, cur_rel)].append(self.kelpie_entity_id)
+                self.to_filter[(self.kelpie_entity_id, cur_rel + self.num_direct_relations)].append(cur_head)
+
+        self.kelpie_train_samples = numpy.vstack((self.kelpie_train_samples, numpy.array(kelpie_samples_to_add)))
+
+
     ### private utility methods
     @staticmethod
     def _extract_samples_with_entity(samples, entity_id):
         return samples[numpy.where(numpy.logical_or(samples[:, 0] == entity_id, samples[:, 2] == entity_id))]
-
-    @staticmethod
-    def _replace_entity_in_samples(samples, old_entity_id, new_entity_id):
-        result = numpy.copy(samples)
-        for i in range(len(result)):
-            if result[i, 0] == old_entity_id:
-                result[i, 0] = new_entity_id
-            if result[i, 2] == old_entity_id:
-                result[i, 2] = new_entity_id
-
-        return result
