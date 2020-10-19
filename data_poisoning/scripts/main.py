@@ -3,9 +3,10 @@ import argparse
 import numpy
 import torch
 
-from kelpie.data_poisoning.data_poisoning_relevance import compute_fact_relevance
-from kelpie.dataset import Dataset, ALL_DATASET_NAMES
-from kelpie.models.complex.model import ComplEx
+from data_poisoning.data_poisoning_relevance import compute_fact_relevance
+from dataset import ALL_DATASET_NAMES, Dataset
+from link_prediction.models.complex import ComplEx
+from model import DIMENSION, INIT_SCALE
 
 datasets = ALL_DATASET_NAMES
 
@@ -72,7 +73,7 @@ parser.add_argument('--tail',
                     help="Name of the tail entity of the fact to explain"
 )
 
-parser.add_argument('--init',
+parser.add_argument('--init_scale',
                     default=1e-3,
                     type=float,
                     help="Initial scale"
@@ -111,12 +112,10 @@ original_sample = numpy.array((head_id, relation_id, tail_id))
 #############   INITIALIZE MODELS AND THEIR STRUCTURES
 # instantiate and load the original model from filesystem
 original_model = ComplEx(dataset=original_dataset,
-                             dimension=args.dimension,
-                             init_random=True,
-                             init_size=args.init) # type: ComplEx
+                         hyperparameters={DIMENSION: args.dimension, INIT_SCALE:args.init_scale},
+                         init_random=True) # type: ComplEx
 original_model.load_state_dict(torch.load(args.model_path))
 original_model.to('cuda')
-
 
 sample_relevance_couples = compute_fact_relevance(model=original_model,
                            dataset=original_dataset,
