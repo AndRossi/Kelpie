@@ -1,4 +1,5 @@
-from typing import Type
+import copy
+from typing import Type, Tuple, Any
 
 import numpy
 import torch
@@ -36,7 +37,7 @@ class PostTrainingEngine(ExplanationEngine):
         self.hyperparameters = hyperparameters
 
     def simple_removal_explanations(self,
-                                    sample_to_explain: numpy.array,
+                                    sample_to_explain: Tuple[Any, Any, Any],
                                     perspective: str):
 
         # the behaviour of the engine must be deterministic!
@@ -60,24 +61,28 @@ class PostTrainingEngine(ExplanationEngine):
 
         # check how the post-trained "clone" performs on the sample to explain
         #direct_score, inverse_score, head_rank, tail_rank = self.test_kelpie_model(testing_model=post_trained_model, sample_to_explain=sample_to_explain, perspective=perspective)
-        (direct_score, inverse_score), \
-        (head_rank, tail_rank), _ = post_trained_model.predict_sample(sample=sample_to_explain,
-                                                                      original_mode=True)
+        (direct_score, inverse_score), _, _ = post_trained_model.predict_sample(sample=numpy.array(sample_to_explain),
+                                                                                    original_mode=True)
+
+        # TODO: make interfaces uniform, that is, make all components return either samples with kelpie entity id or samples with original entity id
+        # right now, some (e.g. kelpie_perturbation.perturbate_samples) return samples with kelpie_entity_id
+        # and some others require or return samples with original_entity_id (e.g. test_kelpie_model_on_sample)
+        # this is confusing!
 
         # introduce perturbation
         print("Perturbing entities...")
         perturbed_list, skipped_list = kelpie_perturbation.perturbate_samples(kelpie_dataset.kelpie_train_samples)
 
         results = []
+        # for each training sample, run a post-training skipping that sample
         for i in range(len(perturbed_list)):
             cur_training_samples = perturbed_list[i]
 
-            cur_skipped_sample = skipped_list[i][0]
-            cur_skipped_sample = (original_entity_id, cur_skipped_sample[1], cur_skipped_sample[2]) if cur_skipped_sample[0] == kelpie_dataset.kelpie_entity_id \
-                else (cur_skipped_sample[0], cur_skipped_sample[1], original_entity_id)
-
+            cur_skipped_sample = Dataset.replace_entity_in_sample(sample=skipped_list[i][0],
+                                                                  old_entity=kelpie_dataset.kelpie_entity_id,
+                                                                  new_entity=kelpie_dataset.original_entity_id)
             print("### ITER %i" % i)
-            print("### SKIPPED SAMPLES: ")
+            print("### SKIPPED SAMPLE: ")
             print("\t" + ";".join((kelpie_dataset.entity_id_2_name[int(cur_skipped_sample[0])],
                                    kelpie_dataset.relation_id_2_name[int(cur_skipped_sample[1])],
                                    kelpie_dataset.entity_id_2_name[int(cur_skipped_sample[2])])))
@@ -86,12 +91,73 @@ class PostTrainingEngine(ExplanationEngine):
                                                kelpie_train_samples=cur_training_samples)
             (cur_direct_score, cur_inverse_score), \
             (cur_head_rank, cur_tail_rank), _ = self.test_kelpie_model_on_sample(model=cur_kelpie_model,
-                                                                                 sample=sample_to_explain,
-                                                                                 perspective=perspective)
+                                                                                 sample=numpy.array(sample_to_explain))
+
+            direct_diff, inverse_diff = direct_score-cur_direct_score, inverse_score-cur_inverse_score
+
+            results.append((cur_skipped_sample, cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, direct_diff + inverse_diff))
+
+        results = sorted(results, key=lambda element: element[-1], reverse=True)
+
+        return results
+
+
+    def simple_addition_explanations(self,
+                    sample_to_explain: Tuple[Any, Any, Any],
+                    perspective: str,
+                    samples_to_add: list):
+
+        # the behaviour of the engine must be deterministic!
+        seed = 42
+        numpy.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.set_rng_state(torch.cuda.get_rng_state())
+        torch.backends.cudnn.deterministic = True
+
+        # sample to explain as a numpy array of the ids
+        head_id, relation_id, tail_id = sample_to_explain
+        # name and id of the entity to explain, based on the passed perspective
+        original_entity_id = head_id if perspective == "head" else tail_id
+
+        # create a Kelpie Dataset focused on the original id of the entity to explain
+        kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
+
+        print("### BASE POST-TRAINING")
+        post_trained_model = self.post_train(kelpie_dataset=kelpie_dataset,
+                                             kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
+
+        # check how the post-trained "clone" performs on the sample to explain
+        (direct_score, inverse_score), _, _ = post_trained_model.predict_sample(sample=numpy.array(sample_to_explain),
+                                                                                original_mode=True)
+        results = []
+
+        for i in range(len(samples_to_add)):
+            cur_sample_to_add = samples_to_add[i]
+            print("### ITER %i" % i)
+            print("### ADDED SAMPLE: ")
+            print("\t" + ";".join([str(cur_sample_to_add[0]),
+                                   str(cur_sample_to_add[1]),
+                                   str(cur_sample_to_add[2])]))
+            print("\t" + ";".join((kelpie_dataset.entity_id_2_name[int(cur_sample_to_add[0])],
+                                   kelpie_dataset.relation_id_2_name[int(cur_sample_to_add[1])],
+                                   kelpie_dataset.entity_id_2_name[int(cur_sample_to_add[2])])))
+
+            # create a Kelpie Dataset ... that also contains the fact to add
+            cur_kelpie_dataset = copy.deepcopy(kelpie_dataset)
+
+            cur_sample_to_add_numpy_arr = numpy.array([cur_sample_to_add])
+            cur_kelpie_dataset.add_training_samples(cur_sample_to_add_numpy_arr)
+
+            cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset,
+                                                 kelpie_train_samples=cur_kelpie_dataset.kelpie_train_samples)  # type: KelpieModel
+
+            (cur_direct_score, cur_inverse_score), \
+            (cur_head_rank, cur_tail_rank), _ = self.test_kelpie_model_on_sample(model=cur_kelpie_model,
+                                                                                 sample=numpy.array(sample_to_explain))
             direct_diff = direct_score - cur_direct_score
             inverse_diff = inverse_score - cur_inverse_score
 
-            results.append((cur_skipped_sample, cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, direct_diff + inverse_diff))
+            results.append((cur_sample_to_add, cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, direct_diff + inverse_diff))
 
         results = sorted(results, key=lambda element: element[-1], reverse=True)
 
@@ -119,14 +185,13 @@ class PostTrainingEngine(ExplanationEngine):
 
     def test_kelpie_model_on_sample(self,
                           model: KelpieModel,
-                          sample: numpy.array,
-                          perspective: str):
+                          sample: numpy.array):
 
-        # convert the sample into a "kelpie sample", that is, transform either its head or its tail in the kelpie entity
-        kelpie_entity_id = model.kelpie_entity_id
-        kelpie_sample = numpy.array((kelpie_entity_id, sample[1], sample[2])) if perspective == "head" \
-            else numpy.array((sample[0], sample[1], kelpie_entity_id))
-
+        # convert the sample into a "kelpie sample", that is,
+        # transform all occurrences of the original entity into the kelpie entity
+        kelpie_sample = Dataset.replace_entity_in_sample(sample=sample,
+                                                         old_entity=model.original_entity_id,
+                                                         new_entity=model.kelpie_entity_id)
         # results on kelpie fact
         scores, ranks, predictions = model.predict_sample(sample=kelpie_sample, original_mode=False)
         return scores, ranks, predictions
