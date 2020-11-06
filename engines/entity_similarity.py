@@ -1,4 +1,5 @@
 import os
+import random
 from collections import defaultdict
 
 import numpy
@@ -11,8 +12,11 @@ def extract_comparable_entities(model: Model,
                                 dataset: Dataset,
                                 sample: numpy.array,
                                 perspective: str,
-                                top_k: int):
+                                num_entities: int,
+                                policy: str):
 
+    if policy not in ("best", "random", "worst"):
+        raise Exception("Unsupported policy " + str(policy) + " for extraction of comparable entities")
 
     head, relation, tail = sample
     entity_to_explain, target_entity = (head, tail) if perspective == "head" else (tail, head)
@@ -38,8 +42,8 @@ def extract_comparable_entities(model: Model,
                 continue
 
             # if the entity does not have any types in common with the entity to explain, ignore it
-            if len(entity_2_types[cur_entity].intersection(entity_2_types[entity_to_explain])) == 0:
-                continue
+            #if len(entity_2_types[cur_entity].intersection(entity_2_types[entity_to_explain])) == 0:
+            #    continue
 
             other_entities.append(cur_entity)
             samples.append((cur_entity, relation, tail))
@@ -98,7 +102,14 @@ def extract_comparable_entities(model: Model,
     # sort by resistance in ascending order
     other_entity_resistance_couples = sorted(other_entity_2_resistance.items(), key=lambda x: x[1], reverse=False)
 
-    return other_entity_resistance_couples[:top_k]
+    if policy=="best":
+        return other_entity_resistance_couples[:num_entities]
+    elif policy == "worst":
+        return other_entity_resistance_couples[-num_entities:]
+    else:
+        other_entity_resistance_couples = random.sample(other_entity_resistance_couples,
+                                               k=min(num_entities, len(other_entity_resistance_couples)))
+        return sorted(other_entity_resistance_couples, key=lambda x: x[1], reverse=False)
 
 
 def extract_entities_by_proximity(model: Model,
