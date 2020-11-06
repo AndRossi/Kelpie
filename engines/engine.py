@@ -1,9 +1,9 @@
+import itertools
 from typing import Tuple, Any
-
-import numpy
 
 from dataset import Dataset
 from model import Model
+
 
 class ExplanationEngine:
     def __init__(self,
@@ -27,20 +27,5 @@ class ExplanationEngine:
                     samples_to_add: list):
         pass
 
-
-    def _extract_sample_couples(self, samples: list):
-
-        # any heuristics should be applied here
-
-        couples = []
-        for i in range(len(samples)):
-            j = i+1
-
-            cur_sample_1 = samples[i]
-            while j < len(samples):
-                cur_sample_2 = samples[j]
-
-                couples.append((cur_sample_1, cur_sample_2))
-                j += 1
-
-        return couples
+    def _extract_sample_nples(self, samples: list, n: int):
+        return list(itertools.combinations(samples, n))

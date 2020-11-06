@@ -87,6 +87,8 @@ class Kelpie:
         # extract the training samples featuring the perspective entity and most relevant to the sample to explain
         train_samples_with_relevance = self.engine.simple_removal_explanations(sample_to_explain=sample_to_explain,
                                                                                perspective=perspective)
+
+        num_relevant_samples = 15
         most_relevant_train_samples = [x[0] for x in train_samples_with_relevance[:num_relevant_samples]]
 
         # extract the top entities most "comparable" to the perspective entity
@@ -94,16 +96,17 @@ class Kelpie:
                                                                   dataset=self.dataset,
                                                                   sample=sample_to_explain,
                                                                   perspective=perspective,
-                                                                  top_k=num_similar_entities)
-        most_comparable_entities = [x[0] for x in entities_with_comparability[:num_similar_entities]]
+                                                                  num_entities=num_similar_entities,
+                                                                  policy="best")
+        comparable_entities = [x[0] for x in entities_with_comparability]
 
         original_sample_2_coverage = defaultdict(lambda: 0.0)
-        original_couple_2_coverage = defaultdict(lambda: 0.0)
+        original_nple_2_coverage = defaultdict(lambda: 0.0)
 
         # for each comparable entity
         # add each of the most_relevant_train_samples to the comparable entity
         # and individually check its relevance
-        for comparable_entity in most_comparable_entities:
+        for comparable_entity in comparable_entities:
 
             # replace the perspective entity with the comparable_entity
             # both in the sample to explain and in all the samples to add
@@ -118,9 +121,6 @@ class Kelpie:
             comparable_samples_with_relevance = self.engine.simple_addition_explanations(sample_to_explain=comparable_sample_to_explain,
                                                                                          perspective=perspective,
                                                                                          samples_to_add=comparable_samples_to_add)
-            comparable_couples_with_relevance = self.engine.couple_addition_explanations(sample_to_explain=comparable_sample_to_explain,
-                                                                                         perspective=perspective,
-                                                                                         samples_to_add=comparable_samples_to_add)
 
             for i, cur_comparable_sample_with_relevance in enumerate(comparable_samples_with_relevance):
                 # for each cur_comparable_sample
@@ -132,24 +132,22 @@ class Kelpie:
                                                               new_entity=perspective_entity,
                                                               as_numpy=False)
                 # update the coverage value of the cur_sample
-                original_sample_2_coverage[cur_sample] += 1.0/float(i+1.0)
+                original_sample_2_coverage[cur_sample] += 1.0/(float(i+1.0)*len(comparable_entities))
 
-            for i, cur_comparable_couple_with_relevance in enumerate(comparable_couples_with_relevance):
 
-                cur_comparable_couple = cur_comparable_couple_with_relevance[0]
-
-                cur_sample_0 = Dataset.replace_entity_in_sample(sample=cur_comparable_couple[0],
-                                                                old_entity=comparable_entity,
-                                                                new_entity=perspective_entity,
-                                                                as_numpy=False)
-                cur_sample_1 = Dataset.replace_entity_in_sample(sample=cur_comparable_couple[1],
-                                                                old_entity=comparable_entity,
-                                                                new_entity=perspective_entity,
-                                                                as_numpy=False)
-                cur_couple = (cur_sample_0, cur_sample_1)
-                original_couple_2_coverage[cur_couple] += 1.0/float(i+1.0)
+            comparable_nples_with_relevance = self.engine.nple_addition_explanations(sample_to_explain=comparable_sample_to_explain,
+                                                                                     perspective=perspective,
+                                                                                     samples_to_add=comparable_samples_to_add,
+                                                                                     n=5)
+            for i, cur_comparable_nple_with_relevance in enumerate(comparable_nples_with_relevance):
+                cur_comparable_nple = cur_comparable_nple_with_relevance[0]
+                cur_nple = tuple([Dataset.replace_entity_in_sample(sample=cur_sample,
+                                                                   old_entity=comparable_entity,
+                                                                   new_entity=perspective_entity,
+                                                                   as_numpy=False) for cur_sample in cur_comparable_nple])
+                original_nple_2_coverage[cur_nple] += 1.0/(float(i+1.0)*len(comparable_entities))
 
         expl_samples = sorted(original_sample_2_coverage.items(), key=lambda x:x[1], reverse=True)[:10]
-        expl_couples = sorted(original_couple_2_coverage.items(), key=lambda x:x[1], reverse=True)[:10]
+        expl_nples = sorted(original_nple_2_coverage.items(), key=lambda x:x[1], reverse=True)[:10]
 
-        return expl_samples, expl_couples
+        return expl_samples, expl_nples, comparable_entities

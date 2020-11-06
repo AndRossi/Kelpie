@@ -75,8 +75,11 @@ class GradientEngine(ExplanationEngine):
                     perspective: str,
                     samples_to_add: list):
 
+        output_details_path = "output_details.txt"
+        output_details_lines = []
         # identify the entity to explain
         head_id, relation_id, tail_id = sample_to_explain
+        fact = self.dataset.sample_to_fact(sample_to_explain)
         entity_to_explain_id = head_id if perspective == "head" else tail_id
 
         # compute the gradient of the fact to explain with respect to the embedding of the entity to explain
@@ -88,7 +91,6 @@ class GradientEngine(ExplanationEngine):
         for current_sample in samples_to_add:
             current_gradient = self.compute_gradient_for(sample=current_sample, entity_to_explain=entity_to_explain_id)
             projection_size = self.projection_size(gradient, current_gradient)
-
             sample_2_gradient[tuple(current_sample)] = current_gradient
             sample_2_relevance_by_projection[tuple(current_sample)] = projection_size
 
@@ -117,61 +119,82 @@ class GradientEngine(ExplanationEngine):
             sample_2_relevance_by_score[current_sample] = current_perturbed_score
 
         most_relevant_samples = sorted(sample_2_relevance_by_score.items(), key=lambda x:x[1], reverse=True)
+
+        #for cur_sample, cur_relevance in most_relevant_samples:
+        #    cur_fact = self.dataset.sample_to_fact(cur_sample)
+        #    cur_projection = sample_2_relevance_by_projection[cur_sample]
+        #    output_details_lines.append(";".join(fact)+ "," + ";".join(cur_fact) + "," + str(cur_projection) + "," + str(cur_relevance) + "\n")
+        #with open(output_details_path, "a") as outfile:
+        #    outfile.writelines(output_details_lines)
+
         return most_relevant_samples
 
-    def couple_addition_explanations(self,
-                                     sample_to_explain: Tuple[Any, Any, Any],
-                                     perspective: str,
-                                     samples_to_add: list):
+    def nple_addition_explanations(self,
+                                   sample_to_explain: Tuple[Any, Any, Any],
+                                   perspective: str,
+                                   samples_to_add: list,
+                                   n: int):
+
+        # if there are less than n items in samples_to_add
+        # it is not possible to try combinations of length n of samples_to_add
+        if len(samples_to_add) < n:
+            return []
 
         # identify the entity to explain
         head_id, relation_id, tail_id = sample_to_explain
         entity_to_explain_id = head_id if perspective == "head" else tail_id
 
-        # compute the gradient of the fact to explain with respect to the embedding of the entity to explain
+        # compute the gradient of the score of fact to explain with respect to the embedding of the entity to explain
         gradient = self.compute_gradient_for(sample=sample_to_explain, entity_to_explain=entity_to_explain_id)
 
-        # for each couple of samples to add, compute the relevance by projection
-        couple_2_relevance_by_projection = {}
-        couple_2_gradient = {}
+        # for each sample to add, compute the gradient of its own score with respect to the embedding of the entity to explain
+        # and compute the mapping sample to add -> gradient
+        sample_to_add_2_gradient = {}
+        for cur_sample_to_add in samples_to_add:
+            sample_to_add_2_gradient[cur_sample_to_add] = self.compute_gradient_for(sample=cur_sample_to_add, entity_to_explain=entity_to_explain_id)
 
-        samples_couples = self._extract_sample_couples(samples=samples_to_add)
-        for i in range(len(samples_couples)):
-            cur_couple = samples_couples[i]
-            cur_gradient_1 = self.compute_gradient_for(sample=cur_couple[0], entity_to_explain=entity_to_explain_id)
-            cur_gradient_2 = self.compute_gradient_for(sample=cur_couple[1], entity_to_explain=entity_to_explain_id)
-            cur_gradient = cur_gradient_1+cur_gradient_2
+        # extract all n-long different combinations of samples
+        samples_nples = self._extract_sample_nples(samples=samples_to_add, n=n)
+        nple_2_gradient = {}
+        nple_2_relevance_by_projection = {}
+        for i in range(len(samples_nples)):
+            cur_samples_nple = samples_nples[i]
+
+            cur_gradient = 0
+            for cur_sample_to_add in cur_samples_nple:
+                cur_gradient += sample_to_add_2_gradient[cur_sample_to_add]
 
             projection_size = self.projection_size(gradient, cur_gradient)
 
-            couple_2_gradient[tuple(cur_couple)] = cur_gradient
-            couple_2_relevance_by_projection[tuple(cur_couple)] = projection_size
+            nple_2_gradient[tuple(cur_samples_nple)] = cur_gradient
+            nple_2_relevance_by_projection[tuple(cur_samples_nple)] = projection_size
 
-        most_relevant_couples_by_projection = sorted(couple_2_relevance_by_projection.items(), key=lambda x:x[1], reverse=True)
+        most_relevant_nples_by_projection = sorted(nple_2_relevance_by_projection.items(), key=lambda x:x[1], reverse=True)
 
         # for each couple training sample containing the entity to explain,
         # shift the entity to explain in the gradient direction and verify the score improvement
-        samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in range(len(couple_2_relevance_by_projection))])
+        samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in range(len(nple_2_relevance_by_projection))])
+
         head_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 0]]
         rel_embeddings_tensor = self.model.relation_embeddings[samples_numpy_array[:, 1]]
         tail_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 2]]
-        for i in range(len(most_relevant_couples_by_projection)):
-            item = most_relevant_couples_by_projection[i]
-            current_couple = item[0]
+        for i in range(len(most_relevant_nples_by_projection)):
+            item = most_relevant_nples_by_projection[i]
+            current_nple = item[0]
             if perspective=="head":
-                head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*couple_2_gradient[current_couple]).cuda()
+                head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
             else:
-                tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + self.epsilon*couple_2_gradient[current_couple]).cuda()
+                tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
         perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor)
 
-        couple_2_relevance_by_score = {}
+        nple_2_relevance_by_score = {}
         for i in range(len(perturbed_scores)):
             current_perturbed_score = perturbed_scores[i].detach().cpu().numpy()
-            current_couple = most_relevant_couples_by_projection[i][0]
-            couple_2_relevance_by_score[tuple(current_couple)] = current_perturbed_score
+            current_nple = most_relevant_nples_by_projection[i][0]
+            nple_2_relevance_by_score[tuple(current_nple)] = current_perturbed_score
 
-        most_relevant_couples = sorted(couple_2_relevance_by_score.items(), key=lambda x:x[1], reverse=True)
-        return most_relevant_couples
+        most_relevant_nples = sorted(nple_2_relevance_by_score.items(), key=lambda x:x[1], reverse=True)
+        return most_relevant_nples
 
 
     def compute_gradient_for(self,
@@ -188,7 +211,8 @@ class GradientEngine(ExplanationEngine):
 
         current_score = self.model.score_embeddings(sample_head_embedding, sample_relation_embedding, sample_tail_embedding)
         current_score.backward()
-        current_gradient = cur_entity_to_explain_embedding.grad[0].detach()
+
+        current_gradient = cur_entity_to_explain_embedding.grad[0]
         cur_entity_to_explain_embedding.grad = None  # reset the gradient, just to be sure
 
         return current_gradient
