@@ -2,6 +2,7 @@ import copy
 import html
 import os
 from collections import defaultdict
+from typing import Tuple
 
 import numpy
 
@@ -223,6 +224,15 @@ class Dataset:
             self.train_samples_set.add((head, rel, tail))
             self.to_filter[(head, rel)].append(tail)
             self.to_filter[(tail, rel + self.num_direct_relations)].append(head)
+
+    def sample_to_fact(self, sample_to_convert: Tuple):
+        head_id, rel_id, tail_id = sample_to_convert
+        return self.entity_id_2_name[head_id], self.relation_id_2_name[rel_id], self.entity_id_2_name[tail_id]
+
+    def fact_to_sample(self, fact_to_convert: Tuple):
+        head_name, rel_name, tail_name = fact_to_convert
+        return self.entity_name_2_id[head_name], self.relation_name_2_id[rel_name], self.entity_name_2_id[tail_name]
+
 
     def remove_training_samples(self, samples_to_remove: numpy.array):
         """
