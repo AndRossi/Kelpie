@@ -25,7 +25,7 @@ class Evaluator:
         if write_output:
             self._write_output(samples, ranks, predictions)
 
-        return self.mrr(all_ranks), self.hits_at(all_ranks, 1)
+        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10)
 
     def _write_output(self, samples, ranks, predictions):
         result_lines = []
