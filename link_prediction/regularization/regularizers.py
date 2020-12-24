@@ -8,6 +8,20 @@ class Regularizer(nn.Module):
     def forward(self, factors: Tuple[torch.Tensor]):
         pass
 
+
+class L2(Regularizer):
+    def __init__(self, weight: float):
+        super(L2, self).__init__()
+        self.weight = weight
+
+    def forward(self, factors):
+        l = 0
+        for factor in factors:
+            l += torch.mean(factor ** 2)
+        l = l*self.weight/len(factors)
+        return l
+
+
 class N2(Regularizer):
     def __init__(self, weight: float):
         super(N2, self).__init__()
