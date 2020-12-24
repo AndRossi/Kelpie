@@ -5,6 +5,7 @@ import torch
 
 from dataset import Dataset
 from engines.engine import ExplanationEngine
+from link_prediction.models.tucker import TuckER
 from model import Model
 
 class DataPoisoningEngine(ExplanationEngine):
@@ -22,7 +23,8 @@ class DataPoisoningEngine(ExplanationEngine):
 
     def simple_removal_explanations(self,
                                     sample_to_explain: Tuple[Any, Any, Any],
-                                    perspective: str):
+                                    perspective: str,
+                                    top_k: int):
 
         # identify the entity to explain
         head_id, relation_id, tail_id = sample_to_explain
@@ -69,7 +71,11 @@ class DataPoisoningEngine(ExplanationEngine):
             sample_2_relevance[tuple(samples_containing_entity_to_explain[i])] = original_scores[i] - self.lambd * perturbed_scores[i]
 
         most_relevant_samples = sorted(sample_2_relevance.items(), key=lambda x:x[1], reverse=True)
-        return most_relevant_samples
+
+        if top_k == -1 or top_k < len(most_relevant_samples):
+            return most_relevant_samples
+        else:
+            return most_relevant_samples[:top_k]
 
 
 
@@ -131,9 +137,13 @@ class DataPoisoningEngine(ExplanationEngine):
                              entity_to_explain: int):
 
         sample_head, sample_relation, sample_tail = sample
-        sample_head_embedding = self.model.entity_embeddings[sample_head].detach().reshape(1, self.model.dimension)
-        sample_relation_embedding = self.model.relation_embeddings[sample_relation].detach().reshape(1, self.model.dimension)
-        sample_tail_embedding = self.model.entity_embeddings[sample_tail].detach().reshape(1, self.model.dimension)
+
+        entity_dimension = self.model.entity_dimension if isinstance(self.model, TuckER) else self.model.dimension
+        relation_dimension = self.model.relation_dimension if isinstance(self.model, TuckER) else self.model.dimension
+
+        sample_head_embedding = self.model.entity_embeddings[sample_head].detach().reshape(1, entity_dimension)
+        sample_relation_embedding = self.model.relation_embeddings[sample_relation].detach().reshape(1, relation_dimension)
+        sample_tail_embedding = self.model.entity_embeddings[sample_tail].detach().reshape(1, entity_dimension)
 
         cur_entity_to_explain_embedding = sample_head_embedding if entity_to_explain == sample_head else sample_tail_embedding
         cur_entity_to_explain_embedding.requires_grad = True
