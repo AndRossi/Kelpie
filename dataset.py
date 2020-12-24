@@ -66,11 +66,21 @@ class Dataset:
         self.test_triples, self.test_samples = None, None, None, None, None, None
 
         # map that associates to each couple (head, relation) all the tails that have been seen completing them
-        # either in train samples, or in valid samples, or in test samples
+        # either in train samples, or in valid samples, or in test samples.
+        # This is required for computing ranks in filtered scenario.
         self.to_filter = defaultdict(lambda: list())
+
+        # map that associates to each couple (head, relation) all the tails that have been seen completing them
+        # IN TRAIN SAMPLES ONLY.
+        # This is required when performing negative sampling.
+        self.train_to_filter = defaultdict(lambda: list())
 
         # map each relation to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
         self.relation_2_type = []
+
+        # map each entity and relation id to its training degree
+        self.entity_2_degree = defaultdict(lambda: 0)
+        self.relation_2_degree = defaultdict(lambda: 0)
 
         # number of distinct entities and relations in this dataset.
         # num_direct_relations is used by extensions of Dataset that may support inverse relations as well
@@ -108,10 +118,20 @@ class Dataset:
 
             # add the tail_id to the list of all tails seen completing (head_id, relation_id, ?)
             # and add the head_id to the list of all heads seen completing (?, relation_id, tail_id)
-            for sample in numpy.vstack((self.train_samples, self.valid_samples, self.test_samples)):
-                (head_id, relation_id, tail_id) = sample
+            all_samples = numpy.vstack((self.train_samples, self.valid_samples, self.test_samples))
+            for i in range(len(all_samples)):
+                (head_id, relation_id, tail_id) = all_samples[i]
                 self.to_filter[(head_id, relation_id)].append(tail_id)
                 self.to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
+                #if the sample was a training sample, also do this for the train_to_filter data structure,
+                # and fill the entity_2_degree and relation_2_degree dicts
+                if i < len(self.train_samples):
+                    self.train_to_filter[(head_id, relation_id)].append(tail_id)
+                    self.train_to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
+                    self.entity_2_degree[head_id] += 1
+                    self.relation_2_degree[relation_id] += 1
+                    if tail_id != head_id:
+                        self.entity_2_degree[tail_id] += 1
 
             # compute relation types
             self.relation_2_type = self._compute_relation_2_type()
@@ -373,7 +393,8 @@ class KelpieDataset(Dataset):
         self.kelpie_valid_samples = Dataset.replace_entity_in_samples(self.original_valid_samples, self.original_entity_id, self.kelpie_entity_id)
         self.kelpie_test_samples = Dataset.replace_entity_in_samples(self.original_test_samples, self.original_entity_id, self.kelpie_entity_id)
 
-        # update the to_filter sets to include the filter lists for the facts with the Kelpie entity
+        ### UPDATING to_filter
+        # update the to_filter data structures to include the filter lists for the facts with the Kelpie entity
         for (entity_id, relation_id) in dataset.to_filter:
             if entity_id == self.original_entity_id:
                 self.to_filter[(self.kelpie_entity_id, relation_id)] = copy.deepcopy(self.to_filter[(entity_id, relation_id)])
@@ -389,6 +410,26 @@ class KelpieDataset(Dataset):
             # in this case add the kelpie entity id to the list only if the original entity id is already in the list
             elif self.original_entity_id in self.to_filter[(entity_id, relation_id)]:
                 self.to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+
+
+        ### UPDATING train_to_filter
+        # update the train_to_filter sets to include the filter lists for the facts with the Kelpie entity
+        for (entity_id, relation_id) in dataset.train_to_filter:
+            if entity_id == self.original_entity_id:
+                self.train_to_filter[(self.kelpie_entity_id, relation_id)] = copy.deepcopy(self.train_to_filter[(entity_id, relation_id)])
+
+        # add the kelpie entity in the filter list for all original facts
+        for (entity_id, relation_id) in self.train_to_filter:
+            # if the couple (entity_id, relation_id) was in the original dataset,
+            # ALWAYS add the kelpie entity to the filtering list
+            if (entity_id, relation_id) in dataset.train_to_filter:
+                self.train_to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+
+            # else, it means that the entity id is the kelpie entity id.
+            # in this case add the kelpie entity id to the list only if the original entity id is already in the list
+            elif self.original_entity_id in self.train_to_filter[(entity_id, relation_id)]:
+                self.train_to_filter[(entity_id, relation_id)].append(self.kelpie_entity_id)
+
 
     # override
     def add_training_samples(self, samples_to_add: numpy.array):
