@@ -18,6 +18,7 @@ class BCEOptimizer(Optimizer):
 
         In our implementation, it is used by the following models:
             - TuckER
+            - ConvE
 
     """
 
@@ -38,10 +39,6 @@ class BCEOptimizer(Optimizer):
         """
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
-        #batch_size: int = 128,
-        #learning_rate: float = 0.03,
-        #decay: float = 1.0,
-        #label_smoothing: float = 0.1,
 
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
@@ -59,8 +56,6 @@ class BCEOptimizer(Optimizer):
               evaluate_every:int =-1,
               valid_samples:np.array = None):
 
-        print("Training the TuckER model...")
-
         training_samples = np.vstack((train_samples,
                                       self.dataset.invert_samples(train_samples)))
 
@@ -74,10 +69,10 @@ class BCEOptimizer(Optimizer):
 
             if evaluate_every > 0 and valid_samples is not None and e % evaluate_every == 0:
                 self.model.eval()
-                with torch.no_grad():
-                    mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
+                mrr, h1, h10 = self.evaluator.eval(samples=valid_samples, write_output=False)
 
                 print("\tValidation Hits@1: %f" % h1)
+                print("\tValidation Hits@10: %f" % h10)
                 print("\tValidation Mean Reciprocal Rank': %f" % mrr)
 
                 if save_path is not None:
@@ -92,8 +87,8 @@ class BCEOptimizer(Optimizer):
 
     def extract_er_vocab(self, samples):
         er_vocab = defaultdict(list)
-        for triple in samples:
-            er_vocab[(triple[0], triple[1])].append(triple[2])
+        for sample in samples:
+            er_vocab[(sample[0], sample[1])].append(sample[2])
         return er_vocab
 
     def extract_batch(self, er_vocab, er_vocab_pairs, batch_start, batch_size):
@@ -103,7 +98,7 @@ class BCEOptimizer(Optimizer):
         for idx, pair in enumerate(batch):
             targets[idx, er_vocab[pair]] = 1.
         if self.label_smoothing:
-            targets = ((1.0 - self.label_smoothing) * targets) + (1.0 / targets.size(1))
+            targets = ((1.0 - self.label_smoothing) * targets) + (1.0 / targets.shape[1])
 
         return torch.tensor(np.array(batch)).cuda(), torch.FloatTensor(targets).cuda()
 
@@ -161,7 +156,7 @@ class KelpieBCEOptimizer(BCEOptimizer):
               er_vocab_pairs,
               batch_size: int):
 
-        np.random.shuffle(er_vocab_pairs)
+        # np.random.shuffle(er_vocab_pairs)
         self.model.train()
 
         with tqdm.tqdm(total=len(er_vocab_pairs), unit='ex', disable=not self.verbose) as bar:

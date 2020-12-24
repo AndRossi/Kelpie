@@ -77,7 +77,7 @@ class MultiClassNLLOptimizer(Optimizer):
 
             if evaluate_every > 0 and valid_samples is not None and \
                     (e + 1) % evaluate_every == 0:
-                mrr, h1 = self.evaluator.eval(samples=valid_samples, write_output=False)
+                mrr, h1, h10 = self.evaluator.eval(samples=valid_samples, write_output=False)
 
                 print("\tValidation Hits@1: %f" % h1)
                 print("\tValidation Mean Reciprocal Rank': %f" % mrr)
