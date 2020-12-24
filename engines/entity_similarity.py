@@ -13,7 +13,8 @@ def extract_comparable_entities(model: Model,
                                 sample: numpy.array,
                                 perspective: str,
                                 num_entities: int,
-                                policy: str):
+                                policy: str,
+                                degree_cap=-1):
 
     if policy not in ("best", "random", "worst"):
         raise Exception("Unsupported policy " + str(policy) + " for extraction of comparable entities")
@@ -29,7 +30,7 @@ def extract_comparable_entities(model: Model,
     other_entities = []
     samples = []
 
-    entity_2_types, type_2_entities = read_entity_types(dataset)
+    # entity_2_types, type_2_entities = read_entity_types(dataset)
 
     if perspective == "head":
         for cur_entity in range(0, dataset.num_entities):
@@ -41,6 +42,8 @@ def extract_comparable_entities(model: Model,
             if dataset.relation_2_type[relation] in [ONE_TO_ONE, MANY_TO_ONE] and (cur_entity, relation) in head_rel_couples:
                 continue
 
+            if degree_cap != -1 and dataset.entity_2_degree[cur_entity] > degree_cap:
+                continue
             # if the entity does not have any types in common with the entity to explain, ignore it
             #if len(entity_2_types[cur_entity].intersection(entity_2_types[entity_to_explain])) == 0:
             #    continue
