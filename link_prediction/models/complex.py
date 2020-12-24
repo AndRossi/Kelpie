@@ -41,6 +41,7 @@ class ComplEx(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
+        self.name = "ComplEx"
         self.dataset = dataset
         self.num_entities = dataset.num_entities            # number of entities in dataset
         self.num_relations = dataset.num_relations          # number of relations in dataset
@@ -63,6 +64,13 @@ class ComplEx(Model):
             with torch.no_grad():
                 self.entity_embeddings *= self.init_scale
                 self.relation_embeddings *= self.init_scale
+
+    def is_minimizer(self):
+        """
+        This method specifies whether this model aims at minimizing of maximizing scores .
+        :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        return False
 
 
     def score(self, samples: np.array) -> np.array:
@@ -91,7 +99,8 @@ class ComplEx(Model):
         """
 
         # NOTE: this method is extremely important, because apart from being called by the ComplEx score(samples) method
-        # it is also used to perform the operations of paper "Data Poisoning Attack against Knowledge Graph Embedding"
+        # it is also used to perform several operations on gradients in our GradientEngine
+        # as well as the operations from the paper "Data Poisoning Attack against Knowledge Graph Embedding"
         # that we use as a baseline and as a heuristic for our work.
 
         # split the head embedding into real and imaginary components
@@ -367,9 +376,9 @@ class KelpieComplEx(KelpieModel, ComplEx):
                                           INIT_SCALE: model.init_scale},
                          init_random=False)
 
-        KelpieModel.__init__(self,
-                             model=model,
-                             dataset=dataset)
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings for entities and relations and freeze them.
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()

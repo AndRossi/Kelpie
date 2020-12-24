@@ -8,9 +8,15 @@ from dataset import Dataset, KelpieDataset
 DIMENSION = "dimension"                         # embedding dimension, when both entity and relation embeddings have same dimension
 ENTITY_DIMENSION = "entity_dimension"           # entity embedding dimension, when entity and relation embeddings have different dimensions
 RELATION_DIMENSION = "relation_dimension"       # relation embedding dimension, when entity and relation embeddings have different dimensions
+
 INPUT_DROPOUT = "input_dropout"                 # dropout rate for the input embeddings
+HIDDEN_DROPOUT = "hidden_dropout"               # dropout rate after the hidden layer when there is only one hidden layer
 HIDDEN_DROPOUT_1 = "hidden_dropout_1"           # dropout rate after the first hidden layer
 HIDDEN_DROPOUT_2 = "hidden_dropout_2"           # dropout rate after the second hidden layer
+FEATURE_MAP_DROPOUT = "feature_map_dropout"     # feature map dropout
+
+HIDDEN_LAYER_SIZE = "hidden_layer"              # hidden layer size when there is only one hidden layer
+
 INIT_SCALE = "init_scale"                       # downscale to operate on the initial, randomly generated embeddings
 OPTIMIZER_NAME = "optimizer_name"               # name of the optimization technique: Adam, Adagrad, SGD
 BATCH_SIZE = "batch_size"                       # training batch size
@@ -19,6 +25,10 @@ LEARNING_RATE = "learning_rate"                 # learning rate
 DECAY = "decay"                                 #
 DECAY_1 = "decay_1"                             # Adam decay 1
 DECAY_2 = "decay_2"                             # Adam decay 2
+
+MARGIN = "margin"                               # pairwise margin-based loss margin
+NEGATIVE_SAMPLES_RATIO = "negative_samples"     # number of negative samples to obtain, via corruption, for each positive sample
+
 REGULARIZER_NAME = "regularizer"                # name of the regularization technique: N3
 REGULARIZER_WEIGHT = "regularizer_weight"       # weight for the regularization in the loss
 LABEL_SMOOTHING = "label_smoothing"             # label smoothing value
@@ -158,16 +168,12 @@ class KelpieModel(Model):
         In addition to that, a KelpieModels also
     """
 
-    def __init__(self,
-                 dataset: KelpieDataset,
-                 model: Model):
-
-        Model.__init__(self,
-                       dataset=dataset)
-
-        self.model = model
-        self.original_entity_id = dataset.original_entity_id
-        self.kelpie_entity_id = dataset.kelpie_entity_id
+    def is_minimizer(self):
+        """
+        This method specifies whether this model aims at minimizing of maximizing scores .
+        :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        pass
 
     # override
     def predict_samples(self,
@@ -198,8 +204,7 @@ class KelpieModel(Model):
 
         :return:
         """
-
-    # this is necessary
+        # this is necessary
     def update_embeddings(self):
         with torch.no_grad():
             self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
@@ -219,9 +224,10 @@ class KelpieModel(Model):
         """
         self.training = mode
         for module in self.children():
-            if not isinstance(module, torch.nn.BatchNorm1d):
+            if not isinstance(module, torch.nn.BatchNorm1d) or isinstance(module, torch.nn.BatchNorm2d):
                 module.train(mode)
         return self
+
 
     def kelpie_model_class(self):
         raise Exception(self.__class__.name  + " is a KelpieModel.")

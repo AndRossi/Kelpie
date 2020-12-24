@@ -48,6 +48,7 @@ class TuckER(Model):
         Model.__init__(self, dataset)
         nn.Module.__init__(self)
 
+        self.name = "TuckER"
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of relations in dataset
@@ -91,6 +92,47 @@ class TuckER(Model):
             samples_scores.append(all_scores[i][tail_index])
 
         return np.array(samples_scores)
+
+    def score_embeddings(self,
+                         head_embeddings: torch.Tensor,
+                         rel_embeddings: torch.Tensor,
+                         tail_embeddings: torch.Tensor):
+        """
+            Compute scores for the passed triples of head, relation and tail embeddings.
+            :param head_embeddings: a torch.Tensor containing the embeddings representing the head entities
+            :param rel_embeddings: a torch.Tensor containing the embeddings representing the relations
+            :param tail_embeddings: a torch.Tensor containing the embeddings representing the tail entities
+
+            :return: a numpy array containing the scores computed for the passed triples of embeddings
+        """
+
+        # NOTE: this method is extremely important, because apart from being called by the ComplEx score(samples) method
+        # it is also used to perform several operations on gradients in our GradientEngine
+        # as well as the operations from the paper "Data Poisoning Attack against Knowledge Graph Embedding"
+        # that we use as a baseline and as a heuristic for our work.
+
+        # batch normalization and reshape of head embeddings
+        head_embeddings = self.batch_norm_1(head_embeddings)
+        head_embeddings = self.input_dropout(head_embeddings)
+        head_embeddings_reshaped = head_embeddings.view(-1, 1, self.entity_dimension)
+
+        # first multiplication with reshape and dropout
+        first_multiplication = torch.mm(rel_embeddings, self.core_tensor.view(self.relation_dimension, -1))
+        first_multiplication_reshaped = first_multiplication.view(-1, self.entity_dimension, self.entity_dimension)
+        first_multiplication_reshaped = self.hidden_dropout1(first_multiplication_reshaped)
+
+        # second multiplication with reshape, batch norm and dropout
+        second_multiplication = torch.bmm(head_embeddings_reshaped, first_multiplication_reshaped)
+        second_multiplication_reshaped = second_multiplication.view(-1, self.entity_dimension)
+        second_multiplication_reshaped = self.batch_norm_2(second_multiplication_reshaped)
+        second_multiplication_reshaped = self.hidden_dropout2(second_multiplication_reshaped)
+
+        # third multiplication with sigmoid activation
+        result = torch.mm(second_multiplication_reshaped, tail_embeddings.transpose(1, 0))
+        scores = torch.sigmoid(result)
+
+        output_scores = torch.diagonal(scores)
+        return output_scores
 
     def forward(self, samples: np.array):
         """
@@ -271,9 +313,9 @@ class KelpieTuckER(KelpieModel, TuckER):
                                             # and it will not be possible to overwrite them with mere Tensors
                                             # such as the one resulting from torch.cat(...) and as frozen_relation_embeddings
 
-        KelpieModel.__init__(self,
-                             model=model,
-                             dataset=dataset)
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings for entities, relations and core, and freeze them.
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
