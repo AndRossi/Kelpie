@@ -4,9 +4,10 @@ import torch
 from torch import nn
 import numpy as np
 from torch.nn import Parameter
+from torch.nn.init import xavier_normal_
 
 from dataset import KelpieDataset, Dataset
-from model import Model, DIMENSION, INIT_SCALE
+from model import Model, DIMENSION
 
 
 class TransE(Model):
@@ -43,11 +44,11 @@ class TransE(Model):
         Model.__init__(self, dataset)
         nn.Module.__init__(self)
 
+        self.name = "TransE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of all relations in dataset (including the inverted ones)
         self.dimension = hyperparameters[DIMENSION]  # embedding dimension
-        self.init_scale = hyperparameters[INIT_SCALE]
 
         # create the embeddings for entities and relations as Parameters, using the passed dimension as size.
         # We do not use the torch.Embeddings module here in order to keep the code uniform to the KelpieDistMult model,
@@ -56,12 +57,15 @@ class TransE(Model):
         if init_random:
             self.entity_embeddings = Parameter(torch.rand(self.num_entities, self.dimension).cuda(), requires_grad=True)
             self.relation_embeddings = Parameter(torch.rand(self.num_relations, self.dimension).cuda(), requires_grad=True)
+            xavier_normal_(self.entity_embeddings)
+            xavier_normal_(self.relation_embeddings)
 
-            # initialization step to make the embedding values smaller in the embedding space
-            with torch.no_grad():
-                self.entity_embeddings *= self.init_scale
-                self.relation_embeddings *= self.init_scale
-
+    def is_minimizer(self):
+        """
+        This method specifies whether this model aims at minimizing of maximizing scores .
+        :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        return True
 
     def score(self, samples: np.array) -> np.array:
         """
@@ -90,7 +94,7 @@ class TransE(Model):
         # NOTE: this method is extremely important, because apart from being called by the Transe score(samples) method
         # it is also used to perform the operations of paper "Data Poisoning Attack against Knowledge Graph Embedding"
         # that we use as a baseline and as a heuristic for our work.
-        return torch.sum(torch.abs(head_embeddings + rel_embeddings - tail_embeddings), dim=1, keepdim=True)
+        return (head_embeddings + rel_embeddings - tail_embeddings).norm(p=1, dim=1)
 
     def all_scores(self, samples: np.array):
         """
@@ -102,12 +106,12 @@ class TransE(Model):
         """
 
         head_embeddings = self.entity_embeddings[samples[:, 0]]     # list of entity embeddings for the heads of the facts
-        rel_embeddings = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the heads
-
+        rel_embeddings = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the fats
+        all_tail_embeddings = self.entity_embeddings                # the list of tails to use is the list of all entity embeddings
         translation_outputs = head_embeddings + rel_embeddings
 
-        all_scores = torch.stack([torch.sum(torch.abs(translation_outputs - cur_tail), dim=1) for cur_tail in self.entity_embeddings]).transpose(0, 1)
-        return all_scores
+        all_scores = torch.stack([(translation_outputs-cur_tail_embedding).norm(p=1, dim=1) for cur_tail_embedding in all_tail_embeddings])
+        return all_scores.transpose(0, 1)
 
     def forward(self, samples: np.array):
         """
@@ -122,13 +126,12 @@ class TransE(Model):
         rel_embeddings = self.relation_embeddings[samples[:, 1]]     # list of relation embeddings for the relations of the heads
         tail_embeddings = self.entity_embeddings[samples[:, 2]]       # list of entity embeddings for the tails of the facts
 
-        translation_outputs = head_embeddings + rel_embeddings
         # this returns two factors
-        #   factor 1 is one matrix with the scores for the fact
+        #   factor 1 is one matrix with the scores for the facts
         #   factor 2 contains the absolute values of the head embeddings, relation embeddings and tail embeddings,
         #            to use for regularization:
-        return (torch.stack([torch.sum(torch.abs(translation_outputs - cur_tail), dim=1) for cur_tail in self.entity_embeddings]).transpose(0, 1),
-               (torch.abs(head_embeddings), torch.abs(rel_embeddings), torch.abs(tail_embeddings)))
+        return (head_embeddings + rel_embeddings - tail_embeddings).norm(p=1, dim=1), \
+               (head_embeddings, rel_embeddings, tail_embeddings)
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
@@ -205,10 +208,10 @@ class TransE(Model):
                 if tail_id not in filter_out:
                     filter_out.append(tail_id)
 
-                all_scores[i, torch.LongTensor(filter_out)] = -1e6
+                all_scores[i, torch.LongTensor(filter_out)] = 1e6
 
             # fill the ranks data structure and convert it to a Python list
-            ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()    #ranks was initialized with ONES
+            ranks += torch.sum((all_scores <= targets).float(), dim=1).cpu()    #ranks was initialized with ONES
             ranks = ranks.cpu().numpy().tolist()
 
             all_scores = all_scores.cpu().numpy()
@@ -223,7 +226,7 @@ class TransE(Model):
                 if tail_id not in filter_out:
                     filter_out.append(tail_id)
 
-                predicted_tails = np.where(all_scores[i] > -1e6)[0]
+                predicted_tails = np.where(all_scores[i] < 1e6)[0]
 
                 # get all not filtered tails and corresponding scores for current fact
                 #predicted_tails = np.where(all_scores[i] != -1e6)
@@ -234,15 +237,15 @@ class TransE(Model):
                 #predicted_tails = np.append(predicted_tails, [tail_id])
 
                 # sort the scores and predicted tails list in the same way
-                permutation = np.argsort(-predicted_tails_scores)
+                permutation = np.argsort(predicted_tails_scores)
 
                 predicted_tails_scores = predicted_tails_scores[permutation]
                 predicted_tails = predicted_tails[permutation]
 
                 # include the score of the target tail in the predictions list
-                # after ALL entities with greater or equal scores (MIN policy)
+                # after ALL entities with lesser or equal scores (MIN policy)
                 j = 0
-                while j < len(predicted_tails_scores) and predicted_tails_scores[j] >= scores[i]:
+                while j < len(predicted_tails_scores) and predicted_tails_scores[j] <= scores[i]:
                     j += 1
 
                 predicted_tails_scores = np.concatenate((predicted_tails_scores[:j],
@@ -270,9 +273,8 @@ class KelpieTransE(TransE):
 
         TransE.__init__(self,
                         dataset=dataset,
-                        hyperparameters={DIMENSION: model.dimension,
-                                         INIT_SCALE: model.init_scale},
-                         init_random=False)
+                        hyperparameters={DIMENSION: model.dimension},
+                        init_random=False)
 
         self.model = model
         self.original_entity_id = dataset.original_entity_id
@@ -293,9 +295,6 @@ class KelpieTransE(TransE):
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
         self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
-        with torch.no_grad():           # Initialize as any other embedding
-            self.kelpie_entity_embedding *= self.init_scale
-
         self.relation_embeddings = frozen_relation_embeddings
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
 

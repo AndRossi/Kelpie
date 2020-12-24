@@ -7,10 +7,9 @@ import torch
 from config import MODEL_PATH
 from dataset import Dataset, ALL_DATASET_NAMES
 from link_prediction.evaluation.evaluation import Evaluator
-from link_prediction.models.conve import ConvE
-from link_prediction.optimization.bce_optimizer import BCEOptimizer
-from model import INPUT_DROPOUT, BATCH_SIZE, LEARNING_RATE, DECAY, LABEL_SMOOTHING, \
-    EPOCHS, DIMENSION, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE
+from link_prediction.models.transe import TransE
+from link_prediction.optimization.pairwise_ranking_optimizer import PairwiseRankingOptimizer
+from model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -35,47 +34,30 @@ if __name__ == '__main__':
                         default=0.0005,
                         help="Learning rate.")
 
-    parser.add_argument("--decay_rate",
-                        type=float,
-                        default=1.0,
-                        help="Decay rate.")
-
     parser.add_argument("--dimension",
                         type=int,
                         default=200,
                         help="Embedding dimensionality.")
 
+    parser.add_argument("--margin",
+                        type=int,
+                        default=5,
+                        help="Margin for pairwise ranking loss.")
+
+    parser.add_argument("--negative_samples_ratio",
+                        type=int,
+                        default=3,
+                        help="Number of negative samples for each positive sample.")
+
+    parser.add_argument("--regularizer_weight",
+                        type=float,
+                        default=0.0,
+                        help="Weight for L2 regularization.")
+
     parser.add_argument("--valid",
                         type=int,
                         default=-1,
                         help="Validate after a cycle of x epochs")
-
-    parser.add_argument("--input_dropout",
-                        type=float,
-                        default=0.3,
-                        nargs="?",
-                        help="Input layer dropout.")
-
-    parser.add_argument("--hidden_dropout",
-                        type=float,
-                        default=0.4,
-                        help="Dropout after the hidden layer.")
-
-    parser.add_argument("--feature_map_dropout",
-                        type=float,
-                        default=0.5,
-                        help="Dropout after the convolutional layer.")
-
-    parser.add_argument("--label_smoothing",
-                        type=float,
-                        default=0.1,
-                        help="Amount of label smoothing.")
-
-    parser.add_argument('--hidden_size',
-                        type=int,
-                        default=9728,
-                        help='The side of the hidden layer. '
-                             'The required size changes with the size of the embeddings. Default: 9728 (embedding size 200).')
 
     args = parser.parse_args()
     torch.backends.cudnn.deterministic = True
@@ -89,25 +71,22 @@ if __name__ == '__main__':
     dataset = Dataset(dataset_name)
 
     hyperparameters = {DIMENSION: args.dimension,
-                       INPUT_DROPOUT: args.input_dropout,
-                       FEATURE_MAP_DROPOUT: args.feature_map_dropout,
-                       HIDDEN_DROPOUT: args.hidden_dropout,
-                       HIDDEN_LAYER_SIZE: args.hidden_size,
+                       MARGIN: args.margin,
+                       NEGATIVE_SAMPLES_RATIO: args.negative_samples_ratio,
+                       REGULARIZER_WEIGHT: args.regularizer_weight,
                        BATCH_SIZE: args.batch_size,
                        LEARNING_RATE: args.learning_rate,
-                       DECAY: args.decay_rate,
-                       LABEL_SMOOTHING: args.label_smoothing,
                        EPOCHS: args.max_epochs}
 
-    conve = ConvE(dataset=dataset, hyperparameters=hyperparameters, init_random=True) # type: ConvE
+    transe = TransE(dataset=dataset, hyperparameters=hyperparameters, init_random=True) # type: TransE
 
-    optimizer = BCEOptimizer(model=conve, hyperparameters=hyperparameters)
+    optimizer = PairwiseRankingOptimizer(model=transe, hyperparameters=hyperparameters)
 
-    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10,
-                    save_path=os.path.join(MODEL_PATH, "ConvE_" + dataset_name + ".pt"),
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=args.valid,
+                    save_path=os.path.join(MODEL_PATH, "TransE_" + dataset_name + ".pt"),
                     valid_samples=dataset.valid_samples)
 
     print("Evaluating model...")
-    mrr, h1 = Evaluator(model=conve).eval(samples=dataset.test_samples, write_output=False)
+    mrr, h1 = Evaluator(model=transe).eval(samples=dataset.test_samples, write_output=False)
     print("\tTest Hits@1: %f" % h1)
     print("\tTest Mean Reciprocal Rank: %f" % mrr)
