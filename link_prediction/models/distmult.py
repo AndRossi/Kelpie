@@ -42,6 +42,7 @@ class DistMult(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
+        self.name = "DistMult"
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset
         self.num_relations = dataset.num_relations   # number of all relations in dataset (including the inverted ones)
@@ -61,6 +62,12 @@ class DistMult(Model):
                 self.entity_embeddings *= self.init_scale
                 self.relation_embeddings *= self.init_scale
 
+    def is_minimizer(self):
+        """
+        This method specifies whether this model aims at minimizing of maximizing scores .
+        :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        return False
 
     def score(self, samples: np.array) -> np.array:
         """
@@ -283,9 +290,10 @@ class KelpieDistMult(KelpieModel, DistMult):
                          hyperparameters={DIMENSION: model.dimension,
                                           INIT_SCALE: model.init_scale},
                          init_random=False)
-        KelpieModel.__init__(self,
-                             model=model,
-                             dataset=dataset)
+
+        self.model = model
+        self.original_entity_id = dataset.original_entity_id
+        self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings for entities and relations and freeze them.
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
