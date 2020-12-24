@@ -1,6 +1,8 @@
 import itertools
 from typing import Tuple, Any
 
+import numpy
+
 from dataset import Dataset
 from model import Model
 
@@ -18,7 +20,8 @@ class ExplanationEngine:
 
     def simple_removal_explanations(self,
                                     sample_to_explain: Tuple[Any, Any, Any],
-                                    perspective: str):
+                                    perspective: str,
+                                    top_k: int):
         pass
 
     def simple_addition_explanations(self,
