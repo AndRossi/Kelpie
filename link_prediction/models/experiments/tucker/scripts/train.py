@@ -1,11 +1,16 @@
 import argparse
 import os
 
+import numpy
+import torch
+
 from config import MODEL_PATH
 from dataset import Dataset, ALL_DATASET_NAMES
-from evaluation import Evaluator
-from models.tucker.model import TuckER
-from optimization.bce_optimizer import BCEOptimizer
+from link_prediction.evaluation.evaluation import Evaluator
+from link_prediction.models.conve import ConvE
+from link_prediction.optimization.bce_optimizer import BCEOptimizer
+from model import INPUT_DROPOUT, BATCH_SIZE, LEARNING_RATE, DECAY, LABEL_SMOOTHING, \
+    EPOCHS, DIMENSION, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,7 +21,8 @@ if __name__ == '__main__':
                         help="The dataset to use: FB15k, FB15k-237, WN18, WN18RR or YAGO3-10")
 
     parser.add_argument("--max_epochs",
-                        type=int, default=500,
+                        type=int,
+                        default=1000,
                         help="Number of epochs.")
 
     parser.add_argument("--batch_size",
@@ -34,15 +40,10 @@ if __name__ == '__main__':
                         default=1.0,
                         help="Decay rate.")
 
-    parser.add_argument("--entity_dimension",
+    parser.add_argument("--dimension",
                         type=int,
                         default=200,
-                        help="Entity embedding dimensionality.")
-
-    parser.add_argument("--relation_dimension",
-                        type=int,
-                        default=200,
-                        help="Relation embedding dimensionality.")
+                        help="Embedding dimensionality.")
 
     parser.add_argument("--valid",
                         type=int,
@@ -55,44 +56,58 @@ if __name__ == '__main__':
                         nargs="?",
                         help="Input layer dropout.")
 
-    parser.add_argument("--hidden_dropout_1",
+    parser.add_argument("--hidden_dropout",
                         type=float,
                         default=0.4,
-                        help="Dropout after the first hidden layer.")
+                        help="Dropout after the hidden layer.")
 
-    parser.add_argument("--hidden_dropout_2",
+    parser.add_argument("--feature_map_dropout",
                         type=float,
                         default=0.5,
-                        help="Dropout after the second hidden layer.")
+                        help="Dropout after the convolutional layer.")
 
     parser.add_argument("--label_smoothing",
                         type=float,
                         default=0.1,
                         help="Amount of label smoothing.")
 
+    parser.add_argument('--hidden_size',
+                        type=int,
+                        default=9728,
+                        help='The side of the hidden layer. '
+                             'The required size changes with the size of the embeddings. Default: 9728 (embedding size 200).')
+
     args = parser.parse_args()
-    #torch.backends.cudnn.deterministic = True
-    #seed = 20
-    #np.random.seed(seed)
-    #torch.manual_seed(seed)
-    #if torch.cuda.is_available:
-    #    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    seed = 42
+    numpy.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available:
+        torch.cuda.manual_seed_all(seed)
 
     dataset_name = args.dataset
     dataset = Dataset(dataset_name)
 
-    tucker = TuckER(dataset=dataset, entity_dimension=args.entity_dimension, relation_dimension=args.relation_dimension,
-                   input_dropout=args.input_dropout, hidden_dropout_1=args.hidden_dropout_1,
-                   hidden_dropout_2=args.hidden_dropout_2, init_random=True) # type: TuckER
+    hyperparameters = {DIMENSION: args.dimension,
+                       INPUT_DROPOUT: args.input_dropout,
+                       FEATURE_MAP_DROPOUT: args.feature_map_dropout,
+                       HIDDEN_DROPOUT: args.hidden_dropout,
 
-    optimizer = BCEOptimizer(model=tucker, batch_size=args.batch_size, learning_rate=args.learning_rate,
-                             decay=args.decay_rate, label_smoothing=args.label_smoothing)
+                       BATCH_SIZE: args.batch_size,
+                       LEARNING_RATE: args.learning_rate,
+                       DECAY: args.decay_rate,
+                       LABEL_SMOOTHING: args.label_smoothing,
+                       EPOCHS: args.max_epochs}
 
-    optimizer.train(train_samples=dataset.train_samples, max_epochs=args.max_epochs, evaluate_every=10,
-                    save_path=os.path.join(MODEL_PATH, "TuckER_" + dataset_name + ".pt"),
+    conve = ConvE(dataset=dataset, hyperparameters=hyperparameters, init_random=True) # type: ConvE
+
+    optimizer = BCEOptimizer(model=conve, hyperparameters=hyperparameters)
+
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10,
+                    save_path=os.path.join(MODEL_PATH, "ConvE_" + dataset_name + ".pt"),
                     valid_samples=dataset.valid_samples)
 
     print("Evaluating model...")
-    mrr, h1 = Evaluator(model=tucker).eval(samples=dataset.test_samples, write_output=False)
+    mrr, h1 = Evaluator(model=conve).eval(samples=dataset.test_samples, write_output=False)
     print("\tTest Hits@1: %f" % h1)
     print("\tTest Mean Reciprocal Rank: %f" % mrr)
