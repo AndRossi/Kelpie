@@ -16,7 +16,6 @@ class GradientEngine(ExplanationEngine):
                  hyperparameters: dict,
                  epsilon:float):
 
-
         ExplanationEngine.__init__(self, model=model, dataset=dataset, hyperparameters=hyperparameters)
         self.epsilon = epsilon
 
@@ -24,125 +23,153 @@ class GradientEngine(ExplanationEngine):
                                     sample_to_explain: Tuple[Any, Any, Any],
                                     perspective: str,
                                     top_k: int):
+        """
+            Given a sample to explain, and the perspective from which to explain it,
+            find the k training samples containing the perspective entity that, if removed (one by one)
+            would affect the most the prediction of the sample to explain.
 
-        # identify the entity to explain
+            :param sample_to_explain: the sample to explain in the form of a tuple (head, relation, tail)
+            :param perspective: the perspective from which to explain the fact: it can be either "head" or "tail"
+            :param top_k: the number of top relevant training samples to return
+
+            :return: an array of k pairs, where each pair is a relevant training sample with its relevance value,
+                     sorted by descending relevance
+        """
+
         head_id, relation_id, tail_id = sample_to_explain
         entity_to_explain_id = head_id if perspective == "head" else tail_id
-
-        # compute the gradient of the fact to explain with respect to the embedding of the entity to explain
-        gradient = self.compute_gradient_for(sample=sample_to_explain, entity_to_explain=entity_to_explain_id)
 
         # extract all training samples containing the entity to explain
         samples_containing_entity_to_explain = [(h, r, t) for (h, r, t) in self.dataset.train_samples if entity_to_explain_id in [h, t]]
         if len(samples_containing_entity_to_explain) == 0:
             return None
 
-        # for each training sample containing the entity to explain, compute the relevance by projection
-        sample_2_relevance_by_projection = {}
-        sample_2_gradient = {}
-        for current_sample in samples_containing_entity_to_explain:
-            current_gradient = self.compute_gradient_for(current_sample, entity_to_explain_id)
-            projection_size = self.projection_size(gradient, current_gradient)
+        # this is EXTREMELY important in models with dropout and/or batch normalization.
+        # It disables dropout, and tells batch_norm layers to use saved statistics instead of batch data.
+        # This affects both the computed scores and the computed gradients.
+        self.model.eval()
 
-            sample_2_gradient[current_sample] = current_gradient
-            sample_2_relevance_by_projection[current_sample] = projection_size
-        most_relevant_samples_by_projection = sorted(sample_2_relevance_by_projection.items(), key=lambda x:x[1], reverse=True)
+        target_entity_score = self.model.score(numpy.array([sample_to_explain]))[0]
 
         # for each training sample containing the entity to explain, compute the relevance by shift
         # (i.e. given the gradient of the training sample with respect to the embedding of the entity to explain,
         # shift the embedding of the entity to explain in the direction of that gradient
         # and measure the improvement of the score of the fact to explain)
-        samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in most_relevant_samples_by_projection])
+        samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in samples_containing_entity_to_explain])
         head_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 0]]
         rel_embeddings_tensor = self.model.relation_embeddings[samples_numpy_array[:, 1]]
         tail_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 2]]
-        for i in range(len(most_relevant_samples_by_projection)):
-            item = most_relevant_samples_by_projection[i]
-            current_sample = item[0]
+        for i, current_sample in enumerate(samples_containing_entity_to_explain):
 
-            # TODO: THIS ONLY WORKS FOR MAXIMIZING MODELS SO FAR (SHOULD BE + FOR MINIMIZING MODELS)
+            # the gradient points towards the direction that INCREASES the score
+            current_gradient = self.compute_gradient_for(sample=current_sample, entity_to_explain=entity_to_explain_id)
+
             if perspective=="head":
-                head_embeddings_tensor[i] = (head_embeddings_tensor[i] - self.epsilon*sample_2_gradient[current_sample]).cuda()
-            else:
-                tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] - self.epsilon*sample_2_gradient[current_sample]).cuda()
-        perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor).detach().cpu().numpy()
+                # if lesser scores are better, move the embedding in the direction that INCREASES the score of the fact to remove
+                if self.model.is_minimizer():
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*current_gradient).cuda()
+                # otherwise, if greater scores are better, move the embedding in the direction that DECREASES the score of the fact to remove
+                else:
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] - self.epsilon*current_gradient).cuda()
 
-        sample_2_relevance_by_score = {}
+            # todo: support tail perspective
+            else:
+                raise Exception("Not supported yet")
+                # tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] - self.epsilon*sample_2_gradient[current_sample]).cuda()
+
+        # for each removed fact, compute the score of the fact to explain using the entity embedding accordingly shifted.
+        perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor).detach().cpu().numpy()
+        removed_sample_2_perturbed_score = {}
         for i in range(len(perturbed_scores)):
             current_perturbed_score = perturbed_scores[i]
-            current_sample = most_relevant_samples_by_projection[i][0]
-            sample_2_relevance_by_score[current_sample] = current_perturbed_score
+            current_sample = samples_containing_entity_to_explain[i]
+            removed_sample_2_perturbed_score[current_sample] = current_perturbed_score
 
-            # TODO: THIS ONLY WORKS FOR MAXIMIZING MODELS SO FAR (SHOULD BE reverse=True FOR MINIMIZING MODELS)
-        most_relevant_samples = sorted(sample_2_relevance_by_score.items(), key=lambda x:x[1], reverse=False)
+        # for each removed fact, compute the relevance as "how much the score of the fact to explain has worsened by removing that fact"
+        removed_sample_2_relevance = {}
+        for cur_removed_sample in samples_containing_entity_to_explain:
+            if self.model.is_minimizer():
+                removed_sample_2_relevance[cur_removed_sample] = removed_sample_2_perturbed_score[cur_removed_sample] - target_entity_score
+            else:
+                removed_sample_2_relevance[cur_removed_sample] = target_entity_score - removed_sample_2_perturbed_score[cur_removed_sample]
 
-        if top_k == -1 or top_k < len(most_relevant_samples):
-            return most_relevant_samples
-        else:
-            return most_relevant_samples[:top_k]
+        # sort all items by descending relevance
+        sorted_samples_with_relevance = sorted(removed_sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        return sorted_samples_with_relevance if top_k == -1 or top_k < len(sorted_samples_with_relevance) else sorted_samples_with_relevance[:top_k]
 
 
     def simple_addition_explanations(self,
-                    sample_to_explain: Tuple[Any, Any, Any],
-                    perspective: str,
-                    samples_to_add: list,
-                    eps=None):
+                                     sample_to_convert: Tuple[Any, Any, Any],
+                                     perspective: str,
+                                     samples_to_add: list):
+        """
+            Given a "sample to convert" (that is, a sample that the model currently does not predict as true,
+            and that we want to be predicted as true); given the perspective from which to intervene on it;
+            and given and a list of other training samples containing the perspective entity;
+            for each sample in the list, compute an esteem of the relevance it would have if added to the perspective entity
+            to improve the most the prediction of the sample to convert.
 
-        if eps is None:
-            eps = self.epsilon
+            :param sample_to_convert: the sample that we would like the model to predict as "true",
+                                      in the form of a tuple (head, relation, tail)
+            :param perspective: the perspective from which to explain the fact: it can be either "head" or "tail"
+            :param samples_to_add: the list of samples containing the perspective entity
+                                   that we want to analyze the effect of, if added to the perspective entity
+
+            :return: an array of pairs, where each pair is a samples_to_add with the extracted value of relevance,
+                     sorted by descending relevance
+        """
 
         # identify the entity to explain
-        head_id, relation_id, tail_id = sample_to_explain
+        head_id, relation_id, tail_id = sample_to_convert
         entity_to_explain_id = head_id if perspective == "head" else tail_id
 
-        target_entity_score, best_entity_score = self._target_and_best_scores_for_sample(numpy.array(sample_to_explain))
+        # this is EXTREMELY important in models with dropout and/or batch normalization.
+        # It disables dropout, and tells batch_norm layers to use saved statistics instead of batch data.
+        # This affects both the computed scores and the computed gradients.
+        self.model.eval()
 
-        # compute the gradient of the fact to explain with respect to the embedding of the entity to explain
-        # gradient = self.compute_gradient_for(sample=sample_to_explain, entity_to_explain=entity_to_explain_id)
+        target_entity_score, best_entity_score = self._target_and_best_scores_for_sample(numpy.array(sample_to_convert))
 
-        sample_2_gradient = {}
-        #sample_2_relevance_by_projection = {}
-        for current_sample in samples_to_add:
-            current_gradient = self.compute_gradient_for(sample=current_sample, entity_to_explain=entity_to_explain_id)
-            sample_2_gradient[tuple(current_sample)] = current_gradient
-            # for each sample to add, compute the relevance by projection
-            # projection_size = self.projection_size(gradient, current_gradient)
-            # sample_2_relevance_by_projection[tuple(current_sample)] = projection_size
-
-        #most_relevant_samples_by_projection = sorted(sample_2_relevance_by_projection.items(), key=lambda x:x[1], reverse=True)
-
-        # for each sample to add featuring the entity to explain,
-        # compute and store how the score of the sample to explain changes
-        # when as entity to explain gets shifted by an epsilon towards the gradient of the score to the sample to add
-        added_sample_2_perturbed_score = {}
+        # for each sample to add, compute the score the when the entity to explain gets shifted by an epsilon
+        # in the direction that makes the score of the sample to add better
         samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in range(len(samples_to_add))])
         head_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 0]]
         rel_embeddings_tensor = self.model.relation_embeddings[samples_numpy_array[:, 1]]
         tail_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 2]]
         for i in range(len(samples_to_add)):
             current_sample = samples_to_add[i]
-            # todo: + or - depending on whether the model maximizes or minimizes the score
+
+            # the gradient points towards the direction that INCREASES the score
+            current_gradient = self.compute_gradient_for(sample=current_sample, entity_to_explain=entity_to_explain_id)
+
             if perspective=="head":
-                head_embeddings_tensor[i] = (head_embeddings_tensor[i] + eps*sample_2_gradient[current_sample]).cuda()
+                if self.model.is_minimizer():
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] - self.epsilon*current_gradient).cuda()
+                else:
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*current_gradient).cuda()
+
+            # todo: support tail perspective
             else:
-                tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + eps*sample_2_gradient[current_sample]).cuda()
+                raise Exception("Not supported yet")
+                #tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + eps*current_gradient[current_sample]).cuda()
 
-        perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor)
+        perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor).detach().cpu().numpy()
+        added_sample_2_perturbed_score = {}
         for i in range(len(perturbed_scores)):
-            current_perturbed_score = perturbed_scores[i].detach().cpu().numpy()
-            cur_added_sample = samples_to_add[i]
-            added_sample_2_perturbed_score[cur_added_sample] = current_perturbed_score
+            current_perturbed_score = perturbed_scores[i]
+            current_added_sample = samples_to_add[i]
+            added_sample_2_perturbed_score[current_added_sample] = current_perturbed_score
 
-        # compute the relevance of each sample to add,
-        # based on the obtained score perturbation on the sample to explain.
-        # Relevance = score that the target tail would obtain with perturbation - score that it would have obtained originally
+        # map each added sample to its relevance - that is, how much the score has improved by "adding" that sample
         sample_2_relevance = {}
         for cur_added_sample in samples_to_add:
-            # todo: depends on whether the model maximizes or minimizes the score
-            sample_2_relevance[cur_added_sample] = added_sample_2_perturbed_score[cur_added_sample] - target_entity_score
+            if self.model.is_minimizer():
+                sample_2_relevance[cur_added_sample] = target_entity_score - added_sample_2_perturbed_score[cur_added_sample]
+            else:
+                sample_2_relevance[cur_added_sample] = added_sample_2_perturbed_score[cur_added_sample] - target_entity_score
 
-        # todo: "reverse" depends on whether the model maximizes or minimizes the score
-        sorted_samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x:x[1], reverse=True)
+        sorted_samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+
 
         return sorted_samples_with_relevance, \
                added_sample_2_perturbed_score, \
@@ -151,51 +178,69 @@ class GradientEngine(ExplanationEngine):
 
 
     def nple_addition_explanations(self,
-                                   sample_to_explain: Tuple[Any, Any, Any],
+                                   sample_to_convert: Tuple[Any, Any, Any],
                                    perspective: str,
                                    samples_to_add: list,
                                    n: int):
+        """
+            Given a "sample to convert" (that is, a sample that the model currently does not predict as true,
+            and that we want to be predicted as true); given the perspective from which to intervene on it;
+            given and a list of other training samples containing the perspective entity;
+            and given the length "n" of combinations of training samples to try;
+            for each combination of length "n" of the samples in the list,
+            estimate the relevance that adding that combination of facts to the perspective entity
+            would have to improve the prediction of the sample to convert.
+
+            :param sample_to_convert: the sample that we would like the model to predict as "true",
+                                      in the form of a tuple (head, relation, tail)
+            :param perspective: the perspective from which to explain the fact: it can be either "head" or "tail"
+            :param samples_to_add: the list of samples containing the perspective entity
+                                   that we want to analyze the effect of, if added to the perspective entity
+            :param n: length of combinations of samples to add to the perspective entity
+
+            :return: an array of pairs, where each pair is a n n-long combination of samples_to_add
+                     coupled with with the corresponding extracted value of relevance, sorted by descending relevance
+        """
+
 
         # if there are less than n items in samples_to_add
         # it is not possible to try combinations of length n of samples_to_add
         if len(samples_to_add) < n:
             return []
 
-        target_entity_score, best_entity_score = self._target_and_best_scores_for_sample(numpy.array(sample_to_explain))
+        # this is EXTREMELY important in models with dropout and/or batch normalization.
+        # It disables dropout, and tells batch_norm layers to use saved statistics instead of batch data.
+        # This affects both the computed scores and the computed gradients.
+        self.model.eval()
+
+        target_entity_score, best_entity_score = self._target_and_best_scores_for_sample(numpy.array(sample_to_convert))
 
         # identify the entity to explain
-        head_id, relation_id, tail_id = sample_to_explain
+        head_id, relation_id, tail_id = sample_to_convert
         entity_to_explain_id = head_id if perspective == "head" else tail_id
 
-        # compute the gradient of the score of fact to explain with respect to the embedding of the entity to explain
-        # gradient = self.compute_gradient_for(sample=sample_to_explain, entity_to_explain=entity_to_explain_id)
 
         # for each sample to add, compute the gradient of its own score with respect to the embedding of the entity to explain
         # and compute the mapping sample to add -> gradient
         sample_to_add_2_gradient = {}
         for cur_sample_to_add in samples_to_add:
-            sample_to_add_2_gradient[cur_sample_to_add] = self.compute_gradient_for(sample=cur_sample_to_add, entity_to_explain=entity_to_explain_id)
+            sample_to_add_2_gradient[cur_sample_to_add] = self.compute_gradient_for(sample=cur_sample_to_add,
+                                                                                    entity_to_explain=entity_to_explain_id)
 
         # extract all n-long different combinations of samples
         samples_nples = self._extract_sample_nples(samples=samples_to_add, n=n)
         nple_2_gradient = {}
 
-        #nple_2_relevance_by_projection = {}
         for i in range(len(samples_nples)):
             cur_samples_nple = samples_nples[i]
             cur_gradient = 0
             for cur_sample_to_add in cur_samples_nple:
                 cur_gradient += sample_to_add_2_gradient[cur_sample_to_add]
             nple_2_gradient[tuple(cur_samples_nple)] = cur_gradient
-            # projection_size = self.projection_size(gradient, cur_gradient)
-            # nple_2_relevance_by_projection[tuple(cur_samples_nple)] = projection_size
-
-        # most_relevant_nples_by_projection = sorted(nple_2_relevance_by_projection.items(), key=lambda x:x[1], reverse=True)
 
         # for each couple training sample containing the entity to explain,
         # shift the entity to explain in the gradient direction and verify the score improvement
         samples_numpy_array = numpy.array([(head_id, relation_id, tail_id) for _ in range(len(samples_nples))])
-
         head_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 0]]
         rel_embeddings_tensor = self.model.relation_embeddings[samples_numpy_array[:, 1]]
         tail_embeddings_tensor = self.model.entity_embeddings[samples_numpy_array[:, 2]]
@@ -203,11 +248,14 @@ class GradientEngine(ExplanationEngine):
         for i in range(len(samples_nples)):
             current_nple = samples_nples[i]
             if perspective=="head":
-                # todo: depends on whether the model maximizes or minimizes the score
-                head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
+                if self.model.is_minimizer():
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] - self.epsilon*nple_2_gradient[current_nple]).cuda()
+                else:
+                    head_embeddings_tensor[i] = (head_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
+            # todo: support tail perspective
             else:
-                # todo: depends on whether the model maximizes or minimizes the score
-                tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
+                raise Exception("Not supported yet!")
+                #tail_embeddings_tensor[i] = (tail_embeddings_tensor[i] + self.epsilon*nple_2_gradient[current_nple]).cuda()
         perturbed_scores = self.model.score_embeddings(head_embeddings_tensor, rel_embeddings_tensor, tail_embeddings_tensor)
 
         added_nple_2_perturbed_score = {}
@@ -217,8 +265,11 @@ class GradientEngine(ExplanationEngine):
             current_perturbed_score = perturbed_scores[i].detach().cpu().numpy()
             cur_added_nple = samples_nples[i]
             added_nple_2_perturbed_score[tuple(cur_added_nple)] = current_perturbed_score
-            # todo: depends on whether the model maximizes or minimizes the score
-            added_nple_2_relevance[tuple(cur_added_nple)] = current_perturbed_score - target_entity_score
+
+            if self.model.is_minimizer():
+                added_nple_2_relevance[tuple(cur_added_nple)] = target_entity_score - current_perturbed_score
+            else:
+                added_nple_2_relevance[tuple(cur_added_nple)] = current_perturbed_score - target_entity_score
 
         sorted_nples_with_relevance = sorted(added_nple_2_relevance.items(), key=lambda x:x[1], reverse=True)
 
@@ -290,18 +341,18 @@ class GradientEngine(ExplanationEngine):
 
         return numpy.dot(a, b) / numpy.linalg.norm(a)
 
-    # todo: this should depend on whether the model maximises or minimizes scores
-    def _compute_relevance(self, perturbed_score, original_score):
-        return perturbed_score - original_score
-
 
     def _target_and_best_scores_for_sample(self, sample):
         head_id, relation_id, tail_id = sample
         all_scores = self.model.all_scores(numpy.array([sample])).detach().cpu().numpy()[0]
         target_score = all_scores[tail_id]
+        filter_out = self.dataset.to_filter[(head_id, relation_id)] if (head_id, relation_id) in self.dataset.to_filter else []
 
-        filter_out = self.dataset.to_filter[(head_id, relation_id)]
-        all_scores[filter_out] = -1e6         # todo: make it huge if the model wants to minimize scores
-        best_score = numpy.max(all_scores)      # todo: min if the model wants to minimize scores
+        if self.model.is_minimizer():
+            all_scores[filter_out] = 1e6
+            best_score = numpy.min(all_scores)
+        else:
+            all_scores[filter_out] = -1e6
+            best_score = numpy.max(all_scores)
+
         return target_score, best_score
-

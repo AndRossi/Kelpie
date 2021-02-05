@@ -291,7 +291,7 @@ class KelpieConvE(KelpieModel, ConvE):
                                             # and it will not be possible to overwrite them with mere Tensors
                                             # such as the one resulting from torch.cat(...) and as frozen_relation_embeddings
 
-        self.model = model
+        # self.model = model
         self.original_entity_id = dataset.original_entity_id
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
@@ -323,17 +323,17 @@ class KelpieConvE(KelpieModel, ConvE):
         self.hidden_layer.eval()
 
         # copy the batchnorms of the original ConvE model and keep them frozen
-        self.batch_norm_1 = copy.deepcopy(self.model.batch_norm_1)  # copy weights and stuff
+        self.batch_norm_1 = copy.deepcopy(model.batch_norm_1)  # copy weights and stuff
         self.batch_norm_1.weight.requires_grad = False
         self.batch_norm_1.bias.requires_grad = False
         self.batch_norm_1.eval()
 
-        self.batch_norm_2 = copy.deepcopy(self.model.batch_norm_2)  # copy weights and stuff
+        self.batch_norm_2 = copy.deepcopy(model.batch_norm_2)  # copy weights and stuff
         self.batch_norm_2.weight.requires_grad = False
         self.batch_norm_2.bias.requires_grad = False
         self.batch_norm_2.eval()
 
-        self.batch_norm_3 = copy.deepcopy(self.model.batch_norm_3)  # copy weights and stuff
+        self.batch_norm_3 = copy.deepcopy(model.batch_norm_3)  # copy weights and stuff
         self.batch_norm_3.weight.requires_grad = False
         self.batch_norm_3.bias.requires_grad = False
         self.batch_norm_3.eval()

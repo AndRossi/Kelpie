@@ -33,6 +33,8 @@ REGULARIZER_NAME = "regularizer"                # name of the regularization tec
 REGULARIZER_WEIGHT = "regularizer_weight"       # weight for the regularization in the loss
 LABEL_SMOOTHING = "label_smoothing"             # label smoothing value
 
+GAMMA = "gamma"
+
 class Model(nn.Module):
     """
         The Model class provides the interface that any LP model should implement.
@@ -58,6 +60,13 @@ class Model(nn.Module):
     def __init__(self, dataset: Dataset):
         nn.Module.__init__(self)
         self.dataset = dataset
+
+    def is_minimizer(self):
+        """
+            This method specifies whether this model aims at minimizing of maximizing scores.
+            :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        pass
 
     def score(self, samples: numpy.array) -> numpy.array:
         """
@@ -168,13 +177,6 @@ class KelpieModel(Model):
         In addition to that, a KelpieModels also
     """
 
-    def is_minimizer(self):
-        """
-        This method specifies whether this model aims at minimizing of maximizing scores .
-        :return: True if in this model low scores are better than high scores; False otherwise.
-        """
-        pass
-
     # override
     def predict_samples(self,
                         samples: numpy.array,
@@ -204,7 +206,8 @@ class KelpieModel(Model):
 
         :return:
         """
-        # this is necessary
+
+    # this is necessary
     def update_embeddings(self):
         with torch.no_grad():
             self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
@@ -224,7 +227,7 @@ class KelpieModel(Model):
         """
         self.training = mode
         for module in self.children():
-            if not isinstance(module, torch.nn.BatchNorm1d) or isinstance(module, torch.nn.BatchNorm2d):
+            if not isinstance(module, Model) or isinstance(module, torch.nn.BatchNorm1d) or isinstance(module, torch.nn.BatchNorm2d):
                 module.train(mode)
         return self
 

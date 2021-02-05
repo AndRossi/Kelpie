@@ -77,6 +77,13 @@ class TuckER(Model):
             xavier_normal_(self.entity_embeddings)
             xavier_normal_(self.relation_embeddings)
 
+    def is_minimizer(self):
+        """
+        This method specifies whether this model aims at minimizing of maximizing scores .
+        :return: True if in this model low scores are better than high scores; False otherwise.
+        """
+        return False
+
     def score(self, samples: np.array) -> np.array:
         """
             Compute scores for the passed samples

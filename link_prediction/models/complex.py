@@ -30,7 +30,7 @@ class ComplEx(Model):
         """
             Constructor for ComplEx model.
 
-            :param dataset: the ComplExDataset on which to train and evaluate the model
+            :param dataset: the Dataset on which to train and evaluate the model
             :param hyperparameters: hyperparameters dictionary.
                                     Must contain at least DIMENSION and INIT_SCALE
         """
