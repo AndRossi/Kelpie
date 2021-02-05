@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Tuple, Any
 from dataset import Dataset
-from engines.entity_similarity import extract_comparable_entities
 from engines.gradient_engine import GradientEngine
 from model import Model, LEARNING_RATE
 
@@ -89,14 +88,11 @@ class Kelpie:
         most_relevant_train_samples = [x[0] for x in train_samples_with_relevance]
 
         # extract the top entities most "comparable" to the perspective entity
-        entities_with_comparability = extract_comparable_entities(model=self.model,
-                                                                  dataset=self.dataset,
-                                                                  sample=sample_to_explain,
-                                                                  perspective=perspective,
-                                                                  num_entities=num_similar_entities,
-                                                                  policy="random")
-        comparable_entities = [x[0] for x in entities_with_comparability]
-
+        comparable_entities = self.engine.extract_entities_for(model=self.model,
+                                                               dataset=self.dataset,
+                                                               sample=sample_to_explain,
+                                                               perspective=perspective,
+                                                               k=num_similar_entities)
 
         terminate = False
         rule_length = 1
@@ -212,16 +208,17 @@ class Kelpie:
                                                                                perspective=perspective,
                                                                                top_k=num_relevant_samples)
 
+        # extract the top entities most "comparable" to the perspective entity
+        comparable_entities = self.engine.extract_entities_for(model=self.model,
+                                                               dataset=self.dataset,
+                                                               sample=sample_to_explain,
+                                                               perspective=perspective,
+                                                               k=num_similar_entities,
+                                                               degree_cap=200)
+        print([self.dataset.entity_id_2_name[x] for x in comparable_entities])
+
         most_relevant_train_samples = [x[0] for x in train_samples_with_relevance[:num_relevant_samples]]
 
-        # extract the top entities most "comparable" to the perspective entity
-        entities_with_comparability = extract_comparable_entities(model=self.model,
-                                                                  dataset=self.dataset,
-                                                                  sample=sample_to_explain,
-                                                                  perspective=perspective,
-                                                                  num_entities=num_similar_entities,
-                                                                  policy="random")
-        comparable_entities = [x[0] for x in entities_with_comparability]
 
         original_sample_2_coverage = defaultdict(lambda: 0.0)
         original_nple_2_coverage = defaultdict(lambda: 0.0)
@@ -245,7 +242,7 @@ class Kelpie:
             # obtain the relevance of those samples in addition, with respect to the the sample to explain
             comparable_samples_with_relevance, \
             comparable_sample_2_perturbed_score, \
-            target_entity_score, best_entity_score  = self.engine.simple_addition_explanations(sample_to_explain=comparable_sample_to_explain,
+            target_entity_score, best_entity_score  = self.engine.simple_addition_explanations(sample_to_convert=comparable_sample_to_explain,
                                                                                                perspective=perspective,
                                                                                                samples_to_add=comparable_samples_to_add)
 
@@ -270,10 +267,10 @@ class Kelpie:
                 original_sample_2_coverage[cur_sample] += 1.0/(float(i+1.0)*len(comparable_entities))
 
 
-            out = self.engine.nple_addition_explanations(sample_to_explain=comparable_sample_to_explain,
-                                                                                             perspective=perspective,
-                                                                                             samples_to_add=comparable_samples_to_add,
-                                                                                             n=2)
+            out = self.engine.nple_addition_explanations(sample_to_convert=comparable_sample_to_explain,
+                                                         perspective=perspective,
+                                                         samples_to_add=comparable_samples_to_add,
+                                                         n=2)
             if len(out) == 4:
                 comparable_nples_with_relevance, \
                 comparable_nple_2_perturbed_score, \
@@ -347,7 +344,7 @@ class Kelpie:
             repl_added_samples_with_relevance, \
             repl_added_sample_2_perturbed_score, \
             target_entity_score, \
-            best_entity_score = self.engine.simple_addition_explanations(sample_to_explain=sample_to_convert,
+            best_entity_score = self.engine.simple_addition_explanations(sample_to_convert=sample_to_convert,
                                                                          perspective=perspective,
                                                                          samples_to_add=repl_samples_to_add)
 
@@ -359,7 +356,7 @@ class Kelpie:
             repl_added_nples_with_relevance, \
             repl_added_nple_2_perturbed_score, \
             target_entity_score, \
-            best_entity_score = self.engine.nple_addition_explanations(sample_to_explain=sample_to_convert,
+            best_entity_score = self.engine.nple_addition_explanations(sample_to_convert=sample_to_convert,
                                                                        perspective=perspective,
                                                                        samples_to_add=repl_samples_to_add,
                                                                        n=combination_length)
