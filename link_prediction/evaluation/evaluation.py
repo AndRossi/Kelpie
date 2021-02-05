@@ -1,5 +1,6 @@
 import html
 
+from link_prediction.models.transe import TransE
 from model import Model, KelpieModel
 import numpy as np
 
@@ -13,9 +14,23 @@ class Evaluator:
             write_output:bool = False):
 
         self.model.cuda()
+        batch_size = 1000
 
-        # run prediction on the samples
-        scores, ranks, predictions = self.model.predict_samples(samples)
+        # if the model is Transe, it uses too much memory to allow computation of all samples altogether
+        if len(samples) > batch_size and isinstance(self.model, TransE):
+            scores, ranks, predictions = [], [], []
+            batch_start = 0
+            while batch_start < len(samples):
+                cur_batch = samples[batch_start: min(len(samples), batch_start+batch_size)]
+                cur_batch_scores, cur_batch_ranks, cur_batch_predictions = self.model.predict_samples(cur_batch)
+                scores += cur_batch_scores
+                ranks += cur_batch_ranks
+                predictions += cur_batch_predictions
+
+                batch_start += batch_size
+        else:
+            # run prediction on all the samples
+            scores, ranks, predictions = self.model.predict_samples(samples)
 
         all_ranks = []
         for i in range(samples.shape[0]):
@@ -92,8 +107,24 @@ class KelpieEvaluator(Evaluator):
              write_output:bool = False,
              original_mode:bool = False):
 
-        # run prediction on the samples
-        scores, ranks, predictions = self.model.predict_samples(samples, original_mode)
+        batch_size = 1000
+
+        # if the model is Transe, it uses too much memory to allow computation of all samples altogether
+        if len(samples) > batch_size and isinstance(self.model, TransE):
+            scores, ranks, predictions = [], [], []
+            batch_start = 0
+            while batch_start < len(samples):
+                cur_batch = samples[batch_start: min(len(samples), batch_start+batch_size)]
+                cur_batch_scores, cur_batch_ranks, cur_batch_predictions = self.model.predict_samples(cur_batch, original_mode)
+                scores += cur_batch_scores
+                ranks += cur_batch_ranks
+                predictions += cur_batch_predictions
+
+                batch_start += batch_size
+
+        else:
+            # run prediction on all the samples
+            scores, ranks, predictions = self.model.predict_samples(samples, original_mode)
 
         all_ranks = []
         for i in range(samples.shape[0]):
@@ -103,4 +134,4 @@ class KelpieEvaluator(Evaluator):
         if write_output:
             self._write_output(samples, ranks, predictions)
 
-        return self.mrr(all_ranks), self.hits_at(all_ranks, 1)
+        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10)
