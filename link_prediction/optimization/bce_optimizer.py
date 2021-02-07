@@ -56,10 +56,8 @@ class BCEOptimizer(Optimizer):
               evaluate_every:int =-1,
               valid_samples:np.array = None):
 
-        training_samples = np.vstack((train_samples,
-                                      self.dataset.invert_samples(train_samples)))
-
-        er_vocab = self.extract_er_vocab(training_samples)
+        all_training_samples = np.vstack((train_samples, self.dataset.invert_samples(train_samples)))
+        er_vocab = self.extract_er_vocab(all_training_samples)
         er_vocab_pairs = list(er_vocab.keys())
 
         self.model.cuda()
@@ -111,7 +109,7 @@ class BCEOptimizer(Optimizer):
         self.model.train()
 
         with tqdm.tqdm(total=len(er_vocab_pairs), unit='ex', disable=not self.verbose) as bar:
-            bar.set_description(f'train loss')
+            bar.set_description('train loss')
             batch_start = 0
 
             while batch_start < len(er_vocab_pairs):
@@ -160,7 +158,7 @@ class KelpieBCEOptimizer(BCEOptimizer):
         self.model.train()
 
         with tqdm.tqdm(total=len(er_vocab_pairs), unit='ex', disable=not self.verbose) as bar:
-            bar.set_description(f'train loss')
+            bar.set_description('train loss')
 
             batch_start = 0
             while batch_start < len(er_vocab_pairs):

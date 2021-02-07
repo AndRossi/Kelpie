@@ -65,15 +65,15 @@ class MultiClassNLLOptimizer(Optimizer):
               valid_samples:np.array = None):
 
         # extract the direct and inverse train facts
-        training_samples = np.vstack((train_samples,
-                                      self.model.dataset.invert_samples(train_samples)))
+        all_training_samples = np.vstack((train_samples,
+                                          self.model.dataset.invert_samples(train_samples)))
 
         # batch size must be the minimum between the passed value and the number of Kelpie training facts
-        batch_size = min(self.batch_size, len(training_samples))
+        batch_size = min(self.batch_size, len(all_training_samples))
 
         cur_loss = 0
         for e in range(self.epochs):
-            cur_loss = self.epoch(batch_size, training_samples)
+            cur_loss = self.epoch(batch_size, all_training_samples)
 
             if evaluate_every > 0 and valid_samples is not None and \
                     (e + 1) % evaluate_every == 0:
@@ -103,7 +103,7 @@ class MultiClassNLLOptimizer(Optimizer):
         loss = nn.CrossEntropyLoss(reduction='mean')
 
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
-            bar.set_description(f'train loss')
+            bar.set_description('train loss')
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
@@ -113,7 +113,7 @@ class MultiClassNLLOptimizer(Optimizer):
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
-                bar.set_postfix(loss=f'{l.item():.0f}')
+                bar.set_postfix(loss='{l.item():.0f}')
 
 
     def step_on_batch(self, loss, batch):
@@ -153,7 +153,7 @@ class KelpieMultiClassNLLOptimizer(MultiClassNLLOptimizer):
         loss = nn.CrossEntropyLoss(reduction='mean')
 
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
-            bar.set_description(f'train loss')
+            bar.set_description('train loss')
 
             batch_start = 0
             while batch_start < training_samples.shape[0]:
@@ -167,4 +167,4 @@ class KelpieMultiClassNLLOptimizer(MultiClassNLLOptimizer):
 
                 batch_start += self.batch_size
                 bar.update(batch.shape[0])
-                bar.set_postfix(loss=f'{l.item():.0f}')
+                bar.set_postfix(loss='{l.item():.0f}')
