@@ -2,11 +2,12 @@
 __pycache__/
 .idea/
 
-paths/
+### Kelpie paths not to add to git for the time being
 stored_models
 data
 end_to_end_testing
-link_prediction/models/experiments/
+link_prediction/models/experiments
+removal_testing
 
 ### OS generated files 
 
