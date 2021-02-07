@@ -5,6 +5,8 @@ __pycache__/
 paths/
 stored_models
 data
+end_to_end_testing
+link_prediction/models/experiments
 
 ### OS generated files 
 
