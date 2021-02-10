@@ -1,10 +1,16 @@
 import math
-from typing import Type, Tuple, Any
+from typing import Tuple, Any
 
 import numpy
 
 from dataset import KelpieDataset, Dataset
 from engines.engine import ExplanationEngine
+from link_prediction.models.complex import ComplEx
+from link_prediction.models.conve import ConvE
+from link_prediction.models.transe import TransE
+from link_prediction.optimization.bce_optimizer import KelpieBCEOptimizer
+from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiClassNLLOptimizer
+from link_prediction.optimization.pairwise_ranking_optimizer import KelpiePairwiseRankingOptimizer
 from model import Model, KelpieModel
 
 class PostTrainingEngine(ExplanationEngine):
@@ -16,7 +22,6 @@ class PostTrainingEngine(ExplanationEngine):
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
-                 post_training_optimizer_class: Type,
                  hyperparameters: dict):
         """
             PostTrainingEngine constructor.
@@ -28,15 +33,24 @@ class PostTrainingEngine(ExplanationEngine):
         """
 
         ExplanationEngine.__init__(self, model=model, dataset=dataset, hyperparameters=hyperparameters)
+
+        if isinstance(self.model, ComplEx):
+            self.kelpie_optimizer_class = KelpieMultiClassNLLOptimizer
+        elif isinstance(self.model, ConvE):
+            self.kelpie_optimizer_class = KelpieBCEOptimizer
+        elif isinstance(self.model, TransE):
+            self.kelpie_optimizer_class = KelpiePairwiseRankingOptimizer
+        else:
+            self.kelpie_optimizer_class = KelpieMultiClassNLLOptimizer
+
         if isinstance(model, KelpieModel):
             raise Exception("The model passed to the PostTrainingEngine is already a post-trainable KelpieModel.")
 
-        self.kelpie_optimizer_class = post_training_optimizer_class
 
     def simple_removal_explanations(self,
                                     sample_to_explain: Tuple[Any, Any, Any],
                                     perspective: str,
-                                    top_k: int):
+                                    top_k: int =-1):
         """
             Given a sample to explain, and the perspective from which to explain it,
             find the k training samples containing the perspective entity that, if removed (one by one)
@@ -142,6 +156,10 @@ class PostTrainingEngine(ExplanationEngine):
         original_best_entity_score, \
         original_target_entity_rank = self.extract_detailed_performances_on_sample(self.model, sample_to_convert)
 
+        print(original_target_entity_score)
+        print(original_best_entity_score)
+        print(original_target_entity_rank)
+
         # create a Kelpie Dataset focused on the original id of the entity to explain
         kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
 
@@ -156,6 +174,10 @@ class PostTrainingEngine(ExplanationEngine):
         base_pt_target_entity_score, \
         base_pt_best_entity_score, \
         base_pt_target_entity_rank = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_convert)
+
+        print(base_pt_target_entity_score)
+        print(base_pt_best_entity_score)
+        print(base_pt_target_entity_rank)
 
         # finally, check how the kelpie post-trained models perform on the kelpie sample to explain.
         # This means checking how the "kelpie entities", each with its specific addition, perform.
@@ -179,6 +201,10 @@ class PostTrainingEngine(ExplanationEngine):
             pt_target_entity_score, \
             pt_best_entity_score, \
             pt_target_entity_rank = self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_convert)
+
+            print(pt_target_entity_score)
+            print(pt_best_entity_score)
+            print(pt_target_entity_rank)
 
             # undo the addition, to allow the following iterations of this loop
             kelpie_dataset.undo_last_training_samples_addition()
