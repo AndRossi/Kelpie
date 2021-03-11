@@ -1,11 +1,10 @@
-from collections import defaultdict
 from typing import Tuple, Any
-
 from dataset import Dataset
 from engines.post_training_engine import PostTrainingEngine
 from model import Model
-from prefilters.pt_prefilter import PostTrainingPreFilter
-from rule_extraction.extractor import SufficientRulesExtractor
+#from prefilters.pt_prefilter import PostTrainingPreFilter
+from prefilters.topology_prefilter import TopologyPreFilter
+from rule_extraction.probabilistic_extractor import ProbabilisticSufficientRuleExtractor
 
 
 class Kelpie:
@@ -29,9 +28,9 @@ class Kelpie:
         self.dataset = dataset
         self.hyperparameters = hyperparameters
 
-        self.prefilter = PostTrainingPreFilter(model=model,
-                                               dataset=dataset,
-                                               hyperparameters=hyperparameters)
+        self.prefilter = TopologyPreFilter(model=model,
+                                           dataset=dataset)
+                                           #hyperparameters=hyperparameters)
         self.engine = PostTrainingEngine(model=model,
                                          dataset=dataset,
                                          hyperparameters=hyperparameters)
@@ -66,13 +65,14 @@ class Kelpie:
                                                                           perspective=perspective,
                                                                           top_k=num_promising_samples)
 
-        rule_extractor = SufficientRulesExtractor(model=self.model,
-                                                  dataset=self.dataset,
-                                                  hyperparameters=self.hyperparameters,
-                                                  sample_to_explain=sample_to_explain,
-                                                  perspective=perspective,
-                                                  num_entities_to_convert=num_entities_to_convert)
+        #rule_extractor = BruteForceSufficientRuleExtractor(model=self.model,
 
-        rules_with_coverage = rule_extractor.extract_rules(samples_to_add=most_promising_samples,
-                                                           rule_length=1)
-        return rules_with_coverage, rule_extractor.entities_to_convert
+        rule_extractor = ProbabilisticSufficientRuleExtractor(model=self.model,
+                                                           dataset=self.dataset,
+                                                           hyperparameters=self.hyperparameters,
+                                                           sample_to_explain=sample_to_explain,
+                                                           perspective=perspective,
+                                                           num_entities_to_convert=num_entities_to_convert)
+
+        rules_with_relevance = rule_extractor.extract_rules(samples_to_add=most_promising_samples)
+        return rules_with_relevance, rule_extractor.entities_to_convert

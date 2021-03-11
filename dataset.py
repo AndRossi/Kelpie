@@ -340,12 +340,11 @@ class Dataset:
 
         return numpy.array(result) if as_numpy else result
 
-def home_folder_for(dataset_name:str):
-    dataset_home = os.path.join(DATA_PATH, dataset_name)
-    if os.path.isdir(dataset_home):
-        return dataset_home
-    else:
-        raise Exception("Folder %s does not exist" % dataset_home)
+    def printable_sample(self, sample: Tuple[int, int, int]):
+        return "<" + ", ".join(self.sample_to_fact(sample)) + ">"
+
+    def printable_nple(self, nple: list):
+        return" + ".join([self.printable_sample(sample) for sample in nple])
 
 class KelpieDataset(Dataset):
     """
@@ -501,6 +500,7 @@ class KelpieDataset(Dataset):
         return Dataset.replace_entity_in_sample(sample=kelpie_sample,
                                                 old_entity=self.kelpie_entity_id,
                                                 new_entity=self.original_entity_id)
+
 
     ### private utility methods
     @staticmethod
