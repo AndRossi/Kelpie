@@ -12,6 +12,7 @@ from link_prediction.optimization.bce_optimizer import KelpieBCEOptimizer
 from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiClassNLLOptimizer
 from link_prediction.optimization.pairwise_ranking_optimizer import KelpiePairwiseRankingOptimizer
 from model import Model, KelpieModel
+from collections import OrderedDict
 
 class PostTrainingEngine(ExplanationEngine):
 
@@ -34,6 +35,7 @@ class PostTrainingEngine(ExplanationEngine):
 
         ExplanationEngine.__init__(self, model=model, dataset=dataset, hyperparameters=hyperparameters)
 
+
         if isinstance(self.model, ComplEx):
             self.kelpie_optimizer_class = KelpieMultiClassNLLOptimizer
         elif isinstance(self.model, ConvE):
@@ -45,6 +47,19 @@ class PostTrainingEngine(ExplanationEngine):
 
         if isinstance(model, KelpieModel):
             raise Exception("The model passed to the PostTrainingEngine is already a post-trainable KelpieModel.")
+
+        # these data structures are used store permanently, for any fact:
+        #   - the score
+        #   - the score obtained by the best scoring tail (in "head" perspective) or head (in "tail" perspective)
+        #   - the rank obtained by the target tail (in "head" perspective) or head (in "tail" perspective) score)
+        self._original_model_results = {}  # map original samples to scores and ranks from the original model
+        self._base_pt_model_results = {}   # map original samples to scores and ranks from the base post-trained model
+
+        # The kelpie_cache is a simple LRU cache that allows reuse of KelpieDatasets and of base post-training results
+        # without need to re-build them from scratch every time.
+        self._kelpie_dataset_cache_size = 20
+        self._kelpie_dataset_cache = OrderedDict()
+
 
 
     def simple_removal_explanations(self,
@@ -100,24 +115,15 @@ class PostTrainingEngine(ExplanationEngine):
             (cur_head_rank, cur_tail_rank), _ = post_trained_kelpie_model.predict_sample(sample=kelpie_sample_to_explain, original_mode=False)
             print("\tIteration " + str(i) + ": skipping sample <"+ ", ".join(kelpie_dataset.sample_to_fact(skipped_training_sample)) + ">")
 
-            # we want to give higher priority to the facts that, when removed, worsen the score the most. So:
-            # if the model is a minimizer the greater cur_direct_score is than base_direct_score, the more relevant the removed fact
-            if self.model.is_minimizer():
-                score_worsening = cur_direct_score - base_direct_score
-            # if the model is a maximizer that lesser cur_direct_score is than base_direct_score, the more relevant the removed fact
-            else:
-                score_worsening = base_direct_score - cur_direct_score
-
-            #print("\t\tDirect score in the post-trained model: " + str(cur_direct_score) + "(base was" + str(base_direct_score) + ")")
-            #print("\t\tDirect tail score worsening: " + str(score_worsening))
-
+            # we want to give higher priority to the facts that, when removed, worsen the rank and the score the most.
             rank_worsening = cur_tail_rank - base_tail_rank
-            #print("\t\tRank worsening: " + str(rank_worsening))
 
-            relevance = rank_worsening + self.sigmoid(score_worsening)
-            #print("\t\tRelevance: " + str(relevance))
+            # if the model is a minimizer the greater cur_direct_score is than base_direct_score, the more relevant the removed fact;
+            # if the model is a maximizer that lesser cur_direct_score is than base_direct_score, the more relevant the removed fact
+            score_worsening = cur_direct_score - base_direct_score if self.model.is_minimizer() else base_direct_score - cur_direct_score
+            relevance = float(rank_worsening + self.sigmoid(score_worsening))/float(cur_tail_rank)
 
-            results.append((skipped_training_sample, cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, relevance))
+            results.append((tuple(skipped_training_sample), cur_direct_score, cur_inverse_score, cur_head_rank, cur_tail_rank, relevance))
 
         results = sorted(results, key=lambda element: element[-1], reverse=True)
 
@@ -127,16 +133,17 @@ class PostTrainingEngine(ExplanationEngine):
             return results[:top_k]
 
 
-    def simple_addition_explanations(self,
-                                     sample_to_convert: Tuple[Any, Any, Any],
-                                     perspective: str,
-                                     samples_to_add: list):
+    def addition_relevance(self,
+                           sample_to_convert: Tuple[Any, Any, Any],
+                           perspective: str,
+                           samples_to_add: list):
         """
             Given a "sample to convert" (that is, a sample that the model currently does not predict as true,
-            and that we want to be predicted as true); given the perspective from which to intervene on it;
-            and given and a list of other training samples containing the perspective entity;
-            for each sample in the list, compute an esteem of the relevance it would have if added to the perspective entity
-            to improve the most the prediction of the sample to convert.
+            and that we want to be predicted as true);
+            given the perspective from which to analyze it;
+            and given and a list of other training samples containing the entity to convert;
+            compute the relevance of the samples to add, that is, an estimate of the effect they would have
+            if added (all together) to the perspective entity to improve the prediction of the sample to convert.
 
             :param sample_to_convert: the sample that we would like the model to predict as "true",
                                       in the form of a tuple (head, relation, tail)
@@ -144,187 +151,147 @@ class PostTrainingEngine(ExplanationEngine):
             :param samples_to_add: the list of samples containing the perspective entity
                                    that we want to analyze the effect of, if added to the perspective entity
 
-            :return: an array of pairs, where each pair is a samples_to_add with the extracted value of relevance,
-                     sorted by descending relevance
+            :return:
         """
 
         head_id, relation_id, tail_id = sample_to_convert
-        original_entity_id = head_id if perspective == "head" else tail_id
+        original_entity_to_convert = head_id if perspective == "head" else tail_id
 
-        # check how the original model performs on the original sample to explain
+        # check how the original model performs on the original sample to convert
         original_target_entity_score, \
         original_best_entity_score, \
-        original_target_entity_rank = self.extract_detailed_performances_on_sample(self.model, sample_to_convert)
+        original_target_entity_rank = self.original_results_for(original_sample_to_predict=sample_to_convert)
 
-        print(original_target_entity_score)
-        print(original_best_entity_score)
-        print(original_target_entity_rank)
+        # get from the cache a Kelpie Dataset focused on the original id of the entity to explain,
+        # (or create it from scratch if it is not in cache)
+        kelpie_dataset = self._get_kelpie_dataset_for(original_entity_id=original_entity_to_convert)
 
-        # create a Kelpie Dataset focused on the original id of the entity to explain
-        kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
-
-        # the kelpie sample to convert features the kelpie entity rather than the "real" one
-        kelpie_sample_to_convert = kelpie_dataset.as_kelpie_sample(original_sample=sample_to_convert)
-
-        print("\t\tRunning base post-training before additions...")
-        base_pt_model = self.post_train(kelpie_dataset=kelpie_dataset, kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
-
-        # then check how the base post-trained model performs on the kelpie sample to explain.
-        # This means checking how the "clone entity" (with no additional samples) performs
+        # run base post-training to obtain a "clone" of the perspective entity and see how it performs in the sample to convert
         base_pt_target_entity_score, \
         base_pt_best_entity_score, \
-        base_pt_target_entity_rank = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_convert)
+        base_pt_target_entity_rank = self.base_post_training_results_for(kelpie_dataset=kelpie_dataset,
+                                                                         original_sample_to_predict=sample_to_convert)
 
-        print(base_pt_target_entity_score)
-        print(base_pt_best_entity_score)
-        print(base_pt_target_entity_rank)
+        # run actual post-training by adding the passed samples to the perspective entity and see how it performs in the sample to convert
+        pt_target_entity_score, \
+        pt_best_entity_score, \
+        pt_target_entity_rank = self.addition_post_training_results_for(kelpie_dataset=kelpie_dataset,
+                                                                        original_sample_to_predict=sample_to_convert,
+                                                                        original_samples_to_add=samples_to_add)
 
-        # finally, check how the kelpie post-trained models perform on the kelpie sample to explain.
-        # This means checking how the "kelpie entities", each with its specific addition, perform.
-        added_sample_2_relevance = dict()
-        added_sample_2_pt_results = dict()
-        for i in range(len(samples_to_add)):
-            cur_sample_to_add = samples_to_add[i]
-            print("\t\tIteration " + str(i) + ": adding sample <"+ ", ".join(self.dataset.sample_to_fact(cur_sample_to_add)) + ">")
+        # we want to give higher priority to the facts that, when added, make the score the better (= smaller).
+        rank_improvement = base_pt_target_entity_rank - pt_target_entity_rank
 
-            # we should now create a new Kelpie Dataset identical to kelpie_dataset but also containing cur_sample_to_add.
-            # However this would be awfully time-consuming.
-            # For the sake of efficiency, we will just temporarily add those facts to the current kelpie_dataset
-            # and then undo the addition after the post-training and the evaluation of the post-trained model are over.
-            kelpie_dataset.add_training_samples(numpy.array([cur_sample_to_add]))   # no need to add the "kelpie" version of cur_sample_to_add: the "add_training_samples" method replaces the original entity with the kelpie entity by itself
+        # if the model is a minimizer the smaller pt_target_entity_score is than base_pt_target_entity_score, the more relevant the added fact;
+        # if the model is a maximizer, the greater pt_target_entity_score is than base_pt_target_entity_score, the more relevant the added fact
+        score_improvement = base_pt_target_entity_score - pt_target_entity_score if self.model.is_minimizer() else pt_target_entity_score - base_pt_target_entity_score
 
-            # post-train a kelpie model on the dataset that has undergone the addition
-            cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset, kelpie_train_samples=kelpie_dataset.kelpie_train_samples)  # type: KelpieModel
+        relevance = float(rank_improvement + self.sigmoid(score_improvement)) / float(base_pt_target_entity_rank)
 
-            # then check how the post-trained model performs on the kelpie sample to explain.
-            # This means checking how the "kelpie entity" (with the added sample) performs, rather than the original entity
-            pt_target_entity_score, \
-            pt_best_entity_score, \
-            pt_target_entity_rank = self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_convert)
+        print("\t\tObtained individual relevance: " + str(relevance) + "\n")
 
-            print(pt_target_entity_score)
-            print(pt_best_entity_score)
-            print(pt_target_entity_rank)
-
-            # undo the addition, to allow the following iterations of this loop
-            kelpie_dataset.undo_last_training_samples_addition()
-
-            # we want to give higher priority to the facts that, when added, make the score the better. So:
-            # if the model is a minimizer the smaller pt_target_entity_score is than base_pt_target_entity_score, the more relevant the added fact
-            if self.model.is_minimizer():
-                score_worsening = base_pt_target_entity_score - pt_target_entity_score
-            # if the model is a maximizer, the greater pt_target_entity_score is than base_pt_target_entity_score, the more relevant the added fact
-            else:
-                score_worsening = pt_target_entity_score - base_pt_target_entity_score
-
-            relevance = base_pt_target_entity_rank - pt_target_entity_rank + self.sigmoid(score_worsening)
-
-            added_sample_2_relevance[cur_sample_to_add] = relevance
-            added_sample_2_pt_results[cur_sample_to_add] = (pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank)
-
-        sorted_samples_with_relevance = sorted(added_sample_2_relevance.items(), key=lambda element: element[-1], reverse=True)
-
-        return sorted_samples_with_relevance, \
-               added_sample_2_pt_results, \
+        return relevance, \
                original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
-               base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank
+               base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank,\
+               pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank
 
-    def nple_addition_explanations(self,
-                                   sample_to_convert: Tuple[Any, Any, Any],
-                                   perspective: str,
-                                   samples_to_add: list,
-                                   n: int):
+
+    # private methods that know how to access cache structures
+
+    def _get_kelpie_dataset_for(self, original_entity_id: int) -> KelpieDataset:
         """
-            Given a "sample to convert" (that is, a sample that the model currently does not predict as true,
-            and that we want to be predicted as true); given the perspective from which to intervene on it;
-            given and a list of other training samples containing the perspective entity;
-            and given the length "n" of combinations of training samples to try;
-            for each combination of length "n" of the samples in the list,
-            estimate the relevance that adding that combination of facts to the perspective entity
-            would have to improve the prediction of the sample to convert.
+        Return the value of the queried key in O(1).
+        Additionally, move the key to the end to show that it was recently used.
 
-            :param sample_to_convert: the sample that we would like the model to predict as "true",
-                                      in the form of a tuple (head, relation, tail)
-            :param perspective: the perspective from which to explain the fact: it can be either "head" or "tail"
-            :param samples_to_add: the list of samples containing the perspective entity
-                                   that we want to analyze the effect of, if added to the perspective entity
-            :param n: length of combinations of samples to add to the perspective entity
-
-            :return: an array of pairs, where each pair is a n n-long combination of samples_to_add
-                     coupled with with the corresponding extracted value of relevance, sorted by descending relevance
+        :param original_entity_id:
+        :return:
         """
 
-        # if there are less than n items in samples_to_add
-        # it is not possible to try combinations of length n of samples_to_add
-        if len(samples_to_add) < n:
-            return []
+        if original_entity_id not in self._kelpie_dataset_cache:
 
-        # identify the entity to explain
-        head_id, relation_id, tail_id = sample_to_convert
-        original_entity_id = head_id if perspective == "head" else tail_id
+            kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
+            self._kelpie_dataset_cache[original_entity_id] = kelpie_dataset
+            self._kelpie_dataset_cache.move_to_end(original_entity_id)
 
-        # check how the original model performs on the original sample to explain
-        original_target_entity_score, \
-        original_best_entity_score, \
-        original_target_entity_rank = self.extract_detailed_performances_on_sample(self.model, sample_to_convert)
+            if len(self._kelpie_dataset_cache) > self._kelpie_dataset_cache_size:
+                self._kelpie_dataset_cache.popitem(last=False)
 
-        # create a Kelpie Dataset focused on the original id of the entity to explain
-        kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
-        # the kelpie sample to convert features the kelpie entity rather than the "real" one
-        kelpie_sample_to_convert = kelpie_dataset.as_kelpie_sample(original_sample=sample_to_convert)
+        return self._kelpie_dataset_cache[original_entity_id]
 
-        print("### BASE POST-TRAINING")
-        base_pt_model = self.post_train(kelpie_dataset=kelpie_dataset, kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
+    def original_results_for(self, original_sample_to_predict: numpy.array) :
 
-        # then check how the base post-trained model performs on the kelpie sample to explain.
-        # This means checking how the "clone entity" (with no additional samples) performs
-        base_pt_target_entity_score, \
-        base_pt_best_entity_score, \
-        base_pt_target_entity_rank = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_convert)
+        sample = (original_sample_to_predict[0], original_sample_to_predict[1], original_sample_to_predict[2])
+        if not sample in self._original_model_results:
+            target_entity_score, \
+            best_entity_score, \
+            target_entity_rank = self.extract_detailed_performances_on_sample(self.model, original_sample_to_predict)
 
-        # extract all n-long different combinations of samples
-        samples_nples = self._extract_sample_nples(samples=samples_to_add, n=n)
+            self._original_model_results[sample] = (target_entity_score, best_entity_score, target_entity_rank)
 
-        added_nple_2_perturbed_score = {}
-        added_nple_2_relevance = {}
+        return self._original_model_results[sample]
 
-        for i in range(len(samples_nples)):
-            current_nple_to_add = samples_nples[i]
 
-            # we should now create a new Kelpie Dataset identical to the kelpie_dataset, but also containing the current_nple_to_add.
-            # However this would be awfully time-consuming for a dataset that will only be used for one post-training and evaluation.
-            # So, for the sake of efficiency, we will just temporarily add those facts to the current kelpie_dataset
-            # and then undo the addition as soon as we don't need them anymore.
-            cur_nple_to_add_numpy_arr = numpy.array(current_nple_to_add)
-            kelpie_dataset.add_training_samples(cur_nple_to_add_numpy_arr)
+    def base_post_training_results_for(self,
+                                       kelpie_dataset: KelpieDataset,
+                                       original_sample_to_predict: numpy.array):
 
-            cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset,
-                                               kelpie_train_samples=kelpie_dataset.kelpie_train_samples)  # type: KelpieModel
+        original_sample_to_predict = (original_sample_to_predict[0], original_sample_to_predict[1], original_sample_to_predict[2])
+        kelpie_sample_to_predict = kelpie_dataset.as_kelpie_sample(original_sample=original_sample_to_predict)
 
-            # then check how the post-trained model performs on the kelpie sample to explain.
-            # This means checking how the "kelpie entity" (with the added sample) performs, rather than the original entity
-            pt_target_entity_score, \
-            pt_best_entity_score, \
-            pt_target_entity_rank = self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_convert)
 
-            # undo the addition, to allow the following iterations of this loop
-            kelpie_dataset.undo_last_training_samples_addition()
+        if not original_sample_to_predict in self._base_pt_model_results:
+            original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
+            print("\t\tRunning base post-training on entity " + original_entity_name + " with no additions")
+            base_pt_model = self.post_train(kelpie_dataset=kelpie_dataset,
+                                            kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
 
-            if self.model.is_minimizer():
-                direct_score_improvement = base_pt_target_entity_score - pt_target_entity_score
-            else:
-                direct_score_improvement = pt_target_entity_score - base_pt_target_entity_score
+            # then check how the base post-trained model performs on the kelpie sample to explain.
+            # This means checking how the "clone entity" (with no additional samples) performs
+            base_pt_target_entity_score, \
+            base_pt_best_entity_score, \
+            base_pt_target_entity_rank = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_predict)
 
-            added_nple_2_relevance[current_nple_to_add] = direct_score_improvement
-            added_nple_2_perturbed_score[current_nple_to_add] = pt_target_entity_score
+            self._base_pt_model_results[original_sample_to_predict] = (base_pt_target_entity_score,
+                                                                       base_pt_best_entity_score,
+                                                                       base_pt_target_entity_rank)
 
-        sorted_nples_with_relevance = sorted(added_nple_2_relevance.items(), key=lambda element: element[-1], reverse=True)
+        return self._base_pt_model_results[original_sample_to_predict]
 
-        return sorted_nples_with_relevance, \
-               added_nple_2_perturbed_score, \
-               original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
-               base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank
 
+    def addition_post_training_results_for(self,
+                                           kelpie_dataset: KelpieDataset,
+                                           original_sample_to_predict: numpy.array,
+                                           original_samples_to_add: numpy.array):
+
+        original_sample_to_predict = (original_sample_to_predict[0], original_sample_to_predict[1], original_sample_to_predict[2])
+        kelpie_sample_to_predict = kelpie_dataset.as_kelpie_sample(original_sample=original_sample_to_predict)
+
+        # these are original samples, and not "kelpie" samples.
+        # the "add_training_samples" method replaces the original entity with the kelpie entity by itself
+        kelpie_dataset.add_training_samples(original_samples_to_add)
+
+        original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
+        print("\t\tRunning post-training on entity " + original_entity_name + " adding samples: ")
+        for x in original_samples_to_add:
+            print ("\t\t\t" + kelpie_dataset.printable_sample(x))
+
+        # post-train a kelpie model on the dataset that has undergone the addition
+        cur_kelpie_model = self.post_train(kelpie_dataset=kelpie_dataset,
+                                           kelpie_train_samples=kelpie_dataset.kelpie_train_samples)  # type: KelpieModel
+
+        # then check how the post-trained model performs on the kelpie sample to explain.
+        # This means checking how the "kelpie entity" (with the added sample) performs, rather than the original entity
+        pt_target_entity_score, \
+        pt_best_entity_score, \
+        pt_target_entity_rank = self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict)
+
+        # undo the addition, to allow the following iterations of this loop
+        kelpie_dataset.undo_last_training_samples_addition()
+
+        return pt_target_entity_score, pt_best_entity_score, pt_target_entity_rank
+
+
+    # private methods to do stuff
 
     def post_train(self,
                    kelpie_dataset: KelpieDataset,
