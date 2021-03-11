@@ -218,8 +218,8 @@ class KelpieModel(Model):
         This method overrides the traditional train() implementation of torch.nn.Module,
         in which a.train() sets all children of a to train mode.
 
-        In KelpieModels, in post-training any BatchNorm1d layers must NOT be put in train mode,
-        because even in post-training they MUST remain constant.
+        In KelpieModels, in post-training any layers, including BatchNorm1d or BatchNorm2d,
+        must NOT be put in train mode, because even in post-training they MUST remain constant.
 
         So this method overrides the traditional train() by skipping any BatchNorm1d children
         :param mode:
@@ -227,7 +227,11 @@ class KelpieModel(Model):
         """
         self.training = mode
         for module in self.children():
-            if not isinstance(module, Model) or isinstance(module, torch.nn.BatchNorm1d) or isinstance(module, torch.nn.BatchNorm2d):
+            if not (isinstance(module, Model) or
+                    isinstance(module, torch.nn.BatchNorm1d) or
+                    isinstance(module, torch.nn.BatchNorm2d) or
+                    isinstance(module, torch.nn.Linear) or
+                    isinstance(module, torch.nn.Conv2d)):
                 module.train(mode)
         return self
 
