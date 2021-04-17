@@ -5,7 +5,8 @@ import torch
 from torch.nn import Parameter
 from torch.nn.init import xavier_normal_
 
-from dataset import Dataset, KelpieDataset
+from dataset import Dataset
+from kelpie_dataset import KelpieDataset
 from model import Model, DIMENSION, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, KelpieModel
 
 
@@ -144,6 +145,46 @@ class ConvE(Model):
 
         return output_scores
 
+
+    def criage_first_step(self, samples: np.array):
+
+        head_embeddings = self.entity_embeddings[samples[:, 0]]
+        head_embeddings = head_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
+
+        # list of relation embeddings for the relations of the heads
+        relation_embeddings = self.relation_embeddings[samples[:, 1]]
+        relation_embeddings = relation_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
+
+        # tail_embeddings = self.entity_embeddings[samples[:, 2]].view(-1, 1, self.embedding_width, self.embedding_height)
+
+        stacked_inputs = torch.cat([head_embeddings, relation_embeddings], 2)
+        stacked_inputs = self.batch_norm_1(stacked_inputs)
+        stacked_inputs = self.input_dropout(stacked_inputs)
+
+        feature_map = self.convolutional_layer(stacked_inputs)
+        feature_map = self.batch_norm_2(feature_map)
+        feature_map = torch.relu(feature_map)
+        feature_map = self.feature_map_dropout(feature_map)
+        feature_map = feature_map.view(feature_map.shape[0], -1)
+
+        x = self.hidden_layer(feature_map)
+        x = self.hidden_dropout(x)
+        x = self.batch_norm_3(x)
+        x = torch.relu(x)
+
+        return x
+
+    def criage_last_step(self,
+                         x: torch.Tensor,
+                         tail_embeddings: torch.Tensor):
+        scores = torch.mm(x, tail_embeddings.transpose(1, 0))
+
+        #x += self.b.expand_as(x)
+        scores = torch.sigmoid(scores)
+        output_scores = torch.diagonal(scores)
+        return output_scores
+
+
     def all_scores(self, samples: np.array) -> np.array:
         """
             For each of the passed samples, compute scores for all possible tail entities.
@@ -277,7 +318,8 @@ class KelpieConvE(KelpieModel, ConvE):
     def __init__(
             self,
             dataset: KelpieDataset,
-            model: ConvE):
+            model: ConvE,
+            init_tensor=None):
 
         ConvE.__init__(self,
                         dataset=dataset,
@@ -299,6 +341,11 @@ class KelpieConvE(KelpieModel, ConvE):
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
+        # the tensor from which to initialize the kelpie_entity_embedding;
+        # if it is None it is initialized randomly
+        if init_tensor is None:
+            init_tensor = torch.rand(1, self.dimension)
+
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
@@ -309,7 +356,7 @@ class KelpieConvE(KelpieModel, ConvE):
 
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
+        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
 

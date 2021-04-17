@@ -6,7 +6,8 @@ import numpy as np
 from torch.nn import Parameter
 from torch.nn.init import xavier_normal_
 
-from dataset import KelpieDataset, Dataset
+from dataset import Dataset
+from kelpie_dataset import KelpieDataset
 from model import Model, DIMENSION, KelpieModel
 
 
@@ -271,7 +272,8 @@ class KelpieTransE(KelpieModel, TransE):
     def __init__(
             self,
             dataset: KelpieDataset,
-            model: TransE):
+            model: TransE,
+            init_tensor=None):
 
         TransE.__init__(self,
                         dataset=dataset,
@@ -286,6 +288,11 @@ class KelpieTransE(KelpieModel, TransE):
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
+        # the tensor from which to initialize the kelpie_entity_embedding;
+        # if it is None it is initialized randomly
+        if init_tensor is None:
+            init_tensor = torch.rand(1, self.dimension)
+
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
@@ -293,10 +300,8 @@ class KelpieTransE(KelpieModel, TransE):
         # If I used .cuda() outside the Parameter, like
         #       self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension), requires_grad=True).cuda()
         # IT WOULD NOT WORK because cuda() returns a Tensor, not a Parameter.
-
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
-
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
+        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
             xavier_normal_(self.kelpie_entity_embedding)
 

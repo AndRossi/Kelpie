@@ -4,7 +4,8 @@ import numpy as np
 import torch
 from torch.nn import Parameter
 
-from dataset import Dataset, KelpieDataset
+from dataset import Dataset
+from kelpie_dataset import KelpieDataset
 from model import Model, DIMENSION, INIT_SCALE, KelpieModel
 
 
@@ -283,7 +284,8 @@ class KelpieDistMult(KelpieModel, DistMult):
     def __init__(
             self,
             dataset: KelpieDataset,
-            model: DistMult):
+            model: DistMult,
+            init_tensor=None):
 
         DistMult.__init__(self,
                          dataset=dataset,
@@ -299,6 +301,11 @@ class KelpieDistMult(KelpieModel, DistMult):
         frozen_entity_embeddings = model.entity_embeddings.clone().detach()
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
+        # the tensor from which to initialize the kelpie_entity_embedding;
+        # if it is None it is initialized randomly
+        if init_tensor is None:
+            init_tensor = torch.rand(1, self.dimension)
+
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
@@ -309,7 +316,7 @@ class KelpieDistMult(KelpieModel, DistMult):
 
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.dimension).cuda(), requires_grad=True)
+        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
         with torch.no_grad():           # Initialize as any other embedding
             self.kelpie_entity_embedding *= self.init_scale
 

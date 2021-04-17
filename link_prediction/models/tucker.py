@@ -7,7 +7,8 @@ import numpy as np
 from torch.nn import Parameter
 from torch.nn.init import xavier_normal_
 
-from dataset import KelpieDataset, Dataset
+from dataset import Dataset
+from kelpie_dataset import KelpieDataset
 from model import Model, KelpieModel, \
     ENTITY_DIMENSION, RELATION_DIMENSION, INPUT_DROPOUT, HIDDEN_DROPOUT_1, HIDDEN_DROPOUT_2
 
@@ -307,7 +308,7 @@ class KelpieTuckER(KelpieModel, TuckER):
             self,
             dataset: KelpieDataset,
             model: TuckER,
-            ):
+            init_tensor: None):
         TuckER.__init__(self,
                         dataset=dataset,
                         hyperparameters={ENTITY_DIMENSION: model.entity_dimension,
@@ -329,6 +330,11 @@ class KelpieTuckER(KelpieModel, TuckER):
         frozen_relation_embeddings = model.relation_embeddings.clone().detach()
         frozen_core = model.core_tensor.clone().detach()
 
+        # the tensor from which to initialize the kelpie_entity_embedding;
+        # if it is None it is initialized randomly
+        if init_tensor is None:
+            init_tensor = torch.rand(1, self.entity_dimension)
+
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
         # and to pass them to the Optimizer for optimization.
@@ -339,7 +345,7 @@ class KelpieTuckER(KelpieModel, TuckER):
 
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
-        self.kelpie_entity_embedding = Parameter(torch.rand(1, self.entity_dimension).cuda(), requires_grad=True)
+        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
         self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
         self.relation_embeddings = frozen_relation_embeddings
         self.core_tensor = frozen_core
