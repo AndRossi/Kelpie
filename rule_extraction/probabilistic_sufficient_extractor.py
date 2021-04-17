@@ -33,7 +33,7 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
         :param num_entities_to_convert
         """
 
-        super().__init__(model, dataset, hyperparameters, sample_to_explain, perspective, num_entities_to_convert)
+        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert)
 
         self.window_size = 10
 
@@ -183,9 +183,9 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
             original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
             base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank, \
             pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank = \
-                self.engine.simple_addition_relevance(sample_to_convert=r_sample_to_convert,
-                                                      perspective=self.perspective,
-                                                      samples_to_add=r_nple_to_add)
+                self.engine.addition_relevance(sample_to_convert=r_sample_to_convert,
+                                               perspective=self.perspective,
+                                               samples_to_add=r_nple_to_add)
 
             rule_2_individual_relevances[rule].append(individual_relevance)
 
@@ -204,7 +204,7 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
                             str(individual_relevance))
 
         # add the rule global relevance to all the outlines that refer to this rule
-        global_relevance = self._avg(rule_2_individual_relevances[rule])
+        global_relevance = self._average(rule_2_individual_relevances[rule])
 
         complete_outlines = [x + ";" + str(global_relevance) + "\n" for x in outlines]
         with open("output_details_" + str(rule_length) + ".csv", "a") as output_file:
@@ -220,3 +220,5 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
         for item in l:
             result += float(item)
         return result/float(len(l))
+
+
