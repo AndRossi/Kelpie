@@ -2,7 +2,7 @@ from typing import Any, Tuple
 import numpy
 import torch
 from torch import nn
-from dataset import Dataset, KelpieDataset
+from dataset import Dataset
 
 # KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
 DIMENSION = "dimension"                         # embedding dimension, when both entity and relation embeddings have same dimension

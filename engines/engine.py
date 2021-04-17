@@ -5,7 +5,7 @@ from typing import Tuple, Any
 import numpy
 import torch
 
-from dataset import Dataset, ONE_TO_ONE, MANY_TO_ONE, KelpieDataset
+from dataset import Dataset, ONE_TO_ONE, MANY_TO_ONE
 from model import Model
 
 
