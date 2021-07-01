@@ -9,14 +9,14 @@ class Evaluator:
         self.model = model
         self.dataset = model.dataset    # the Dataset may be useful to convert ids to names
 
-    def eval(self,
-            samples: np.array,
-            write_output:bool = False):
+    def evaluate(self,
+                samples: np.array,
+                write_output:bool = False):
 
         self.model.cuda()
-        batch_size = 1000
 
         # if the model is Transe, it uses too much memory to allow computation of all samples altogether
+        batch_size = 500
         if len(samples) > batch_size and isinstance(self.model, TransE):
             scores, ranks, predictions = [], [], []
             batch_start = 0
@@ -40,7 +40,7 @@ class Evaluator:
         if write_output:
             self._write_output(samples, ranks, predictions)
 
-        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10)
+        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10), self.mr(all_ranks)
 
     def _write_output(self, samples, ranks, predictions):
         result_lines = []
@@ -87,6 +87,10 @@ class Evaluator:
         return mrr
 
     @staticmethod
+    def mr(values):
+        return np.average(values)
+
+    @staticmethod
     def hits_at(values, k:int):
         hits = 0
         for value in values:
@@ -102,10 +106,10 @@ class KelpieEvaluator(Evaluator):
         self.model = model
 
     # override
-    def eval(self,
-             samples: np.array,
-             write_output:bool = False,
-             original_mode:bool = False):
+    def evaluate(self,
+                 samples: np.array,
+                 write_output:bool = False,
+                 original_mode:bool = False):
 
         batch_size = 1000
 
@@ -134,4 +138,4 @@ class KelpieEvaluator(Evaluator):
         if write_output:
             self._write_output(samples, ranks, predictions)
 
-        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10)
+        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10), self.mr(all_ranks)
