@@ -221,7 +221,7 @@ class KelpieModel(Model):
         In KelpieModels, in post-training any layers, including BatchNorm1d or BatchNorm2d,
         must NOT be put in train mode, because even in post-training they MUST remain constant.
 
-        So this method overrides the traditional train() by skipping any BatchNorm1d children
+        So this method overrides the traditional train() by skipping any layer children
         :param mode:
         :return:
         """

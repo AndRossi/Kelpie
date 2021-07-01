@@ -3,6 +3,8 @@ import torch
 import numpy as np
 from torch import optim
 from collections import defaultdict
+
+from link_prediction.models.conve import ConvE
 from model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
 from optimizer import Optimizer
 
@@ -127,12 +129,25 @@ class BCEOptimizer(Optimizer):
 
 
     def step_on_batch(self, batch, targets):
-        self.optimizer.zero_grad()
 
+        # if the batch has length 1 ( = this is the last batch) and the model has batch_norm layers,
+        # do not try to update the batch_norm layers, because they would not work.
+        if len(batch) == 1 and isinstance(self.model, ConvE):
+            self.model.batch_norm_1.eval()
+            self.model.batch_norm_2.eval()
+            self.model.batch_norm_3.eval()
+
+        self.optimizer.zero_grad()
         predictions = self.model.forward(batch)
         loss = self.loss(predictions, targets)
         loss.backward()
         self.optimizer.step()
+
+        # if the layers had been set to mode "eval", put them back to mode "train"
+        if len(batch) == 1 and isinstance(self.model, ConvE):
+            self.model.batch_norm_1.train()
+            self.model.batch_norm_2.train()
+            self.model.batch_norm_3.train()
 
         return loss
 
@@ -179,3 +194,22 @@ class KelpieBCEOptimizer(BCEOptimizer):
 
             if self.decay:
                 self.scheduler.step()
+
+
+    def step_on_batch(self, batch, targets):
+
+        # just making sure that these layers are still in eval() mode
+        if isinstance(self.model, ConvE):
+            self.model.batch_norm_1.eval()
+            self.model.batch_norm_2.eval()
+            self.model.batch_norm_3.eval()
+            self.model.convolutional_layer.eval()
+            self.model.hidden_layer.eval()
+
+        self.optimizer.zero_grad()
+        predictions = self.model.forward(batch)
+        loss = self.loss(predictions, targets)
+        loss.backward()
+        self.optimizer.step()
+
+        return loss

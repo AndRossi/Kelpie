@@ -25,9 +25,9 @@ MANY_TO_MANY="N-N"
 class Dataset:
 
     def __init__(self,
-                 name: str,
-                 separator: str = "\t",
-                 load: bool = True):
+                 name: object,
+                 separator: object = "\t",
+                 load: object = True) -> object:
         """
             Dataset constructor.
             This method will initialize the Dataset and its structures.

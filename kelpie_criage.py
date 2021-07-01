@@ -73,10 +73,11 @@ class Kelpie:
         return rules_with_relevance
 
     def explain_sufficient(self,
-                          sample_to_explain:Tuple[Any, Any, Any],
-                          perspective:str,
-                          num_promising_samples=50,
-                          num_entities_to_convert=10):
+                           sample_to_explain:Tuple[Any, Any, Any],
+                           perspective:str,
+                           num_promising_samples=50,
+                           num_entities_to_convert=10,
+                           entities_to_convert = None):
         """
         This method extracts necessary explanations for a specific sample,
         from the perspective of either its head or its tail.
@@ -107,7 +108,8 @@ class Kelpie:
                                                        hyperparameters=self.hyperparameters,
                                                        sample_to_explain=sample_to_explain,
                                                        perspective=perspective,
-                                                       num_entities_to_convert=num_entities_to_convert)
+                                                       num_entities_to_convert=num_entities_to_convert,
+                                                       entities_to_convert=entities_to_convert)
 
         rules_with_relevance = rule_extractor.extract_rules(samples_to_add=most_promising_samples, top_k=10)
         return rules_with_relevance, rule_extractor.entities_to_convert
