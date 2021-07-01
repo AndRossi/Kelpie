@@ -29,6 +29,7 @@ class TopologyPreFilter(PreFilter):
         self.entity_id_2_train_samples = {}
         self.threadLock = threading.Lock()
         self.counter = 0
+        self.thread_pool = Pool(processes=MAX_PROCESSES)
 
         for (h, r, t) in dataset.train_samples:
 
@@ -78,8 +79,7 @@ class TopologyPreFilter(PreFilter):
                                    start_entity, end_entity, samples_featuring_start_entity[i], verbose)
                                    for i in range(len(samples_featuring_start_entity))]
 
-        with Pool(processes=MAX_PROCESSES) as pool:
-            results = pool.map(self.analyze_sample, worker_processes_inputs)
+        results = self.thread_pool.map(self.analyze_sample, worker_processes_inputs)
 
         for i in range(len(samples_featuring_start_entity)):
             _, _, _, sample_to_analyze, _ = worker_processes_inputs[i]
