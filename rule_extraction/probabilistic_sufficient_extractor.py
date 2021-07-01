@@ -21,7 +21,8 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
                  hyperparameters: dict,
                  sample_to_explain: Tuple[Any, Any, Any],
                  perspective: str,
-                 num_entities_to_convert=10):
+                 num_entities_to_convert=10,
+                 entities_to_convert=None):
         """
         ProbabilisticSufficientRuleExtractor object constructor.
 
@@ -40,12 +41,16 @@ class ProbabilisticSufficientRuleExtractor(SufficientRuleExtractor):
         self.engine = PostTrainingEngine(model=model,
                                          dataset=dataset,
                                          hyperparameters=hyperparameters)
-        self.entities_to_convert = self.engine.extract_entities_for(model=self.model,
-                                                                    dataset=self.dataset,
-                                                                    sample=sample_to_explain,
-                                                                    perspective=perspective,
-                                                                    k=num_entities_to_convert,
-                                                                    degree_cap=200)
+
+        if entities_to_convert is not None:
+            self.entities_to_convert = entities_to_convert
+        else:
+            self.entities_to_convert = self.engine.extract_entities_for(model=self.model,
+                                                                        dataset=self.dataset,
+                                                                        sample=sample_to_explain,
+                                                                        perspective=perspective,
+                                                                        k=num_entities_to_convert,
+                                                                        degree_cap=200)
     def extract_rules(self,
                       samples_to_add: list,
                       top_k: int =10):
