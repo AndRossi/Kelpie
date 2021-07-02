@@ -274,6 +274,7 @@ Our experiments on each model and dataset can be replicated with the following c
   * **WN18**
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -285,7 +286,6 @@ Our experiments on each model and dataset can be replicated with the following c
              ```python
              python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode necessary data_poisoning
              ```
-
 
             * **Criage**
             
@@ -329,6 +329,7 @@ Our experiments on each model and dataset can be replicated with the following c
   
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -355,6 +356,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -383,6 +385,7 @@ Our experiments on each model and dataset can be replicated with the following c
   
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -409,6 +412,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -436,6 +440,7 @@ Our experiments on each model and dataset can be replicated with the following c
   * **YAGO3-10**
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -462,7 +467,8 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
-            * **Kelpie**
+ 
+           * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient
@@ -491,6 +497,7 @@ Our experiments on each model and dataset can be replicated with the following c
   * **FB15k**
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -517,6 +524,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -545,6 +553,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -571,6 +580,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -601,6 +611,7 @@ Our experiments on each model and dataset can be replicated with the following c
       * **Necessary Scenario**
 
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -627,6 +638,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -655,6 +667,7 @@ Our experiments on each model and dataset can be replicated with the following c
   
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -681,6 +694,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -709,6 +723,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -735,6 +750,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -752,7 +768,6 @@ Our experiments on each model and dataset can be replicated with the following c
              ```python
              python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode sufficient --baseline criage
              ```
-
              
          * **Verify Explanations:**
          
@@ -766,6 +781,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -786,6 +802,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -809,6 +826,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -829,6 +847,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -852,6 +871,7 @@ Our experiments on each model and dataset can be replicated with the following c
   
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -872,6 +892,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -895,6 +916,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -915,6 +937,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -939,6 +962,7 @@ Our experiments on each model and dataset can be replicated with the following c
   
       * **Necessary Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
@@ -959,6 +983,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
       * **Sufficient Scenario**
          * **Explain predictions:**
+
             * **Kelpie**
             
              ```python
