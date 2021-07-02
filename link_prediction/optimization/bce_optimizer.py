@@ -8,7 +8,6 @@ from link_prediction.models.conve import ConvE
 from model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
 from optimizer import Optimizer
 
-
 class BCEOptimizer(Optimizer):
     """
         This optimizer relies on BCE loss.

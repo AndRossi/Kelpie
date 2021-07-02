@@ -2,7 +2,6 @@ from typing import Tuple, Any
 from dataset import Dataset
 from model import Model
 
-
 class PreFilter:
 
     """
