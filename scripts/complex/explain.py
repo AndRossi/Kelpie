@@ -94,7 +94,6 @@ parser.add_argument("--baseline",
 
 parser.add_argument("--entities_to_convert",
                     type=str,
-                    required=True,
                     help="path of the file with the entities to convert (only used by baselines)")
 
 parser.add_argument("--mode",

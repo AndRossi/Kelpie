@@ -4,13 +4,8 @@ __pycache__/
 
 ### Kelpie paths not to add to git for the time being
 stored_models
-data
-end_to_end_testing
-link_prediction/models/experiments
-removal_testing
 
 ### OS generated files 
-
 .DS_Store
 .DS_Store?
 ._*
