@@ -36,8 +36,6 @@ parser.add_argument('--model_path',
 
 args = parser.parse_args()
 
-model_path = args.load
-
 print("Loading %s dataset..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
@@ -45,12 +43,12 @@ hyperparameters = {DIMENSION: args.dimension, INIT_SCALE: args.init_scale}
 print("Initializing model...")
 model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)   # type: ComplEx
 model.to('cuda')
-model.load_state_dict(torch.load(model_path))
+model.load_state_dict(torch.load(args.model_path))
 model.eval()
 
 print("Evaluating model...")
 mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=True)
 print("\tTest Hits@1: %f" % h1)
-print("\tTest Hits@1: %f" % h10)
+print("\tTest Hits@10: %f" % h10)
 print("\tTest Mean Reciprocal Rank: %f" % mrr)
 print("\tTest Mean Rank: %f" % mr)

@@ -5,7 +5,7 @@ from model import Model
 class SufficientExplanationBuilder:
 
     """
-    The SufficientExplanationBuilder object guides the search for sufficient rules.
+    The SufficientExplanationBuilder object guides the search for sufficient explanations.
     """
     def __init__(self,
                  model: Model,
@@ -28,11 +28,11 @@ class SufficientExplanationBuilder:
         self.perspective_entity = sample_to_explain[0] if perspective == "head" else sample_to_explain[2]
 
         self.num_entities_to_convert = num_entities_to_convert
-        self.rule_length_cap = 4
+        self.length_cap = 4
 
-    def extract_rules(self,
-                      samples_to_add: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_add: list,
+                           top_k: int =10):
         pass
 
     def _average(self, l: list):
@@ -46,7 +46,7 @@ class NecessaryExplanationBuilder:
 
 
     """
-    The NecessaryExplanationBuilder object guides the search for necessary rules.
+    The NecessaryExplanationBuilder object guides the search for necessary explanations.
     """
     def __init__(self,
                  model: Model,
@@ -67,11 +67,11 @@ class NecessaryExplanationBuilder:
         self.perspective = perspective
         self.perspective_entity = sample_to_explain[0] if perspective == "head" else sample_to_explain[2]
 
-        self.rule_length_cap = 4
+        self.length_cap = 4
 
-    def extract_rules(self,
-                      samples_to_add: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_add: list,
+                           top_k: int =10):
         pass
 
     def _average(self, l:list):

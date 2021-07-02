@@ -115,6 +115,6 @@ if __name__ == '__main__':
     print("Evaluating model...")
     mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=True)
     print("\tTest Hits@1: %f" % h1)
-    print("\tTest Hits@1: %f" % h10)
+    print("\tTest Hits@10: %f" % h10)
     print("\tTest Mean Reciprocal Rank: %f" % mrr)
     print("\tTest Mean Rank: %f" % mr)

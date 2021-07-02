@@ -68,7 +68,7 @@ class DataPoisoning:
                                                                   sample_to_explain=sample_to_explain,
                                                                   perspective=perspective, )
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_remove=most_promising_samples)
+        rules_with_relevance = rule_extractor.build_explanations(samples_to_remove=most_promising_samples)
         return rules_with_relevance
 
     def explain_sufficient(self,
@@ -95,14 +95,17 @@ class DataPoisoning:
         :return: a list containing for each relevant n-ple extracted, a couple containing
                                 - that relevant n-ple
                                 - its value of relevance
-
+        :param num_entities_to_convert: the number of entities to convert to extract
+                                        (if they have to be extracted)
+        :param entities_to_convert: the entities to convert
+                                    (if they are passed instead of having to be extracted)
         """
 
         most_promising_samples = self.prefilter.top_promising_samples_for(sample_to_explain=sample_to_explain,
                                                                           perspective=perspective,
                                                                           top_k=num_promising_samples)
 
-        rule_extractor = DataPoisoningSufficientExplanationBuilder(model=self.model,
+        explanation_builder = DataPoisoningSufficientExplanationBuilder(model=self.model,
                                                                    dataset=self.dataset,
                                                                    hyperparameters=self.hyperparameters,
                                                                    sample_to_explain=sample_to_explain,
@@ -110,5 +113,5 @@ class DataPoisoning:
                                                                    num_entities_to_convert=num_entities_to_convert,
                                                                    entities_to_convert=entities_to_convert)
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_add=most_promising_samples, top_k=10)
-        return rules_with_relevance, rule_extractor.entities_to_convert
+        explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples, top_k=10)
+        return explanations_with_relevance, explanation_builder.entities_to_convert

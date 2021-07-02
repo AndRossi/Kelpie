@@ -4,7 +4,7 @@ from relevance_engines.criage_engine import CriageEngine
 from model import Model
 from prefilters.criage_prefilter import CriagePreFilter
 from explanation_builders.criage_necessary_builder import CriageNecessaryExplanationBuilder
-from explanation_builders.criage_sufficient_builderpy import CriageSufficientRuleExtractor
+from explanation_builders.criage_sufficient_builder import CriageSufficientExplanationBuilder
 
 class Criage:
     """
@@ -61,13 +61,13 @@ class Criage:
                                                                          perspective=perspective,
                                                                          top_k=num_promising_samples)
 
-        rule_extractor = CriageNecessaryExplanationBuilder(model=self.model,
+        explanation_builder = CriageNecessaryExplanationBuilder(model=self.model,
                                                            dataset=self.dataset,
                                                            hyperparameters=self.hyperparameters,
                                                            sample_to_explain=sample_to_explain,
                                                            perspective=perspective)
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_remove=top_promising_samples)
+        rules_with_relevance = explanation_builder.build_explanations(samples_to_remove=top_promising_samples)
         return rules_with_relevance
 
     def explain_sufficient(self,
@@ -90,24 +90,27 @@ class Criage:
         :param num_promising_samples: the number of samples relevant to the sample to explain
                                      that must be identified and removed from the entity under analysis
                                      to verify whether they worsen the target prediction or not
+        :param num_entities_to_convert: the number of entities to convert to extract
+                                        (if they have to be extracted)
+        :param entities_to_convert: the entities to convert
+                                    (if they are passed instead of having to be extracted)
 
         :return: a list containing for each relevant n-ple extracted, a couple containing
                                 - that relevant n-ple
                                 - its value of relevance
-
         """
 
         most_promising_samples = self.prefilter.top_promising_samples_for(sample_to_explain=sample_to_explain,
                                                                           perspective=perspective,
                                                                           top_k=num_promising_samples)
 
-        rule_extractor = CriageSufficientRuleExtractor(model=self.model,
-                                                       dataset=self.dataset,
-                                                       hyperparameters=self.hyperparameters,
-                                                       sample_to_explain=sample_to_explain,
-                                                       perspective=perspective,
-                                                       num_entities_to_convert=num_entities_to_convert,
-                                                       entities_to_convert=entities_to_convert)
+        explanation_builder = CriageSufficientExplanationBuilder(model=self.model,
+                                                                 dataset=self.dataset,
+                                                                 hyperparameters=self.hyperparameters,
+                                                                 sample_to_explain=sample_to_explain,
+                                                                 perspective=perspective,
+                                                                 num_entities_to_convert=num_entities_to_convert,
+                                                                 entities_to_convert=entities_to_convert)
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_add=most_promising_samples, top_k=10)
-        return rules_with_relevance, rule_extractor.entities_to_convert
+        explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples, top_k=10)
+        return explanations_with_relevance, explanation_builder.entities_to_convert

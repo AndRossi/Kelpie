@@ -55,7 +55,6 @@ class Kelpie:
         :param num_promising_samples: the number of samples relevant to the sample to explain
                                      that must be identified and added to the extracted similar entities
                                      to verify whether they boost the target prediction or not
-
         :param num_entities_to_convert: the number of entities to convert to extract
                                         (if they have to be extracted)
         :param entities_to_convert: the entities to convert
@@ -74,7 +73,7 @@ class Kelpie:
                                                                           perspective=perspective,
                                                                           top_k=num_promising_samples)
 
-        rule_extractor = StochasticSufficientExplanationBuilder(model=self.model,
+        explanation_builder = StochasticSufficientExplanationBuilder(model=self.model,
                                                                 dataset=self.dataset,
                                                                 hyperparameters=self.hyperparameters,
                                                                 sample_to_explain=sample_to_explain,
@@ -82,8 +81,8 @@ class Kelpie:
                                                                 num_entities_to_convert=num_entities_to_convert,
                                                                 entities_to_convert = entities_to_convert)
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_add=most_promising_samples)
-        return rules_with_relevance, rule_extractor.entities_to_convert
+        explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples)
+        return explanations_with_relevance, explanation_builder.entities_to_convert
 
     def explain_necessary(self,
                           sample_to_explain:Tuple[Any, Any, Any],
@@ -114,11 +113,11 @@ class Kelpie:
                                                                           perspective=perspective,
                                                                           top_k=num_promising_samples)
 
-        rule_extractor = StochasticNecessaryExplanationBuilder(model=self.model,
+        explanation_builder = StochasticNecessaryExplanationBuilder(model=self.model,
                                                                dataset=self.dataset,
                                                                hyperparameters=self.hyperparameters,
                                                                sample_to_explain=sample_to_explain,
                                                                perspective=perspective)
 
-        rules_with_relevance = rule_extractor.extract_rules(samples_to_remove=most_promising_samples)
-        return rules_with_relevance
+        explanations_with_relevance = explanation_builder.build_explanations(samples_to_remove=most_promising_samples)
+        return explanations_with_relevance

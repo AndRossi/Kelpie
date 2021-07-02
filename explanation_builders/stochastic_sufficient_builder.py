@@ -14,7 +14,7 @@ XSI_THRESHOLD = 0.9
 class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
 
     """
-    The StochasticSufficientExplanationBuilder object guides the search for sufficient rules with a probabilistic policy
+    The StochasticSufficientExplanationBuilder object guides the search for sufficient explanations with a probabilistic policy
     """
     def __init__(self, model: Model,
                  dataset: Dataset,
@@ -51,9 +51,9 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                                                                         perspective=perspective,
                                                                         k=num_entities_to_convert,
                                                                         degree_cap=200)
-    def extract_rules(self,
-                      samples_to_add: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_add: list,
+                           top_k: int =10):
 
 
         all_rules_with_relevance = []
@@ -72,7 +72,7 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
         cur_rule_length = 2
         # stop if you have too few samples (e.g. if you have only 2 samples, you can not extract rules of length 3)
         # or if you get to the length cap
-        while cur_rule_length <= samples_number and cur_rule_length <= self.rule_length_cap:
+        while cur_rule_length <= samples_number and cur_rule_length <= self.length_cap:
             rule_2_relevance = self.extract_rules_with_length(samples_to_add=samples_to_add,
                                                               length=cur_rule_length,
                                                               sample_2_relevance=sample_2_relevance)

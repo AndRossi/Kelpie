@@ -7,7 +7,7 @@ from explanation_builders.explanation_builder import NecessaryExplanationBuilder
 class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
     """
-    The BaselineNecessaryRuleExtractor object guides the search for necessary rules
+    The DataPoisoningNecessaryExplanationBuilder object guides the search for DP necessary rules
 
     """
     def __init__(self, model: Model,
@@ -16,7 +16,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                  sample_to_explain: Tuple[Any, Any, Any],
                  perspective: str):
         """
-        BaselineNecessaryRuleExtractor object constructor.
+        DataPoisoningNecessaryExplanationBuilder object constructor.
 
         :param model: the model to explain
         :param dataset: the dataset used to train the model
@@ -31,9 +31,9 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                           hyperparameters=hyperparameters,
                                           epsilon=hyperparameters[LEARNING_RATE])
 
-    def extract_rules(self,
-                      samples_to_remove: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_remove: list,
+                           top_k: int =10):
         rule_2_relevance = {}
 
         for i, sample_to_remove in enumerate(samples_to_remove):

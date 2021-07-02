@@ -9,7 +9,7 @@ import numpy
 class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
 
     """
-    The StochasticSufficientExplanationBuilder object guides the search for sufficient rules with a probabilistic policy
+    The DataPoisoningSufficientExplanationBuilder object guides the search for sufficient explanations for DP
     """
     def __init__(self, model: Model,
                  dataset: Dataset,
@@ -20,7 +20,7 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
                  entities_to_convert = None
                  ):
         """
-        StochasticSufficientExplanationBuilder object constructor.
+        DataPoisoningSufficientExplanationBuilder object constructor.
 
         :param model: the model to explain
         :param dataset: the dataset used to train the model
@@ -47,9 +47,9 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
                                                                         perspective=perspective,
                                                                         k=num_entities_to_convert,
                                                                         degree_cap=200)
-    def extract_rules(self,
-                      samples_to_add: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_add: list,
+                           top_k: int =10):
 
 
         rule_2_global_relevance = {}

@@ -1,4 +1,3 @@
-import time
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.criage_engine import CriageEngine
@@ -8,7 +7,7 @@ from explanation_builders.explanation_builder import NecessaryExplanationBuilder
 class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
     """
-    The CriageNecessaryExplanationBuilder object guides the search for necessary facts to remove using the Criage approach
+    The CriageNecessaryExplanationBuilder object guides the search for necessary facts to remove for Criage
     """
     def __init__(self, model: Model,
                  dataset: Dataset,
@@ -30,9 +29,9 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                    dataset=dataset,
                                    hyperparameters=hyperparameters)
 
-    def extract_rules(self,
-                      samples_to_remove: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_remove: list,
+                           top_k: int =10):
 
         rule_2_relevance = {}
 
@@ -64,6 +63,4 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             with open("output_details_1.csv", "a") as output_file:
                 output_file.writelines([cur_line + "\n"])
 
-
-        # return sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
         return sorted(rule_2_relevance.items(), key=lambda x: x[1])[:top_k]

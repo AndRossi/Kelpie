@@ -8,7 +8,7 @@ from explanation_builders.explanation_builder import SufficientExplanationBuilde
 class CriageSufficientExplanationBuilder(SufficientExplanationBuilder):
 
     """
-    The CriageSufficientExplanationBuilder object guides the search for sufficient rules following the Criage approach
+    The CriageSufficientExplanationBuilder object guides the search for sufficient rules for Criage
     """
     def __init__(self, model: Model,
                  dataset: Dataset,
@@ -45,9 +45,9 @@ class CriageSufficientExplanationBuilder(SufficientExplanationBuilder):
                                                                         perspective=perspective,
                                                                         k=num_entities_to_convert,
                                                                         degree_cap=200)
-    def extract_rules(self,
-                      samples_to_add: list,
-                      top_k: int =10):
+    def build_explanations(self,
+                           samples_to_add: list,
+                           top_k: int =10):
 
         rule_2_global_relevance = {}
 
