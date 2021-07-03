@@ -193,9 +193,10 @@ The training processes, and the corresponding evaluations, can be launched with 
 
 We showcase the effectiveness of Kelpie explaining the tail predictions of a set of 100 correctly predicted test facts for each model and dataset, both in *necessary* and in *sufficient* scenario.
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
+We report result files for each model and dataset, both extracted by Kelpie and by the baseline approaches, both in the necessary and for the sufficient scenario, in the `results.zip` archive in our repository.
 
-We usually employ the same facts across the necessary and sufficient scenarios. 
-The only exception at this regard are the `ConvE` explanations for `FB15k` and `FB15k-237`: in these cases, a few <h, r, t> predictions used in necessary explanations could not be explained sufficiently because, due to strong dataset biases, *all entities in the dataset would be predicted correctly if used instead of h*.
+Across the necessary and sufficient scenarios for the same model and dataset we usually employ the same set of 100 correctly predicted test facts. 
+The only exception at this regard is in the `ConvE` explanations for `FB15k` and `FB15k-237` predictions: in these cases, a few <h, r, t> predictions used in necessary explanations could not be explained sufficiently because, due to strong dataset biases, *all entities in the dataset would be predicted correctly if used instead of h*.
 This made it impossible to extract a set of `c` entities to convert, because any entity would appear already converted without applying any sufficient explanation.
 We thus replaced these predictions for the sufficient scenario, obtaining created two different version `nec` and `_suff` for the input facts file.
 
@@ -215,7 +216,6 @@ Kelpie experiments are based on the execution of two separate scripts:
    * saves the outcomes of the corresponding predictions in an `output_end_to_end.csv` file;
 
 The `explain.py` also accepts an optional `--baseline` parameter with allowed values `data_poisoning` or `criage`; using this parameter allows to estract results for our baselines instead of Kelpie.
-We report result files for each model and dataset, both extracted by Kelpie and by the baseline approaches, both in the necessary and for the sufficient scenario, in the `results` folder of our repository.
 
 Our experiments on each model and dataset can be replicated with the following commands: 
 
