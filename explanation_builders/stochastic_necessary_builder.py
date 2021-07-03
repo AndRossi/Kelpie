@@ -4,7 +4,7 @@ from typing import Tuple, Any
 
 from dataset import Dataset
 from relevance_engines.post_training_engine import PostTrainingEngine
-from model import Model
+from link_prediction.models.model import Model
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
 import numpy
 

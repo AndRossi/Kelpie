@@ -1,7 +1,7 @@
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.post_training_engine import PostTrainingEngine
-from model import Model
+from link_prediction.models.model import Model
 from prefilters.topology_prefilter import TopologyPreFilter
 from explanation_builders.stochastic_necessary_builder import StochasticNecessaryExplanationBuilder
 from explanation_builders.stochastic_sufficient_builder import StochasticSufficientExplanationBuilder

@@ -12,7 +12,7 @@ import torch
 from dataset import ALL_DATASET_NAMES, Dataset, MANY_TO_ONE, ONE_TO_ONE
 from link_prediction.models.complex import ComplEx
 from link_prediction.optimization.multiclass_nll_optimizer import MultiClassNLLOptimizer
-from model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, REGULARIZER_WEIGHT, EPOCHS, \
+from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, REGULARIZER_WEIGHT, EPOCHS, \
     BATCH_SIZE, REGULARIZER_NAME
 
 datasets = ALL_DATASET_NAMES

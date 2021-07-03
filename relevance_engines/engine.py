@@ -6,7 +6,7 @@ import numpy
 import torch
 
 from dataset import Dataset, ONE_TO_ONE, MANY_TO_ONE
-from model import Model
+from link_prediction.models.model import Model
 
 
 class ExplanationEngine:

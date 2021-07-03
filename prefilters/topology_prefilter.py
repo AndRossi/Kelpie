@@ -2,7 +2,7 @@ import copy
 from multiprocessing.pool import ThreadPool as Pool
 from typing import Tuple, Any
 from dataset import Dataset
-from model import Model
+from link_prediction.models.model import Model
 from prefilters.prefilter import PreFilter
 
 from config import MAX_PROCESSES

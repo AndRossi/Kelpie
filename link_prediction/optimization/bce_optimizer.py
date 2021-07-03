@@ -5,8 +5,8 @@ from torch import optim
 from collections import defaultdict
 
 from link_prediction.models.conve import ConvE
-from model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
-from optimizer import Optimizer
+from link_prediction.models.model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
+from link_prediction.optimization.optimizer import Optimizer
 
 class BCEOptimizer(Optimizer):
     """

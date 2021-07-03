@@ -4,9 +4,9 @@ import numpy as np
 from torch import optim, nn
 
 from link_prediction.regularization.regularizers import N3, N2
-from model import Model, OPTIMIZER_NAME, BATCH_SIZE, EPOCHS, LEARNING_RATE, DECAY_1, REGULARIZER_NAME, \
+from link_prediction.models.model import Model, OPTIMIZER_NAME, BATCH_SIZE, EPOCHS, LEARNING_RATE, DECAY_1, REGULARIZER_NAME, \
     REGULARIZER_WEIGHT, DECAY_2, KelpieModel
-from optimizer import Optimizer
+from link_prediction.optimization.optimizer import Optimizer
 
 class MultiClassNLLOptimizer(Optimizer):
     """

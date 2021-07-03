@@ -1,7 +1,7 @@
 import html
 
 from link_prediction.models.transe import TransE
-from model import Model, KelpieModel
+from link_prediction.models.model import Model, KelpieModel
 import numpy as np
 
 class Evaluator:

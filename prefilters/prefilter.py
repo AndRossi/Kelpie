@@ -1,6 +1,6 @@
 from typing import Tuple, Any
 from dataset import Dataset
-from model import Model
+from link_prediction.models.model import Model
 
 class PreFilter:
 

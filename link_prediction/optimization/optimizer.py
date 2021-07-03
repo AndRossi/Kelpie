@@ -1,6 +1,6 @@
 import numpy
 from link_prediction.evaluation.evaluation import Evaluator
-from model import Model
+from link_prediction.models.model import Model
 
 class Optimizer:
     """

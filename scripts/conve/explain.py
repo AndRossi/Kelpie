@@ -16,7 +16,7 @@ from data_poisoning import DataPoisoning
 from criage import Criage
 
 from link_prediction.models.conve import ConvE
-from model import DIMENSION, LEARNING_RATE, EPOCHS, \
+from link_prediction.models.model import DIMENSION, LEARNING_RATE, EPOCHS, \
     BATCH_SIZE, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, LABEL_SMOOTHING, DECAY
 
 start_time = time.time()

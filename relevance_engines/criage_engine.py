@@ -10,7 +10,7 @@ from relevance_engines.engine import ExplanationEngine
 from link_prediction.models.complex import ComplEx
 from link_prediction.models.conve import ConvE
 from link_prediction.models.distmult import DistMult
-from model import Model
+from link_prediction.models.model import Model
 
 class CriageEngine(ExplanationEngine):
 

@@ -12,7 +12,7 @@ from dataset import ALL_DATASET_NAMES, Dataset
 from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.models.complex import ComplEx
 from link_prediction.optimization.multiclass_nll_optimizer import MultiClassNLLOptimizer
-from model import OPTIMIZER_NAME, LEARNING_RATE, REGULARIZER_NAME, REGULARIZER_WEIGHT, BATCH_SIZE, DECAY_1, DECAY_2, \
+from link_prediction.models.model import OPTIMIZER_NAME, LEARNING_RATE, REGULARIZER_NAME, REGULARIZER_WEIGHT, BATCH_SIZE, DECAY_1, DECAY_2, \
     DIMENSION, INIT_SCALE, EPOCHS
 
 parser = argparse.ArgumentParser(

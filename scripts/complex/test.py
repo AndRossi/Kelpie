@@ -7,7 +7,7 @@ import torch
 from dataset import ALL_DATASET_NAMES, Dataset
 from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.models.complex import ComplEx
-from model import DIMENSION, INIT_SCALE
+from link_prediction.models.model import DIMENSION, INIT_SCALE
 
 parser = argparse.ArgumentParser(description="Kelpie")
 

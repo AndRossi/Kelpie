@@ -10,7 +10,7 @@ import torch
 from dataset import ALL_DATASET_NAMES, Dataset, MANY_TO_ONE, ONE_TO_ONE
 from link_prediction.models.conve import ConvE
 from link_prediction.optimization.bce_optimizer import BCEOptimizer
-from model import DIMENSION, LEARNING_RATE, EPOCHS, \
+from link_prediction.models.model import DIMENSION, LEARNING_RATE, EPOCHS, \
     BATCH_SIZE, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, \
     LABEL_SMOOTHING, DECAY
 

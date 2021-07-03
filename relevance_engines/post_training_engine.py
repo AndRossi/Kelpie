@@ -14,7 +14,7 @@ from link_prediction.models.tucker import TuckER
 from link_prediction.optimization.bce_optimizer import KelpieBCEOptimizer
 from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiClassNLLOptimizer
 from link_prediction.optimization.pairwise_ranking_optimizer import KelpiePairwiseRankingOptimizer
-from model import Model, KelpieModel
+from link_prediction.models.model import Model, KelpieModel
 from collections import OrderedDict
 
 class PostTrainingEngine(ExplanationEngine):

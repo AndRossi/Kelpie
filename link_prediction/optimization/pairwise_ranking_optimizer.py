@@ -3,9 +3,9 @@ import torch
 import numpy as np
 from torch import optim
 from link_prediction.regularization.regularizers import L2
-from model import Model, BATCH_SIZE, LEARNING_RATE, EPOCHS, MARGIN, NEGATIVE_SAMPLES_RATIO, \
+from link_prediction.models.model import Model, BATCH_SIZE, LEARNING_RATE, EPOCHS, MARGIN, NEGATIVE_SAMPLES_RATIO, \
     REGULARIZER_WEIGHT, KelpieModel
-from optimizer import Optimizer
+from link_prediction.optimization.optimizer import Optimizer
 
 
 class PairwiseRankingOptimizer(Optimizer):

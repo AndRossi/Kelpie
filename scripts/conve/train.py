@@ -11,7 +11,7 @@ from dataset import Dataset, ALL_DATASET_NAMES
 from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.models.conve import ConvE
 from link_prediction.optimization.bce_optimizer import BCEOptimizer
-from model import INPUT_DROPOUT, BATCH_SIZE, LEARNING_RATE, DECAY, LABEL_SMOOTHING, \
+from link_prediction.models.model import INPUT_DROPOUT, BATCH_SIZE, LEARNING_RATE, DECAY, LABEL_SMOOTHING, \
     EPOCHS, DIMENSION, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE
 
 if __name__ == '__main__':

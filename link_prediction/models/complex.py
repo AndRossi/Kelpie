@@ -5,7 +5,7 @@ from torch.nn import Parameter
 
 from dataset import Dataset
 from kelpie_dataset import KelpieDataset
-from model import Model, KelpieModel, DIMENSION, INIT_SCALE
+from link_prediction.models.model import Model, KelpieModel, DIMENSION, INIT_SCALE
 
 
 class ComplEx(Model):

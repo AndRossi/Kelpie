@@ -13,7 +13,7 @@ from dataset import Dataset, ALL_DATASET_NAMES
 from link_prediction.evaluation.evaluation import Evaluator
 from link_prediction.models.transe import TransE
 from link_prediction.optimization.pairwise_ranking_optimizer import PairwiseRankingOptimizer
-from model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
+from link_prediction.models.model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -4,7 +4,7 @@ import numpy
 from dataset import Dataset
 from relevance_engines.engine import ExplanationEngine
 from link_prediction.models.tucker import TuckER
-from model import Model
+from link_prediction.models.model import Model
 
 class DataPoisoningEngine(ExplanationEngine):
 

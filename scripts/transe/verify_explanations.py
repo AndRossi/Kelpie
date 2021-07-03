@@ -11,7 +11,7 @@ import torch
 from dataset import ALL_DATASET_NAMES, Dataset, MANY_TO_ONE, ONE_TO_ONE
 from link_prediction.optimization.pairwise_ranking_optimizer import PairwiseRankingOptimizer
 from link_prediction.models.transe import TransE
-from model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
+from link_prediction.models.model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
 
 datasets = ALL_DATASET_NAMES
 

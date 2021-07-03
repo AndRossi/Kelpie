@@ -14,7 +14,7 @@ from kelpie import Kelpie as Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
 from link_prediction.models.complex import ComplEx
-from model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, REGULARIZER_WEIGHT, EPOCHS, \
+from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, REGULARIZER_WEIGHT, EPOCHS, \
     BATCH_SIZE, REGULARIZER_NAME
 
 datasets = ALL_DATASET_NAMES

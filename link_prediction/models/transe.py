@@ -8,7 +8,7 @@ from torch.nn.init import xavier_normal_
 
 from dataset import Dataset
 from kelpie_dataset import KelpieDataset
-from model import Model, DIMENSION, KelpieModel
+from link_prediction.models.model import Model, DIMENSION, KelpieModel
 
 
 class TransE(Model):

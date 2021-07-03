@@ -7,7 +7,7 @@ from torch.nn.init import xavier_normal_
 
 from dataset import Dataset
 from kelpie_dataset import KelpieDataset
-from model import Model, DIMENSION, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, KelpieModel
+from link_prediction.models.model import Model, DIMENSION, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, KelpieModel
 
 
 class ConvE(Model):

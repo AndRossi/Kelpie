@@ -14,7 +14,7 @@ from kelpie import Kelpie as Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
 from link_prediction.models.transe import TransE
-from model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
+from link_prediction.models.model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, REGULARIZER_WEIGHT
 
 parser = argparse.ArgumentParser()
 

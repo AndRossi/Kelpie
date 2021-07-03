@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
-from model import Model, LEARNING_RATE
+from link_prediction.models.model import Model, LEARNING_RATE
 from explanation_builders.explanation_builder import SufficientExplanationBuilder
 import numpy
 

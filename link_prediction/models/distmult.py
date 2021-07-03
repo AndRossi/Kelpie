@@ -6,7 +6,7 @@ from torch.nn import Parameter
 
 from dataset import Dataset
 from kelpie_dataset import KelpieDataset
-from model import Model, DIMENSION, INIT_SCALE, KelpieModel
+from link_prediction.models.model import Model, DIMENSION, INIT_SCALE, KelpieModel
 
 
 class DistMult(Model):

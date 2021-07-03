@@ -1,7 +1,7 @@
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
-from model import Model, LEARNING_RATE
+from link_prediction.models.model import Model, LEARNING_RATE
 from prefilters.topology_prefilter import TopologyPreFilter
 from explanation_builders.dp_necessary_builder import DataPoisoningNecessaryExplanationBuilder
 from explanation_builders.dp_sufficient_builder import DataPoisoningSufficientExplanationBuilder
