@@ -46,7 +46,13 @@ Where
     * *h* is the dropout applied after a hidden layer;
     * *feat* is the feature dropout;
 
-The training processes, and the corresponding evaluations, can be launched with the following commands:
+After the models have been trained, evaluating them yields the following metrics:
+
+<p align="center">
+<img width="60%" alt="model_results" src="https://user-images.githubusercontent.com/6909990/135614004-db1cff3a-68db-447d-bb9c-3c7f05426957.png">
+</p>
+
+The training and evaluation processes can be launched with the following commands:
 
 * **ComplEx**
 
@@ -216,6 +222,18 @@ Kelpie experiments are based on the execution of two separate scripts:
    * saves the outcomes of the corresponding predictions in an `output_end_to_end.csv` file;
 
 The `explain.py` also accepts an optional `--baseline` parameter with allowed values `data_poisoning` or `criage`; using this parameter allows to estract results for our baselines instead of Kelpie.
+
+Our end-to-end results for necessary explanations are the following. We measure the decrease in H@1 and MRR that we experience when removing the explanation facts and retraining the models, compared to the original metrics; the greater the decrease, the better the explanation (i.e., the "more necessary" the explanation facts actually were).
+
+<p align="center">
+<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614246-b68adc39-c771-404d-bc74-4ca532f8258e.png">
+</p>
+
+Our end-to-end results for sufficient explanations are the following. We add the explanation facts to 10 random entities and verify if they now display the same prediction as the one to explain, i.e., if they have been converted. In practice, we measure the explanation effectiveness by checking the increase in H@1 and MRR of the "predictions to convert", (i.e., the facts that we hope the system now predicts) after adding the explanation facts and retraining, compared to their metrics in the original model; the greater the increase, the better the explanation (i.e., the "more sufficient" the explanation facts actually were to convert those entities).
+
+<p align="center">
+<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
+</p>
 
 Our experiments on each model and dataset can be replicated with the following commands: 
 
@@ -1003,3 +1021,7 @@ Our experiments on each model and dataset can be replicated with the following c
            ```python
            python3 scripts/transe/verify_explanations.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode sufficient
            ```
+           
+### Additional Experiments
+
+
