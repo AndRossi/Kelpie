@@ -1026,7 +1026,7 @@ Our experiments on each model and dataset can be replicated with the following c
 
 #### Prefiltering: _k_ value
 The Kelpie pre-filtering module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the research space to the top _k_ most promising facts, thus making the research more feasible.
-In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_:
+In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
 
 <p align="center">
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614960-e146b76a-fd99-44fa-a4a2-7a0f2f2efe62.png">
