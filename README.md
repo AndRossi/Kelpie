@@ -52,7 +52,8 @@ After the models have been trained, evaluating them yields the following metrics
 <img width="60%" alt="model_results" src="https://user-images.githubusercontent.com/6909990/135614004-db1cff3a-68db-447d-bb9c-3c7f05426957.png">
 </p>
 
-The training and evaluation processes can be launched with the following commands:
+The training and evaluation processes can be launched with the commands reported in [the training and testing section](#training-and-testing-models-1)
+
 
 
 ## Running Kelpie
@@ -95,8 +96,7 @@ Our end-to-end results for sufficient explanations are the following. We add the
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
 </p>
 
-Our experiments on each model and dataset can be replicated with the commands : 
-           
+Our experiments on each model and dataset can be replicated with the commands reported in [our section on extracting and verifying explanations](#training-and-testing-models-1)
 ## Additional Experiments
 
 ### Prefiltering: _k_ value
