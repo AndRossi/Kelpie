@@ -52,7 +52,7 @@ After the models have been trained, evaluating them yields the following metrics
 <img width="60%" alt="model_results" src="https://user-images.githubusercontent.com/6909990/135614004-db1cff3a-68db-447d-bb9c-3c7f05426957.png">
 </p>
 
-The training and evaluation processes can be launched with the commands reported in [the training and testing section](#training-and-testing-models-1)
+The training and evaluation processes can be launched with the commands reported in our [training and testing section](#training-and-testing-models-1).
 
 
 
@@ -96,7 +96,9 @@ Our end-to-end results for sufficient explanations are the following. We add the
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
 </p>
 
-Our experiments on each model and dataset can be replicated with the commands reported in [our section on extracting and verifying explanations](#training-and-testing-models-1)
+Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
+
+
 ## Additional Experiments
 
 ### Prefiltering: _k_ value
@@ -114,6 +116,25 @@ In FB15k and FB15k-237, on the contrary, entities tend to have far more mentions
 
 We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the pre-filter value. 
 
+### Topology-based vs Type-based prefiltering
+As described above, the pre-filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
+Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based prefiltering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
+
+In the best-established datasets for Link Prediction, i.e., FB15k, FB15k-237, WN18, WN18RR and YAGO3-10 the types of entities are not reported explicitly, therefore a type-based prefiltering approach can not be applied directly.
+To get around this issue, we observe that generally the type of an entity closely affects the relations that the entity is involved with.
+For example, a person entity will probably be mentioned in facts with relations like "_born_in_", "_lives_in_", or "_has_profession_"; on the contrary a place entity will generally be featured in facts with relations like "_located_in_" or "_contains_".
+For each entity _e_ we thus build a _relation frequency vector_ that contains the numbers of times each relation is featured in a fact mentioning _e_. More specifically, in the vector built for any entity _e_, for each relation _r_ we store separately the frequency of _r_ in facts where _e_ is head and the frequency of _r_ in facts where _e_ is tail. In this way, we obtain a representation of the use of relations across the outbound and inbound edges adjacent to _e_.
+For any entity _e_, we can then find the most entities with a similar type by just comparing the vector of _e_ with the vector of any other entity with cosine-similarity.
+
+We use this approach to build a type-based prefilter module that, explaining any tail prediction <_h_, _r_, _t_>, computes the promisingness of any fact featuring _h_ <_h_, _s_, _e_> or <_e_, _s_, _h_> by the cosine-similarity between _e_ and _t_. In simple terms, the more a fact featuring _h_ is linked to an entity similar to _t_, the more promising it is to explain the tail prediction <_h_, _r_, _t_>. An analogous formulation can be used to explain head predictions.
+
+We report in the following table the effectiveness of the explanations obtained using the topology-based prefilter and the type-based prefilter:
+
+<p align="center">
+<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135847242-45d262c4-bb13-41d4-a81d-aaa73408676d.png">
+</p>
+
+In both experiments we set the _k_ value to 20. This explains why in datasets where the average number of training facts per entity is vastly lower than 20, such as WN18 and WN18RR, the effectiveness of the two methods are very similar: in those cases, both pre-filters send to the Explanation Builder module the same facts by definition. On the contrary, in datasets where entities tend to have more mentions than 20, such as FB15k and FB15k-237, and to a lesser extent YAGO3-10, the topology-based approach tends to lead to more effective explanations.
 
 
 ## Launching Kelpie
