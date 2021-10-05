@@ -164,46 +164,45 @@ We have developed two main interfaces that must be implemented whenever one want
 
 ### Model interface
 
-The Model interface defines the general behavior expected from any LP model; Kelpie can only explain the predictions of LP models that extend this interface.
-Model extends the PyTorch nn.Module interface and it defines very general methods that any LP model should expose.
-Therefore, it is usually very easy to adapt the code of any pre-existing models to extend Model.
+The `Model` interface defines the general behavior expected from any LP model; Kelpie can only explain the predictions of LP models that extend this interface.
+`Model` extends, in turn, the PyTorch `nn.Module` interface, and it defines very general methods that any LP model should expose.
+Therefore, it is usually very easy to adapt the code of any pre-existing models to extend `Model`.
 
-Any instance of Model subclass is expected to expose the following instance variables:
-* _dataset_: a reference to the Dataset under analysis;
-* _num_entities_: the number of entities in the dataset;
-* _num_relations_: the number of relations in the dataset;
-* _dimension_: the embedding size (if equal for entity and relation embeddings)
-* _entity_dimension_ and _relation_dimension_: the entity and relation embedding sizes (if different between entity and relation embeddings)
-* _entity_embeddings_: a Parameter containing the entity embeddings of this model;
-* _relation_embeddings_: a Parameter containing the relation embeddings of this model:
+Any instance of `Model` subclass is expected to expose the following instance variables:
+* `dataset`: a reference to the Dataset under analysis;
+* `num_entities`: the number of entities in the dataset;
+* `num_relations`: the number of relations in the dataset;
+* `dimension`: the embedding size (if equal for entity and relation embeddings)
+* `entity_dimension` and `relation_dimension`: the entity and relation embedding sizes (if different between entity and relation embeddings)
+* `entity_embeddings`: a `torch.nn.Parameter` containing the entity embeddings of this `Model`;
+* `relation_embeddings`: a `torch.nn.Parameter` containing the relation embeddings of this `Model`.
 
-Any Model subclass should provide implementations for the following mehtods:
-* _score_: given a collection of samples passed as a numpy array, it computes their plausibility scores
-* _all_scores_: given a collection of samples passed as a numpy array, it computes for each of them the plausibility scores for all possible tail entities
-* _forward_: given a collection of samples passed as a numpy array, it performs forward propagation. 
-This method is usually very similar to _all_scores_, but it may also return additional objects, e.g., elements required to compute regularization values 
-* _predict_samples_: given a collection of samples passed as a numpy array, it performs head and tail prediction on them 
-* _predict_sample_: given one sample passed as a numpy array, it performs head and tail prediction on it 
-* _is_minimizer_: it returns true if in this model a high fact score corresponds to low plausibility; false otherwise.
-* _kelpie_model_class_: it return the class of the KelpieModel implementation corresponding to this Model
+Any `Model` subclass should provide implementations for the following methods:
+* `score`: given a collection of samples passed as a numpy array, it computes their plausibility scores;
+* `all_scores`: given a collection of samples passed as a numpy array, it computes for each of them the plausibility scores for all possible tail entities;
+* `forward`: given a collection of samples passed as a numpy array, it performs forward propagation (this method is usually very similar to `all_scores`, but it may also return additional objects, e.g., elements required to compute regularization values);
+* `predict_samples`: given a collection of samples passed as a numpy array, it performs head and tail prediction on them 
+* `predict_sample`: given one sample passed as a numpy array, it performs head and tail prediction on it;
+* `is_minimizer`: it returns `True` if in this `Model` a high score corresponds to low fact plausibility, or `False` otherwise;
+* `kelpie_model_class`: it return the class of the `KelpieModel` implementation corresponding to this `Model`.
 
-The KelpieModel interface, in turn, extends the Model interface, and defines the behaviour of post-trainable version of a Model.
-Any KelpieModel implementation refers to a more general Model implementation: e.g., the ComplEx class (which is a Model implementation) has a KelpieComplEx subclass (that extends both ComplEx and KelpieModel).
-Any Model implementation should know the corresponding KelpieModel class, and return it in the above mentioned kelpie_model_class method.
+The `KelpieModel` interface, in turn, extends the `Model` interface, and defines the behaviour of post-trainable version of a `Model`.
+Any `KelpieModel` implementation refers to a more general Model implementation: e.g., the `ComplEx` class (which is a `Model` implementation) has a `KelpieComplEx` subclass (that extends both `ComplEx` and `KelpieModel`).
+Any Model implementation should know the corresponding `KelpieModel` class, and return it in the above mentioned kelpie_model_class method.
 Any KelpieModel instance subclass is expected to expose the following instance variables:
-* _original_entity_id_ = the internal id of the original entity that this KelpieModel has been created to generate a mimic for;
+* _original_entity_id_ = the internal id of the original entity that this `KelpieModel` has been created to generate a mimic for;
 * _kelpie_entity_id_ = the internal id of the created mimic;
 * _kelpie_entity_embedding_: a reference to the embedding of the mimic;
 
-The only methods that KelpieModel classes should implement are overriding versions of _predict_samples_ and _predict_sample_, that in KelpieModels also require the _original_mode_ flag. If set to _True_, the KelpieModel will perform the prediction using the embedding of the original entity for the samples that mention the id of the original entity; if set to False, the KelpieModel will use the mimic embedding instead.
+The only methods that `KelpieModel` classes should implement are overriding versions of `predict_samples` and `predict_sample`, that in `KelpieModel` classes also require the `original_mode` flag: if set to `True`, the `KelpieModel` should perform the prediction using the embedding of the original entity for the samples that mention the id of the original entity; if set to `False`, the `KelpieModel` should use the mimic embedding instead.
 
 ### Optimizer interface
-An Optimizer implements a specific training methodology; therefore, the main method in our Optimizer interface is just _train_.
+An `Optimizer` implements a specific training methodology; therefore, the main method in our `Optimizer` interface is just `train`.
 
-In our project, we have implemented a separate Optimizer class for each Loss function required by our models: therefore, we currently feature a BCEOptimizer class, a MultiClassNLLOptimizer class, and a PairwiseRankingOptimizer class.
-Similarly to the relation between Models and KelpieModels, we have also created for each of these Optimizers a separate sub-class that handles post-training instead of traditional training. We have called such sub-classes KelpieBCEOptimizer, KelpieMultiClassNLLOptimizer and KelpiePairwiseRankingOptimizer respectively.
+In our project, we have implemented a separate `Optimizer` class for each Loss function required by our models: therefore, we currently feature a `BCEOptimizer` class, a `MultiClassNLLOptimizer` class, and a `PairwiseRankingOptimizer` class.
+Similarly to the relation between `Models` and `KelpieModels`, we have also created for each of these Optimizers a separate sub-class that handles post-training instead of traditional training. We have called such sub-classes `KelpieBCEOptimizer`, `KelpieMultiClassNLLOptimizer` and `KelpiePairwiseRankingOptimizer` respectively.
 
-Since these subclasses have identical signature to their respective Optimizers, unlike with Models and KelpieModels we have not created a separate KelpieOptimizer interface. Given an Optimizer, implementing its Kelpie- subclass is immediate: it usually enough to provide an overriding version of the superclass _train_ method, making sure to also update the embedding of the mimic after each epoch calling the model _update_embeddings_ method.
+Since these subclasses have identical signature to their respective Optimizers, unlike with `Models` and `KelpieModels` we have not created a separate `KelpieOptimizer` interface. Given an `Optimizer`, implementing its `Kelpie-` subclass is immediate: it usually enough to provide an overriding version of the superclass `train` method, making sure to also update the embedding of the mimic after each epoch calling the `update_embeddings` method of the KelpieModel that is being post-trained.
 
 ## Launching Kelpie
 
