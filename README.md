@@ -159,7 +159,7 @@ The Relevance Engine is the only component that requires transparent access to t
 Accessing the model is unavoidable, because Kelpie needs to leverage the pre-existing embeddings, the scoring function, and the training methodology, in order to perform the _post-training_ process and create a _mimic_ of a pre-existing entity.
 
 We have developed two main interfaces that must be implemented whenever one wants to add Kelpie support to a new model:
-- [Model and its sub-interface KelpieModel](https://github.com/AndRossi/Kelpie/blob/master/link_prediction/optimization/model.py)
+- [Model and its sub-interface KelpieModel](https://github.com/AndRossi/Kelpie/blob/master/link_prediction/models/model.py)
 - [Optimizer](https://github.com/AndRossi/Kelpie/blob/master/link_prediction/optimization/optimizer.py)
 
 ### Model interface
