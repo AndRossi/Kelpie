@@ -133,7 +133,7 @@ In FB15k and FB15k-237, on the contrary, entities tend to have far more mentions
 We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the pre-filter value. 
 
 ### Topology-based vs Type-based prefiltering
-As described above, the pre-filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
+The pre-filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
 Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based prefiltering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
 
 In the best-established datasets for Link Prediction, i.e., FB15k, FB15k-237, WN18, WN18RR and YAGO3-10 the types of entities are not reported explicitly, therefore a type-based prefiltering approach can not be applied directly.
@@ -147,10 +147,10 @@ We use this approach to build a type-based prefilter module that, explaining any
 We report in the following table the effectiveness of the explanations obtained using the topology-based prefilter and the type-based prefilter:
 
 <p align="center">
-<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135847242-45d262c4-bb13-41d4-a81d-aaa73408676d.png">
+<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/136614185-8539b834-56a5-4c6b-91f8-6b745fce0284.png">
 </p>
 
-In both experiments we set the _k_ value to 20. This explains why in datasets where the average number of training facts per entity is vastly lower than 20, such as WN18 and WN18RR, the effectiveness of the two methods are very similar: in those cases, both pre-filters send to the Explanation Builder module the same facts by definition. On the contrary, in datasets where entities tend to have more mentions than 20, such as FB15k and FB15k-237, and to a lesser extent YAGO3-10, the topology-based approach tends to lead to more effective explanations.
+The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-trainign methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
 
 
 ## Adding support for new models 
