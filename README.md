@@ -100,19 +100,34 @@ Kelpie experiments are based on the execution of two separate scripts:
 
 The `explain.py` also accepts an optional `--baseline` parameter with allowed values `data_poisoning` or `criage`; using this parameter allows to estract results for our baselines instead of Kelpie.
 
-Our end-to-end results for necessary explanations are the following. We measure the decrease in H@1 and MRR that we experience when removing the explanation facts and retraining the models, compared to the original metrics; the greater the decrease, the better the explanation (i.e., the "more necessary" the explanation facts actually were).
+Our end-to-end results for necessary explanations are the following. We measure the decrease in H@1 and MRR that we experience when removing the explanation facts and retraining the models, compared to the original metrics; the greater the decrease, the better the explanation (i.e., the "more necessary" the explanation facts actually were). Therefore, in this scenario, the more negative the ΔH@1 and ΔMRR values, the more effective the explanations ahve been.
 
 <p align="center">
-<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614246-b68adc39-c771-404d-bc74-4ca532f8258e.png">
+<img width="60%" alt="end to end necessary experiment" src="https://user-images.githubusercontent.com/6909990/135614246-b68adc39-c771-404d-bc74-4ca532f8258e.png">
 </p>
 
-Our end-to-end results for sufficient explanations are the following. We add the explanation facts to 10 random entities and verify if they now display the same prediction as the one to explain, i.e., if they have been converted. In practice, we measure the explanation effectiveness by checking the increase in H@1 and MRR of the "predictions to convert", (i.e., the facts that we hope the system now predicts) after adding the explanation facts and retraining, compared to their metrics in the original model; the greater the increase, the better the explanation (i.e., the "more sufficient" the explanation facts actually were to convert those entities).
+Our end-to-end results for sufficient explanations are the following. We add the explanation facts to 10 random entities and verify if they now display the same prediction as the one to explain, i.e., if they have been converted. In practice, we measure the explanation effectiveness by checking the increase in H@1 and MRR of the "predictions to convert", (i.e., the facts that we hope the system now predicts) after adding the explanation facts and retraining, compared to their metrics in the original model; the greater the increase, the better the explanation (i.e., the "more sufficient" the explanation facts actually were to convert those entities). Therefore, in this scenario, the more positive the ΔH@1 and ΔMRR values, the more effective the explanations ahve been.
 
 <p align="center">
-<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
+<img width="60%" alt="end to end sufficient experiment" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
 </p>
 
 Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
+
+
+In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we have been suggested to repeat these experiments 10 times each time a different sample of 100 tail predictions to explain.
+Due to the time-consuming process of retraining the model from scratch after each extraction is over, which is needed to measure the effectiveness of the extracted explanations, repeating 10 times our entire set of end-to-end experiments would take several months; therefore, for the time being we just run the repeats on the ComplEx model in the necessary scenario. 
+This corresponds to running 10 times the explanation extraction by Kelpie, K1, Data Poisoning and Criage on FB15k, FB15k-237, WN18, WN18RR and YAGO3-10, for a total of 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
+We report in the following table, for each method and dataset, the average and the standard deviation of the corresponding ΔH@1 and ΔMRR values:
+
+<p align="center">
+<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/137596334-5eed0d80-6e00-42fc-89c2-cf67532a075d.png">
+</p>
+
+We report in **bold** the best average ΔH@1 and ΔMRR values in each dataset.
+The average ΔH@1 and ΔMRR values obtained across these 10 repeats are similar to those obtained in the original end-to-end experiments: a bit worse (less negative) for FB15k, FB15k-237 and YAGO3-10, a bit better (more negative) for WN18, and almost identical in WN18RR. When such variations occur, they equally invest the effectiveness of both Kelpie and the baselines: as a consequence the gap in effectiveness between Kelpie and its baselines remains almost identical across all datasets, with Kelpie always achieving the best effectiveness both in terms of ΔH@1 and ΔMRR. 
+All in all, this confirms our observations from the original experiment. 
+
 
 
 ## Additional Experiments
