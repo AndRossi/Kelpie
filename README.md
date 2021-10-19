@@ -114,6 +114,7 @@ Our end-to-end results for sufficient explanations are the following. We add the
 
 Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
 
+### 10 times repeat
 
 In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we have been suggested to repeat these experiments 10 times each time a different sample of 100 tail predictions to explain.
 Due to the time-consuming process of retraining the model from scratch after each extraction is over, which is needed to measure the effectiveness of the extracted explanations, repeating 10 times our entire set of end-to-end experiments would take several months; therefore, for the time being we just run the repeats on the ComplEx model in the necessary scenario. 
@@ -121,7 +122,7 @@ This corresponds to running 10 times the explanation extraction by Kelpie, K1, D
 We report in the following table, for each method and dataset, the average and the standard deviation of the corresponding ΔH@1 and ΔMRR values:
 
 <p align="center">
-<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/137596334-5eed0d80-6e00-42fc-89c2-cf67532a075d.png">
+<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/137894457-3698d2ad-82dd-4558-8966-81fe078910a6.png">
 </p>
 
 We report in **bold** the best average ΔH@1 and ΔMRR values in each dataset.
