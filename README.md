@@ -133,6 +133,26 @@ All in all, this confirms our observations from the original experiment.
 
 ## Additional Experiments
 
+We discuss in this section additional experiments referenced in our paper. 
+
+### Explanation Builder: Acceptance Threshold (necessary scenario)
+
+We report here our study how varying the values of the acceptance threshold ξ<sub>n0</sub> affects the results of Kelpie necessary explanations.
+
+For any necessary candidate explanation X, the relevance ξ<sub>nX</sub> is the expected rank worsening associated to X: therefore, makes sense to set the acceptance threshold ξ<sub>n0</sub> at least to 1.
+We observe that using just slightly larger ξ<sub>n0</sub> values grants a larger margin of error in the rank worsening expectation, resulting in overall more effective explanations; on the other hand, this can increase research times. All in all, ξ<sub>n0</sub> can be seen as a parameter to tweak in order to find the best trade-off between the certainty to worsen the rank of the prediction to explain and the computation time.
+
+For each model and dataset we report in Table~\ref{tab:5:end_to_end_necessary_vary_xi} how the effectiveness of the extracted necessary explanations varies when using three different ξ<sub>n0</sub> values: 1 (the smallest sensible choice), 5, and 10. We follow the same pipeline as in our end-to-end experiments: we extract the explanations, remove their facts from the training set, and retrain the model to measure the worsening in the H@1 and MRR of the predictions to explain. 
+
+<p align="center">
+<img width="60%" alt="ξ_n0 variation experiment" src="https://user-images.githubusercontent.com/6909990/138895918-c90bdcc2-4f7f-487c-b800-154ad61e97b2.png">
+</p>
+
+Unsurprisingly, the most effective results are often associated to ξ<sub>n0</sub>=10. Nonetheless, while switching from ξ<sub>n0</sub>=1 to ξ<sub>n0</sub>=5 leads to a significant improvement, ξ<sub>n0</sub>=5 and ξ<sub>n0</sub>=10 results are usually similar.
+In other words, once the room for some margin of error is provided, the rank worsening usually reaches a plateau, and further increasing ξ<sub>n0</sub> does not heavily affect results anymore.
+This motivates our choice to use ξ<sub>n0</sub>=5 in our end-to-end experiments, as we think it provides the best trade-off overall.
+
+
 ### Prefiltering: _k_ value
 The Kelpie pre-filtering module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the research space to the top _k_ most promising facts, thus making the research more feasible.
 In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
