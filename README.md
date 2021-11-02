@@ -188,6 +188,33 @@ We report in the following table the effectiveness of the explanations obtained 
 
 The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-trainign methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
 
+### Explanation Builder: Comparison with Shapley Values and KernelSHAP
+In recent times explainability approaches based on Shapley Values have gained traction in XAI due to their theoretical backing derived from Game Theory. 
+Shapley Values can be used to convey the saliency of combinations of input features; however, given a sample to explain the outcome of, computing the exact Shapley Values for its combinations of features would require to perturbate all of such combinations one by one, and to verify each time the effect on the prediction. This is clearly unfeasible in most scenarios. The authors of "A Unified Approach to Interpreting Model Predictions" (NIPS 2017) have proposed a SHAP framework that encompasses a number of ways to *approximate* Shapley Values instead of computing them precisely; in particular, among the novel approaches they introduce, KernelSHAP is the one to be truly model-agnostic.
+
+Unfortunately neither exact Shapley Values nor KernelSHAP can be used directly on Link Prediction models. Like any saliency-based approach, they formulate explanations in terms of which features of the input sample have been most relevant to the prediction to explain; in the case of Link Prediction, the input of any prediction is a triple of embeddings, so the features are the components of such embeddings. Since embeddings are just numeric vectors they are not human-interpretable, and thus their most relevant components would not be informative from a human point of view.
+
+Kelpie, however, overcomes this issue by relying on the Relevance Engine module, which uses post-training to verify the effects of adding or removing training facts from any entity: this allows us to inject perturbations in the training facts of the head or tail entity of the prediction to explain, as if those facts were our interpretable input features. As a consequence, while saliency-based frameworks are not useful in Link Prediction by themselves, they can indeed be *combined* with the Relevance Engine to take advantage of its post-training method: this amounts to using such such frameworks in replacement of our Explanation Builder, which is the module that would otherwise handle the responsibility to conduct the search in the space of candidate explanations. 
+
+We experiment on 10 TransE predictions on the FB15k dataset, and verify the cost of various exploration approaches by counting the number of visits in the space of candidate explanations that they perform before termination. This number corresponds to the number of post-trainings they request to the Relevance Engine. 
+We compare the following approaches: 
+- exact Shapley Values computation;
+- approximated Shapley Values computation with the KernelSHAP approach;
+- extraction of the best explanation with our Explanation Builder;
+
+In all the three approaches we perform Pre-Filtering first with using *k*=20 so the number of training facts to analyze and combine is 20.
+We report in the following chart our results for each of the predictions to explain (Y axis is in logscale).
+<p align="center">
+<img width="90%" alt="kelpie_shap_comparison" src="https://user-images.githubusercontent.com/6909990/139960079-e6257be7-a294-4d82-bfa0-2e57271c8371.png">
+</p>
+
+As already mentioned, the exact computation of Shapley Values analyzes all combinations of our input features; since in each prediction our Pre-Filter always keeps the 20 most promising facts only, the number of combinations visited by this approach is always the same, in the order of 2^20.
+Despite not requiring to visit all those combinations, KernelSHAP in our experiments is shown to still require a very large number of visits. More specifically, it performs between 305,706 and 596,037 visits in the space of candidate explanations, with an average of 490,146.6.
+Finally, our Explanation Builder appears much more efficient, performing between 20 and 170 visits with an average of 70.8.
+
+Oue our Explanation Builder appears remarkably more efficient than KernelSHAP. On the one hand, our Explanation Builder largely benefits from our preliminary relevance heuristics, which are tailored specifically for the LP scenario. Our heuristics allow us to start the search in the space of candidate explanations from the combination of facts that will most probably produce the best explanations; this, in turn, enables us to enact early termination policies.
+On the other hand KernelSHAP, like any general-purpose framework, cannot make any kind of assumptions onthe composition of the search space. We also scknowledge that recent works have raised concerns on the tractability of SHAP in specific domains, e.g., "On the Tractability of SHAP Explanations" (AAAI 2021).
+
 
 ## Adding support for new models 
 
