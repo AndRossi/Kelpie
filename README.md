@@ -14,7 +14,7 @@ It provides a simple and effective interface to identify the most relevant facts
 
 Kelpie is built in a simple structure based on three modules:
 
-* a **Prefilter** that narrows down the space explanation by identifying and keeping only the most promising training facts;
+* a **Pre-Filter** that narrows down the space explanation by identifying and keeping only the most promising training facts;
 * an **Explanation Builder** that governs the search in the space of the candidate explanations, i.e., the combinations of promising facts obtained from the pre-filtering step;
 * a **Relevance Engine** that is capable of estimating the *relevance* of any candidate explanation that the Explanation Builder wants to verify.
 
@@ -153,40 +153,40 @@ In other words, once the room for some margin of error is provided, the rank wor
 This motivates our choice to use ξ<sub>n0</sub>=5 in our end-to-end experiments, as we think it provides the best trade-off overall.
 
 
-### Prefiltering: _k_ value
-The Kelpie pre-filtering module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the research space to the top _k_ most promising facts, thus making the research more feasible.
+### Pre-Filtering: _k_ value
+The Kelpie Pre-Filter module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the research space to the top _k_ most promising facts, thus making the research more feasible.
 In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
 
 <p align="center">
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614960-e146b76a-fd99-44fa-a4a2-7a0f2f2efe62.png">
 </p>
 
-Across all datasets, varying _k_ does not cause huge variations. This suggests that the topology-based policy used by the pre-filter does indeed identify the most promising facts: in other words, if the pre-filter is good at fiding and placing the most promising facts at the top of its ranking, it does not matter if we analyze the top 10, 20 or 30 facts in the ranking: the facts that we need will still make the cut.
+Across all datasets, varying _k_ does not cause huge variations. This suggests that the topology-based policy used by the Pre-Filter does indeed identify the most promising facts: in other words, if the pre-filter is good at fiding and placing the most promising facts at the top of its ranking, it does not matter if we analyze the top 10, 20 or 30 facts in the ranking: the facts that we need will still make the cut.
 
 In WN18, WN18RR and YAGO3-10 the effect of varying _k_ seems rather negligible (as a matter of fact, they are so small they may be more tied to the inherent randomness of the embedding training process than to the variation of _k_). This can be explained by considering that in these datasets, entities are usually featured in just a feew training facts: in average, 6.9 in WN18, 4.3 IN WN18RR and 17.5 in YAGO3-10.
 In FB15k and FB15k-237, on the contrary, entities tend to have far more mentions in training (in average, 64.5 in FB15k and 37.4 in FB15k-237): this makes the choice of the value of _k_ more relevant, so and varying it leads to slightly more visible consequences. In this cases, as a general rule, greater values of _k_ lead to better or equal explanations, at the cost of extending the research space. 
 
-We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the pre-filter value. 
+We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the Pre-Filter value. 
 
-### Topology-based vs Type-based prefiltering
-The pre-filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
-Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based prefiltering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
+### Topology-based vs Type-based Pre-Filtering
+The Pre-Filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
+Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based Pre-Filtering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
 
-In the best-established datasets for Link Prediction, i.e., FB15k, FB15k-237, WN18, WN18RR and YAGO3-10 the types of entities are not reported explicitly, therefore a type-based prefiltering approach can not be applied directly.
+In the best-established datasets for Link Prediction, i.e., FB15k, FB15k-237, WN18, WN18RR and YAGO3-10 the types of entities are not reported explicitly, therefore a type-based Pre-Filtering approach can not be applied directly.
 To get around this issue, we observe that generally the type of an entity closely affects the relations that the entity is involved with.
 For example, a person entity will probably be mentioned in facts with relations like "_born_in_", "_lives_in_", or "_has_profession_"; on the contrary a place entity will generally be featured in facts with relations like "_located_in_" or "_contains_".
 For each entity _e_ we thus build a _relation frequency vector_ that contains the numbers of times each relation is featured in a fact mentioning _e_. More specifically, in the vector built for any entity _e_, for each relation _r_ we store separately the frequency of _r_ in facts where _e_ is head and the frequency of _r_ in facts where _e_ is tail. In this way, we obtain a representation of the use of relations across the outbound and inbound edges adjacent to _e_.
 For any entity _e_, we can then find the most entities with a similar type by just comparing the vector of _e_ with the vector of any other entity with cosine-similarity.
 
-We use this approach to build a type-based prefilter module that, explaining any tail prediction <_h_, _r_, _t_>, computes the promisingness of any fact featuring _h_ <_h_, _s_, _e_> or <_e_, _s_, _h_> by the cosine-similarity between _e_ and _t_. In simple terms, the more a fact featuring _h_ is linked to an entity similar to _t_, the more promising it is to explain the tail prediction <_h_, _r_, _t_>. An analogous formulation can be used to explain head predictions.
+We use this approach to build a type-based Pre-Filter module that, explaining any tail prediction <_h_, _r_, _t_>, computes the promisingness of any fact featuring _h_ <_h_, _s_, _e_> or <_e_, _s_, _h_> by the cosine-similarity between _e_ and _t_. In simple terms, the more a fact featuring _h_ is linked to an entity similar to _t_, the more promising it is to explain the tail prediction <_h_, _r_, _t_>. An analogous formulation can be used to explain head predictions.
 
-We report in the following table the effectiveness of the explanations obtained using the topology-based prefilter and the type-based prefilter:
+We report in the following table the effectiveness of the explanations obtained using the topology-based Pre-Filter and the type-based Pre-Filter:
 
 <p align="center">
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/136614185-8539b834-56a5-4c6b-91f8-6b745fce0284.png">
 </p>
 
-The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-trainign methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
+The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-training methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
 
 ### Explanation Builder: Comparison with Shapley Values and KernelSHAP
 In recent times explainability approaches based on Shapley Values have gained traction in XAI due to their theoretical backing derived from Game Theory. 
