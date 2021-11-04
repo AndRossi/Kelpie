@@ -81,7 +81,7 @@ We report result files for each model and dataset, both extracted by Kelpie and 
 Across the necessary and sufficient scenarios for the same model and dataset we usually employ the same set of 100 correctly predicted test facts. 
 The only exception at this regard is in the `ConvE` explanations for `FB15k` and `FB15k-237` predictions: in these cases, a few <h, r, t> predictions used in necessary explanations could not be explained sufficiently because, due to strong dataset biases, *all entities in the dataset would be predicted correctly if used instead of h*.
 This made it impossible to extract a set of `c` entities to convert, because any entity would appear already converted without applying any sufficient explanation.
-We thus replaced these predictions for the sufficient scenario, obtaining created two different version `nec` and `_suff` for the input facts file.
+We thus replaced these predictions for the sufficient scenario, obtaining created two different version `_nec` and `_suff` for the input facts file.
 
 Kelpie relies on a *Post-Training technique* (PT) to generate mimics and compute the relevance of potential explanations.
 Across all models and datasets, we always use for the Post-Training the same combination of hyperparameters used in the original training.
@@ -93,7 +93,7 @@ In order to replicate our experiments, the `.pt` model files should be located i
 Kelpie experiments are based on the execution of two separate scripts:
 * an `explain.py` script that: 
    * extracts explanations and saves the top 10 relevant ones for each input prediction in an `output.txt` file;
-   * logs the result each tested explanation into separate files `output_details_1.csv`;
+   * logs the result each tested explanation into separate files `output_details_1.csv`, `output_details_2.csv`, `output_details_3.csv` and `output_details_4.csv` (depending on the length of the tested explanation);
 * a `verify_explanations.py` that 
    * retrains the model from scratch after applying those explanations (i.e., removing their facts from the training set in the necessary scenario, or injecting them to the entities to convert in the sufficient scenario);
    * saves the outcomes of the corresponding predictions in an `output_end_to_end.csv` file;
