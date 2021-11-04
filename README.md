@@ -114,7 +114,7 @@ Our end-to-end results for sufficient explanations are the following. We add the
 
 Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
 
-### Experiment Repetitions
+### [NEW!] Experiment Repetitions
 
 In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we have been suggested to repeat these experiments 10 times each time a different sample of 100 tail predictions to explain.
 Due to the time-consuming process of retraining the model from scratch after each extraction is over, which is needed to measure the effectiveness of the extracted explanations, repeating 10 times our entire set of end-to-end experiments would take several months; therefore, for the time being we just run the repeats on the ComplEx model in the necessary scenario. 
@@ -135,7 +135,7 @@ All in all, this confirms our observations from the original experiment.
 
 We discuss in this section additional experiments referenced in our paper. 
 
-### Explanation Builder: Acceptance Threshold (necessary scenario)
+### Explanation Builder: Acceptance Threshold (necessary scenario) 
 
 We report here our study how varying the values of the acceptance threshold ξ<sub>n0</sub> affects the results of Kelpie necessary explanations.
 
@@ -153,7 +153,7 @@ In other words, once the room for some margin of error is provided, the rank wor
 This motivates our choice to use ξ<sub>n0</sub>=5 in our end-to-end experiments, as we think it provides the best trade-off overall.
 
 
-### Pre-Filtering: _k_ value
+### [NEW!] Pre-Filtering: _k_ value
 The Kelpie Pre-Filter module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the research space to the top _k_ most promising facts, thus making the research more feasible.
 In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
 
@@ -168,7 +168,7 @@ In FB15k and FB15k-237, on the contrary, entities tend to have far more mentions
 
 We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the Pre-Filter value. 
 
-### Topology-based vs Type-based Pre-Filtering
+### [NEW!] Topology-based vs Type-based Pre-Filtering
 The Pre-Filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
 Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based Pre-Filtering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
 
@@ -188,7 +188,7 @@ We report in the following table the effectiveness of the explanations obtained 
 
 The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-training methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
 
-### Explanation Builder: Comparison with Shapley Values and KernelSHAP
+### [NEW!] Explanation Builder: Comparison with Shapley Values and KernelSHAP
 In recent times explainability approaches based on Shapley Values have gained traction in XAI due to their theoretical backing derived from Game Theory. 
 Shapley Values can be used to convey the saliency of combinations of input features; however, computing the exact Shapley Values for the combinations of features of an input sample would require to perturbate all of such combinations one by one, and to verify each time the effect on the prediction. This is clearly unfeasible in most scenarios. The authors of the work "A Unified Approach to Interpreting Model Predictions" (NIPS 2017) have proposed a SHAP framework which provides a number of ways to *approximate* Shapley Values instead of computing them precisely; among the novel approaches they introduce, KernelSHAP is the only truly model-agnostic one.
 
