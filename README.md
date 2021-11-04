@@ -22,7 +22,7 @@ Among these modules, the only one that requires awareness of how the original Li
 While theoreticaly specific connectors could be developed to to adapt to pre-existing models, in our research we have found it easier to make the Relevance Engine directly interact with Kelpie-compatible implementations of the models.
 
 <p align="center">
-<img width="40%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/136070811-19687641-f18b-4d81-80d3-4a512039bef3.png">
+<img width="60%" alt="kelpie_structure" src="https://user-images.githubusercontent.com/6909990/140399831-0c368ac2-7cf4-48dc-bb73-eaf00f7fde52.png">
 </p>
 
 
@@ -183,7 +183,7 @@ We use this approach to build a type-based Pre-Filter module that, explaining an
 We report in the following table the effectiveness of the explanations obtained using the topology-based Pre-Filter and the type-based Pre-Filter:
 
 <p align="center">
-<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/136614185-8539b834-56a5-4c6b-91f8-6b745fce0284.png">
+<img width="60%" alt="kelpie_prefilters_effectiveness" src="https://user-images.githubusercontent.com/6909990/136614185-8539b834-56a5-4c6b-91f8-6b745fce0284.png">
 </p>
 
 The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-training methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
