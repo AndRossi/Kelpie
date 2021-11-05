@@ -131,7 +131,7 @@ Our experiments on each model and dataset can be replicated with the commands re
 
 ### 🆕 Experiment Repetitions
 
-In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat part of our experiments 10 times, using each time a different sample of 100 tail predictions to explain.
+In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat part of our experiments 10 times, using each time a different sample of 100 tail predictions to explain. 
 Due to the time-consuming process of retraining the model from scratch after each extraction is over (which is needed to measure the effectiveness of the extracted explanations) repeating 10 times our _entire_ set of end-to-end experiments would take several months. 
 For the time being we have just repeated the ComplEx experiments in the necessary scenario; this corresponds to running 10 times the explanation extraction of Kelpie and of our baselines K1, Data Poisoning and Criage on the 5 datasets FB15k, FB15k-237, WN18, WN18RR and YAGO3-10. Altogether, this amounts to 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
 We report in the following table, for each method and dataset, the average and the standard deviation of the corresponding ΔH@1 and ΔMRR values:
@@ -144,11 +144,12 @@ We report in **bold** the best average ΔH@1 and ΔMRR values in each dataset.
 The average ΔH@1 and ΔMRR values obtained across these 10 repeats are similar to those obtained in the original end-to-end experiment: a bit worse (less negative) for FB15k, FB15k-237 and YAGO3-10, a bit better (more negative) for WN18, and almost identical in WN18RR. When such variations occur, they equally invest the effectiveness of both Kelpie and the baselines: as a consequence the gap in effectiveness between Kelpie and its baselines remains almost identical across all datasets, with Kelpie always achieving the best effectiveness both in terms of ΔH@1 and ΔMRR. 
 All in all, this confirms our observations from the original experiment. 
 
-
+We share the output files with the results of our experiment repetitions in this repository, as part of the compressed archive `additional_experiments.zip`.
 
 ## Additional Experiments
 
 We discuss in this section additional experiments that we could not include in our paper due to space constraints. 
+We share their output files in this repository in the compressed archive `additional_experiments.zip`.
 
 ### Explanation Builder: Acceptance Threshold (necessary scenario) 
 
