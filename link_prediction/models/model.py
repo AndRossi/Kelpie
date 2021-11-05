@@ -51,8 +51,6 @@ class Model(nn.Module):
         All models work with entity and relation ids directly (not with their names),
         that they found from the Dataset object used to initialize the Model.
 
-        Different Model implementations may rely on different ML frameworks (e.g. PyTorch, TensorFlow, etc.)
-
         Whenever a Model method requires samples, it accepts them in the form of 2-dimensional numpy.arrays,
         where each row corresponds to a sample and contains the integer ids of its head, relation and tail.
     """

@@ -313,11 +313,13 @@ class KelpieTransE(KelpieModel, TransE):
                         samples: np.array,
                         original_mode: bool = False):
         """
-        This method overrides the Model predict_samples method
-        by adding the possibility to run predictions in original_mode
-        which means,
+        This method overrides the Model predict_samples method by adding the possibility to run predictions
+        either in original_mode (i.e., ignoring the kelpie entity, or mimic, and using the original embedding instead)
+        or not (i.e., using the post-trained embedding instead of the original one)
+
         :param samples: the DIRECT samples. Will be inverted to perform head prediction
-        :param original_mode:
+        :param original_mode: a boolean flag specifying whether or not the predictions should be run in original mode
+
         :return:
         """
 

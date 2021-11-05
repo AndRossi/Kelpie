@@ -6,12 +6,11 @@ from prefilters.topology_prefilter import TopologyPreFilter
 from explanation_builders.stochastic_necessary_builder import StochasticNecessaryExplanationBuilder
 from explanation_builders.stochastic_sufficient_builder import StochasticSufficientExplanationBuilder
 
-
 class Kelpie:
     """
     The Kelpie object is the overall manager of the explanation process.
-    It implements the whole explanation pipeline, requesting the suitable operations to the ExplanationEngines
-    and to the entity_similarity modules.
+    It implements the whole explanation pipeline, requesting the suitable operations
+    to the Pre-Filter, Explanation Builder and Relevance Engine modules.
     """
     def __init__(self,
                  model: Model,
@@ -43,7 +42,7 @@ class Kelpie:
                            entities_to_convert = None):
         """
         This method extracts sufficient explanations for a specific sample,
-        from the perspective of either its head or its taiL,
+        from the perspective of either its head or its tail.
 
         :param sample_to_explain: the sample to explain
         :param perspective: a string conveying the perspective of the requested explanations.

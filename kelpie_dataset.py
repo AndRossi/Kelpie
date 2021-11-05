@@ -6,16 +6,18 @@ from dataset import Dataset
 class KelpieDataset(Dataset):
     """
         Since Datasets handle the correspondence between textual entities and ids,
-        the KelpieDataset has the responsibility to decide the id of the kelpie entity
+        the KelpieDataset has the responsibility to decide the id of the kelpie entity (aka mimic in our paper)
         and to store the train, valid and test samples specific for the original entity and for the kelpie entity
 
         A KelpieDataset is never *loaded* from file: it is always generated from a pre-existing, already loaded Dataset.
 
         Nomenclature used in the KelpieDataset:
             - "original entity": the entity to explain the prediction of in the original Dataset;
-            - "clone entity": a "fake" entity post-trained with the same training samples as the original entity
-            - "kelpie entity": a "fake" entity post-trained with slightly different training samples from the original entity.
-                               (e.g. some training samples have been removed, or added).
+            - "clone entity": a homologous mimic, i.e., a "fake" entity
+                              post-trained with the same training samples as the original entity
+            - "kelpie entity": a non-homologous mimic, i.e., a "fake" entity
+                               post-trained with slightly different training samples from the original entity.
+                               (e.g. some training samples may have been removed, or added).
     """
 
     def __init__(self,
@@ -104,9 +106,10 @@ class KelpieDataset(Dataset):
     # override
     def add_training_samples(self, samples_to_add: numpy.array):
         """
-            Add an array of training samples to the kelpie training samples of this KelpieDataset.
+            Add a set of training samples to the training samples of the kelpie entity of this KelpieDataset.
             The samples to add must still feature the original entity id; this method will convert them before addition.
-            The KelpieDataset will keep track of the last performed addition so it can be undone if necessary.
+            The KelpieDataset will keep track of the last performed addition so it can be undone if necessary
+            calling the undo_last_training_samples_addition method.
 
             :param samples_to_add: the samples to add, still featuring the id of the original entity,
                                    in the form of a numpy array
@@ -139,8 +142,14 @@ class KelpieDataset(Dataset):
 
 
     def undo_last_training_samples_addition(self):
+        """
+            This method undoes the last addition performed on this KelpieDataset
+            calling its add_training_samples method.
 
-        # todo: add documentation
+            The purpose of undoing the additions performed on a pre-existing KelpieDataset,
+            instead of creating a new KelpieDataset from scratch, is to improve efficiency.
+        """
+
         if self.last_added_samples_number <= 0:
             raise Exception("No addition to undo.")
 
@@ -205,8 +214,13 @@ class KelpieDataset(Dataset):
 
 
     def undo_last_training_samples_removal(self):
+        """
+            This method undoes the last removal performed on this KelpieDataset
+            calling its add_training_samples method.
 
-        # todo: add documentation
+            The purpose of undoing the removals performed on a pre-existing KelpieDataset,
+            instead of creating a new KelpieDataset from scratch, is to improve efficiency.
+        """
         if self.last_removed_samples_number <= 0:
             raise Exception("No removal to undo.")
 
