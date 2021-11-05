@@ -19,9 +19,6 @@ class Optimizer:
         # create the evaluator to use between epochs
         self.evaluator = Evaluator(self.model)
 
-        self.verbose = verbose
-
-
     def train(self,
               train_samples: numpy.array,
               save_path: str = None,
