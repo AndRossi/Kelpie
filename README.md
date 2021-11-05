@@ -9,17 +9,17 @@
 Kelpie is a post-hoc local explainability tool specifically tailored for embedding-based Link Prediction (LP) models on Knowledge Graphs (KGs).
 It provides a simple and effective interface to identify the most relevant facts to any prediction.
 
+Intuitively, when explaining a _tail_ prediction <_h_, _r_, _t_>, Kelpie identifies the smallest set of training facts mentioning _h_ that are instrumental to that prediction; analogously, a _head_ prediction <_h_, _r_, _t_> would be explained with a combination of the training facts mentioning _t_.
 
 ## Structure 
 
-Kelpie is built in a simple structure based on three modules:
+Kelpie is structured with a simple architecture based on the interaction of three modules. When explaining a _tail_ prediction <_h_, _r_, _t_>:
 
-* a **Pre-Filter** that narrows down the space explanation by identifying and keeping only the most promising training facts;
-* an **Explanation Builder** that governs the search in the space of the candidate explanations, i.e., the combinations of promising facts obtained from the pre-filtering step;
-* a **Relevance Engine** that is capable of estimating the *relevance* of any candidate explanation that the Explanation Builder wants to verify.
+* a **Pre-Filter** narrows down the space of the candidate explanations (i.e., combinations of training facts mentioning _h_) by identifying and keeping only the most promising _h_ facts;
+* an **Explanation Builder** governs the search in the resulting space of the candidate explanations, i.e., the combinations of promising facts obtained from the Pre-Filtering step;
+* a **Relevance Engine** is used to estimate the *relevance* of any candidate explanation that the Explanation Builder wants to verify.
 
-Among these modules, the only one that requires awareness of how the original Link Prediction model is structured and implemented is the Relevance Engine.
-While theoreticaly specific connectors could be developed to to adapt to pre-existing models, in our research we have found it easier to make the Relevance Engine directly interact with Kelpie-compatible implementations of the models.
+The modules would work analogously to explain a _head_ prediction. The only module that requires awareness of how the original Link Prediction model is structured and implemented is the Relevance Engine. While theoreticaly specific connectors could be developed to to adapt to pre-existing models, in our research we have found it easier to make the Relevance Engine directly interact with Kelpie-compatible implementations of the models.
 
 <p align="center">
 <img width="60%" alt="kelpie_structure" src="https://user-images.githubusercontent.com/6909990/140399831-0c368ac2-7cf4-48dc-bb73-eaf00f7fde52.png">
@@ -28,12 +28,11 @@ While theoreticaly specific connectors could be developed to to adapt to pre-exi
 
 ## Explanations 
 
-When explaining a _tail_ prediction <_h_, _r_, _t_>, Kelpie identifies the smallest set of training facts mentioning _h_ that are instrumental to that prediction; analogously, a _head_ prediction <_h_, _r_, _t_> would be explained with a combination of the training facts mentioning _t_.
-Under this broad definition, Kelpie supports two explanation scenarios: _necessary_ explanations and _sufficient_ explanations.
+Under the broad definition described above, Kelpie supports two explanation scenarios: _necessary_ explanations and _sufficient_ explanations.
 
-- Given a _tail_ prediction <_h_, _r_, _t_>, a **necessary explanation** is the smallest set of training facts featuring _h_ such that, if we remove them from the training set and re-train the model from scratch, the model will not be able to identify _t_ as the top-ranking tail. In other words, a necessary explanation is the smallest set of _h_ facts that have made possible for the model to pick the correct tail. An analogous definition can be derived for head predictions. 
+* Given a _tail_ prediction <_h_, _r_, _t_>, a **necessary explanation** is the smallest set of training facts featuring _h_ such that, if we remove them from the training set and re-train the model from scratch, the model will not be able to identify _t_ as the top-ranking tail. In other words, a necessary explanation is the smallest set of _h_ facts that have made possible for the model to pick the correct tail. An analogous definition can be derived for head predictions. 
 
-- Given a _tail_ prediction <_h_, _r_, _t_>, a **sufficient explanation** is the smallest set of training facts featuring _h_ such that, if we add them to random entities _c_ for which the model does not predict <_c_, _r_, _t_>, and we retrain the model from scratch, the model will start predicting <_c_, _r_, _t_> too.  In other words, a necessary explanation is the smallest set of _h_ facts make it possible to extend the prediction to any other entity in the graph. An analogous definition can be derived for head predictions.
+* Given a _tail_ prediction <_h_, _r_, _t_>, a **sufficient explanation** is the smallest set of training facts featuring _h_ such that, if we add them to random entities _c_ for which the model does not predict <_c_, _r_, _t_>, and we retrain the model from scratch, the model will start predicting <_c_, _r_, _t_> too.  In other words, a necessary explanation is the smallest set of _h_ facts make it possible to extend the prediction to any other entity in the graph. An analogous definition can be derived for head predictions.
 
 
 ## Environment and Prerequisites
@@ -44,19 +43,19 @@ Kelpie requires the following libraries:
 - tqdm;
 
 ## Models and Datasets
-Kelpie supports all LP models based on embeddings.
+Kelpie supports all Link Prediction models based on embeddings.
 We run experiments on `ComplEx`, `ConvE` and `TransE` models following the implementation in this repository, explaining their predictions on datasets `FB15k`, `WN18`, `FB15k-237`, `WN18RR` and `YAGO3-10`.
 The training, validation and test sets of such datasets are distributed in this repository in the `data` folder.
 
 ## Training and testing models
 For the sake of reproducibility, we make available through FigShare [the `.pt` model files](https://figshare.com/s/ede27f3440fe742de60b) resulting from training each system on each dataset.
-We use the following hyperparameters, which we have found to achieve the best performances.
+We use the following hyperparameters, which we have found to lead to the best performances.
 
 <p align="center">
-<img width="100%" alt="hyperparams" src="https://user-images.githubusercontent.com/6909990/124291956-66e63c80-db55-11eb-9aa6-9892ee24afc2.png">
+<img width="90%" alt="hyperparams" src="https://user-images.githubusercontent.com/6909990/124291956-66e63c80-db55-11eb-9aa6-9892ee24afc2.png">
 </p>
 
-Where 
+Note that: 
 * *D* is the embedding dimension (in the models we use, entity and relation embeddings always have same dimension);
 * *LR* is the learning rate;
 * *B* is the batch size;
@@ -72,7 +71,7 @@ Where
     * *h* is the dropout applied after a hidden layer;
     * *feat* is the feature dropout;
 
-After the models have been trained, evaluating them yields the following metrics:
+After the models have been trained, their evaluation yields the following metrics:
 
 <p align="center">
 <img width="60%" alt="model_results" src="https://user-images.githubusercontent.com/6909990/135614004-db1cff3a-68db-447d-bb9c-3c7f05426957.png">
@@ -82,7 +81,7 @@ The training and evaluation processes can be launched with the commands reported
 
 
 
-## Running Kelpie
+## End-to-end experiments
 
 We showcase the effectiveness of Kelpie explaining the tail predictions of a set of 100 correctly predicted test facts for each model and dataset, both in *necessary* and in *sufficient* scenario.
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
@@ -126,9 +125,9 @@ Our experiments on each model and dataset can be replicated with the commands re
 
 ### 🆕 Experiment Repetitions
 
-In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we have been suggested to repeat these experiments 10 times each time a different sample of 100 tail predictions to explain.
-Due to the time-consuming process of retraining the model from scratch after each extraction is over, which is needed to measure the effectiveness of the extracted explanations, repeating 10 times our entire set of end-to-end experiments would take several months; therefore, for the time being we just run the repeats on the ComplEx model in the necessary scenario. 
-This corresponds to running 10 times the explanation extraction by Kelpie, K1, Data Poisoning and Criage on FB15k, FB15k-237, WN18, WN18RR and YAGO3-10, for a total of 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
+In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat these experiments 10 times each time a different sample of 100 tail predictions to explain.
+Due to the time-consuming process of retraining the model from scratch after each extraction is over, which is needed to measure the effectiveness of the extracted explanations, repeating 10 times our entire set of end-to-end experiments would take several months; therefore, for the time being we have just repeated the ComplEx experiments in the necessary scenario. 
+This corresponds to running 10 times the explanation extraction of Kelpie and of our baselines K1, Data Poisoning and Criage on the 5 datasets FB15k, FB15k-237, WN18, WN18RR and YAGO3-10; altogether, this results in 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
 We report in the following table, for each method and dataset, the average and the standard deviation of the corresponding ΔH@1 and ΔMRR values:
 
 <p align="center">
@@ -136,7 +135,7 @@ We report in the following table, for each method and dataset, the average and t
 </p>
 
 We report in **bold** the best average ΔH@1 and ΔMRR values in each dataset.
-The average ΔH@1 and ΔMRR values obtained across these 10 repeats are similar to those obtained in the original end-to-end experiments: a bit worse (less negative) for FB15k, FB15k-237 and YAGO3-10, a bit better (more negative) for WN18, and almost identical in WN18RR. When such variations occur, they equally invest the effectiveness of both Kelpie and the baselines: as a consequence the gap in effectiveness between Kelpie and its baselines remains almost identical across all datasets, with Kelpie always achieving the best effectiveness both in terms of ΔH@1 and ΔMRR. 
+The average ΔH@1 and ΔMRR values obtained across these 10 repeats are similar to those obtained in the original end-to-end experiment: a bit worse (less negative) for FB15k, FB15k-237 and YAGO3-10, a bit better (more negative) for WN18, and almost identical in WN18RR. When such variations occur, they equally invest the effectiveness of both Kelpie and the baselines: as a consequence the gap in effectiveness between Kelpie and its baselines remains almost identical across all datasets, with Kelpie always achieving the best effectiveness both in terms of ΔH@1 and ΔMRR. 
 All in all, this confirms our observations from the original experiment. 
 
 
@@ -222,7 +221,7 @@ Despite not visiting all those combinations, KernelSHAP in our experiments is sh
 More specifically, it performs between 305,706 and 596,037 visits in the space of candidate explanations, with an average of 490,146.6.
 Finally, our Explanation Builder appears much more efficient, performing between 20 and 170 visits with an average of 70.8.
 
-All in all, our Explanation Builder appears remarkably more efficient than KernelSHAP. On the one hand, our Explanation Builder largely benefits from our preliminary relevance heuristics, which are tailored specifically for the LP scenario. Our heuristics allow us to start the search in the space of candidate explanations from the combination of facts that will most probably produce the best explanations; this, in turn, enables us to enact early termination policies.
+All in all, our Explanation Builder appears remarkably more efficient than KernelSHAP. On the one hand, our Explanation Builder largely benefits from our preliminary relevance heuristics, which are tailored specifically for the Link Prediction scenario. Our heuristics allow us to start the search in the space of candidate explanations from the combination of facts that will most probably produce the best explanations; this, in turn, enables us to enact early termination policies.
 On the other hand KernelSHAP, like any general-purpose framework, cannot make any kind of assumptions onthe composition of the search space. We also scknowledge that recent works have raised concerns on the tractability of SHAP in specific domains, e.g., "On the Tractability of SHAP Explanations" (AAAI 2021).
 
 
@@ -237,8 +236,8 @@ We have developed two main interfaces that must be implemented whenever one want
 
 ### Model interface
 
-The `Model` interface defines the general behavior expected from any LP model; Kelpie can only explain the predictions of LP models that extend this interface.
-`Model` extends, in turn, the PyTorch `nn.Module` interface, and it defines very general methods that any LP model should expose.
+The `Model` interface defines the general behavior expected from any Link Prediction model; Kelpie can only explain the predictions of Link Prediction models that extend this interface.
+`Model` extends, in turn, the PyTorch `nn.Module` interface, and it defines very general methods that any Link Prediction model should expose.
 Therefore, it is usually very easy to adapt the code of any pre-existing models to extend `Model`.
 
 Any instance of `Model` subclass is expected to expose the following instance variables:
