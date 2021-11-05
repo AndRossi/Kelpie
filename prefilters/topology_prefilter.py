@@ -21,7 +21,6 @@ class TopologyPreFilter(PreFilter):
 
         :param model: the model to explain
         :param dataset: the dataset used to train the model
-        :param hyperparameters: the hyperparameters of the model and of its optimization process
         """
         super().__init__(model, dataset)
 

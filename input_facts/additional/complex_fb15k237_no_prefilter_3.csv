@@ -1,0 +1,10 @@
+/m/01wzs_q	/film/actor/film./film/performance/special_performance_type	/m/01kyvx
+/m/0mmpm	/location/location/time_zones	/m/02lcqs
+/m/01vz80y	/people/person/profession	/m/03gjzk
+/m/03_87	/influence/influence_node/influenced_by	/m/01tz6vs
+/m/0gcs9	/music/artist/track_contributions./music/track_contribution/role	/m/01vdm0
+/m/02yvct	/film/film/release_date_s./film/film_regional_release_date/film_release_region	/m/01mjq
+/m/01p1v	/base/aareas/schema/administrative_area/administrative_area_type	/m/0hzc9wc
+/m/06nm1	/media_common/netflix_genre/titles	/m/02vr3gz
+/m/06qd3	/base/aareas/schema/administrative_area/administrative_parent	/m/02j71
+/m/0gr51	/award/award_category/winners./award/award_honor/ceremony	/m/02yv_b
