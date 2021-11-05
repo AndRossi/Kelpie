@@ -26,6 +26,16 @@ While theoreticaly specific connectors could be developed to to adapt to pre-exi
 </p>
 
 
+## Explanations 
+
+When explaining a _tail_ prediction <_h_, _r_, _t_>, Kelpie identifies the smallest set of training facts mentioning _h_ that are instrumental to that prediction; analogously, a _head_ prediction <_h_, _r_, _t_> would be explained with a combination of the training facts mentioning _t_.
+Under this broad definition, Kelpie supports two explanation scenarios: _necessary_ explanations and _sufficient_ explanations.
+
+- Given a _tail_ prediction <_h_, _r_, _t_>, a **necessary explanation** is the smallest set of training facts featuring _h_ such that, if we remove them from the training set and re-train the model from scratch, the model will not be able to identify _t_ as the top-ranking tail. In other words, a necessary explanation is the smallest set of _h_ facts that have made possible for the model to pick the correct tail. An analogous definition can be derived for head predictions. 
+
+- Given a _tail_ prediction <_h_, _r_, _t_>, a **sufficient explanation** is the smallest set of training facts featuring _h_ such that, if we add them to random entities _c_ for which the model does not predict <_c_, _r_, _t_>, and we retrain the model from scratch, the model will start predicting <_c_, _r_, _t_> too.  In other words, a necessary explanation is the smallest set of _h_ facts make it possible to extend the prediction to any other entity in the graph. An analogous definition can be derived for head predictions.
+
+
 ## Environment and Prerequisites
 We successfully run Kelpie on an Ubuntu 18.04.5 environment using used Python 3.7.7, CUDA Version: 11.2 and Driver Version: 460.73.01.
 Kelpie requires the following libraries: 
