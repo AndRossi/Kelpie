@@ -92,7 +92,8 @@ if __name__ == '__main__':
                     valid_samples=dataset.valid_samples)
 
     print("Evaluating model...")
-    mrr, h1, h10 = Evaluator(model=transe).eval(samples=dataset.test_samples, write_output=False)
+    mrr, h1, h10, mr = Evaluator(model=transe).evaluate(samples=dataset.test_samples, write_output=False)
     print("\tTest Hits@1: %f" % h1)
     print("\tTest Hits@10: %f" % h10)
     print("\tTest Mean Reciprocal Rank: %f" % mrr)
+    print("\tTest Mean Rank: %f" % mr)

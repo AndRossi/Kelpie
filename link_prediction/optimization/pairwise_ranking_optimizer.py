@@ -61,11 +61,12 @@ class PairwiseRankingOptimizer(Optimizer):
             if evaluate_every > 0 and valid_samples is not None and e % evaluate_every == 0:
                 self.model.eval()
                 with torch.no_grad():
-                    mrr, h1, h10 = self.evaluator.eval(samples=valid_samples, write_output=False)
+                    mrr, h1, h10, mr = self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 print("\tValidation Hits@1: %f" % h1)
                 print("\tValidation Hits@10: %f" % h10)
                 print("\tValidation Mean Reciprocal Rank': %f" % mrr)
+                print("\tValidation Mean Rank': %f" % mr)
 
                 if save_path is not None:
                     print("\t saving model...")
