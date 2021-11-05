@@ -109,7 +109,7 @@ Kelpie experiments are based on the execution of two separate scripts:
 
 The `explain.py` also accepts an optional `--baseline` parameter with allowed values `data_poisoning` or `criage`; using this parameter allows to estract results for our baselines instead of Kelpie.
 
-Our end-to-end results for necessary explanations are the following. We measure the decrease in H@1 and MRR that we experience when removing the explanation facts and retraining the models, compared to the original metrics; the greater the decrease, the better the explanation (i.e., the "more necessary" the explanation facts actually were). Therefore, in this scenario, the more negative the ΔH@1 and ΔMRR values, the more effective the explanations ahve been.
+Our end-to-end results for necessary explanations are the following. We measure the decrease in H@1 and MRR that we experience when removing the explanation facts and retraining the models, compared to the original metrics; the greater the decrease, the better the explanation (i.e., the "more necessary" the explanation facts actually were). Therefore, in this scenario, the more negative the ΔH@1 and ΔMRR values, the more effective the explanations have been.
 
 <p align="center">
 <img width="60%" alt="end to end necessary experiment" src="https://user-images.githubusercontent.com/6909990/135614246-b68adc39-c771-404d-bc74-4ca532f8258e.png">
