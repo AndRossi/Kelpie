@@ -129,7 +129,33 @@ We report here our end-to-end results for _sufficient_ explanations. We add the 
 
 Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
 
-### 🆕 Experiment Repetitions
+### Extracted Explanation Lengths
+We report in the following charts the lengths of the explanations extracted in our end-to-end experiments.
+More specifically, we report their distribution for each model and dataset, both in the necessary and in the sufficient scenario. In our experiments, we limit ourselves to explanations with maximum length 4.
+
+Distribution of explanation lengths for the ComplEx model:
+<p align="center">
+<img width="60%" alt="complex explanation lengths" src="https://user-images.githubusercontent.com/6909990/149195991-424443fd-fcb0-460f-a1c8-f1f2a46a60d2.png">
+</p>
+
+Distribution of explanation lengths for the ConvE model:
+<p align="center">
+<img width="60%" alt="conve explanation lengths" src="https://user-images.githubusercontent.com/6909990/149196052-9b7f255c-8e03-4f8c-9758-324e68715d30.png">
+</p>
+
+Distribution of explanation lengths for the TransE model:
+<p align="center">
+<img width="60%" alt="transe explanation lengths" src="https://user-images.githubusercontent.com/6909990/149196089-947abc70-ab82-4598-90ee-f74ea2f7bf15.png">
+</p>
+
+We observe that, under the same model and dataset, necessary explanations tend to be always be longer than sufficient ones. 
+This is intuitively reasonable, because while necessary explanations need to encompass _all_ the pieces of evidence that allow a prediction, whereas sufficient explanation can just focus on the few "most decisive" ones. 
+Let us consider, for example, the tail prediction <_Barack_Obama_, _nationality_, _USA_>. 
+A **necessary** explanation would probably feature multiple _Barack_Obama_ facts, e.g., <_Barack_Obama_, _president_of_, _USA_> and <_Barack_Obama_, _part_of_, _109𝑡ℎ_US_Congress_>.
+On the contrary, a **sufficient** explanation in this case is a set of fact that, if added to any non-American entity _c_, converts it into having _nationality_ _USA_: for this purpose, it is probably enough to just add to _c_ the single fact <_c_, _president_of_, _USA_>.
+
+
+### Experiment Repetitions
 
 In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat part of our experiments 10 times, using each time a different sample of 100 tail predictions to explain. 
 Due to the time-consuming process of retraining the model from scratch after each extraction is over (which is needed to measure the effectiveness of the extracted explanations) repeating 10 times our _entire_ set of end-to-end experiments would take several months. 
@@ -169,7 +195,7 @@ In other words, once the room for some margin of error is provided, the rank wor
 This motivates our choice to use ξ<sub>n0</sub>=5 in our end-to-end experiments, as we think it provides the best trade-off overall.
 
 
-### 🆕 Pre-Filtering: _k_ value
+### Pre-Filtering: _k_ value
 The Kelpie Pre-Filter module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the space of candidate explanations to combinations of the top _k_ most promising facts, thus making the research more feasible.
 In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
 
@@ -184,7 +210,7 @@ In FB15k and FB15k-237, on the contrary, entities tend to have far more mentions
 
 We do not witness any cases in which increasing _k_ to more than 20 leads to astounding improvements in the explanation relevance: this confirms that 20 is indeed a fine trade-off for the Pre-Filter value. 
 
-### 🆕 Topology-based vs Type-based Pre-Filtering
+### Topology-based vs Type-based Pre-Filtering
 The Pre-Filtering module used in our end-to-end experiments identifies the most promising training facts with a topology-based approach.
 Recent works have highlighted that leveraging the types of entities can be beneficial in other tasks that use KG embeddings, such as fact-checking. Therefore, we design a type-based Pre-Filtering approach and compare the effectiveness of the resulting explanations with the effectiveness of those obtained with the usual topology-based method.
 
@@ -204,7 +230,7 @@ We report in the following table the effectiveness of the explanations obtained 
 
 The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-training methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
 
-### 🆕 Explanation Builder: Comparison with Shapley Values and KernelSHAP
+### Explanation Builder: Comparison with Shapley Values and KernelSHAP
 Recently, explainability approaches based on Shapley Values have gained traction in XAI due to their theoretical backing derived from Game Theory. 
 Shapley Values can be used to convey the saliency of combinations of input features; however, computing the exact Shapley Values for the combinations of features of an input sample would require to perturbate all of such combinations one by one, and to verify each time the effect on the prediction to explain. 
 This is clearly unfeasible in most scenarios. The authors of "A Unified Approach to Interpreting Model Predictions" (NIPS 2017) have proposed a SHAP framework which provides a number of ways to *approximate* Shapley Values instead of computing them precisely; among the novel approaches they introduce, KernelSHAP is the only truly model-agnostic one.
