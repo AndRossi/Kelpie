@@ -102,6 +102,11 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
+parser.add_argument("--prefilter_threshold",
+                    type=int,
+                    default=20,
+                    help="The number of promising training facts to keep after pre-filtering")
+
 args = parser.parse_args()
 
 ########## LOAD DATASET
@@ -180,7 +185,7 @@ for i, fact in enumerate(testing_facts):
         rule_samples_with_relevance, \
         entities_to_convert_ids = kelpie.explain_sufficient(sample_to_explain=sample_to_explain,
                                                             perspective="head",
-                                                            num_promising_samples=20,
+                                                            num_promising_samples=args.prefilter_threshold,
                                                             num_entities_to_convert=args.coverage,
                                                             entities_to_convert=entities_to_convert_ids)
 
@@ -208,7 +213,7 @@ for i, fact in enumerate(testing_facts):
     elif args.mode == "necessary":
         rule_samples_with_relevance = kelpie.explain_necessary(sample_to_explain=sample_to_explain,
                                                                perspective="head",
-                                                               num_promising_samples=20)
+                                                               num_promising_samples=args.prefilter_threshold)
         rule_facts_with_relevance = []
         for cur_rule_with_relevance in rule_samples_with_relevance:
             cur_rule_samples, cur_relevance = cur_rule_with_relevance
