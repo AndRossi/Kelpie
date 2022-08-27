@@ -81,6 +81,10 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
+parser.add_argument("--explanations_folder",
+                    type=str,
+                    help="The folder where the explanation files can be found and where to write the output")
+
 args = parser.parse_args()
 
 # deterministic!
@@ -108,7 +112,8 @@ hyperparameters = {DIMENSION: args.dimension,
                    BATCH_SIZE: args.batch_size,
                    REGULARIZER_NAME: "N3"}
 
-with open("output.txt", "r") as input_file:
+explanations_folder = os.path.realpath(args.explanations_folder)
+with open(os.path.join(explanations_folder, "output.txt", "r")) as input_file:
     input_lines = input_file.readlines()
 
 original_model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
@@ -293,7 +298,7 @@ if args.mode == "sufficient":
         e = str(original_tail_rank) + ";" + str(new_tail_rank)
         output_lines.append(";".join([a, b, c, d, e]) + "\n")
 
-    with open("output_end_to_end_skipping_random_facts.csv", "w") as outfile:
+    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt", "w")) as outfile:
         outfile.writelines(output_lines)
 
 
@@ -429,5 +434,5 @@ elif args.mode == "necessary":
         d = str(original_tail_rank) + ";" + str(new_tail_rank)
         output_lines.append(";".join([a, b, c, d]) + "\n")
 
-    with open("output_end_to_end_skipping_random_facts.csv", "w") as outfile:
+    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt", "w")) as outfile:
         outfile.writelines(output_lines)
