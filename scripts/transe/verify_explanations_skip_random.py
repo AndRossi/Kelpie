@@ -191,6 +191,11 @@ if args.mode == "sufficient":
         if len(cur_best_rule_samples) > 1:
             samples_to_explain_with_long_explanations.append(sample_to_explain)
 
+    # if all the explanations to check have length one, the experiment is meaningless
+    if len(samples_to_explain_with_long_explanations) == 0:
+        print("All the explanations to check have length 1, so they are minimal.")
+        exit()
+
     sample_to_convert_2_original_sample_to_explain = {}
     samples_to_convert_2_added_samples = {}
     for samples_to_explain_with_long_explanation in samples_to_explain_with_long_explanations:
@@ -380,7 +385,6 @@ elif args.mode == "necessary":
     new_dataset.remove_training_samples(numpy.array(samples_to_remove))
 
     # obtain tail ranks and scores of the original model for all samples_to_explain_with_long_explanations
-    # original_scores, original_ranks, original_predictions = original_model.predict_samples(numpy.array(samples_to_explain_with_long_explanations))
     original_scores, original_ranks, original_predictions = predict_samples_in_batches(original_model, numpy.array(
         samples_to_explain_with_long_explanations))
 
