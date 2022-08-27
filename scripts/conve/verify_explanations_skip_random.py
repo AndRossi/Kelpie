@@ -200,7 +200,7 @@ if args.mode == "sufficient":
 
     # if all the explanations to check have length one, the experiment is meaningless
     if len(samples_to_explain_with_long_explanations) == 0:
-        print("All the explanations to check have length 1, so they are minimal.")
+        print("All the explanations to check have length 1, so they are all minimal by definition.")
         exit()
 
     sample_to_convert_2_original_sample_to_explain = {}
@@ -379,6 +379,11 @@ elif args.mode == "necessary":
             cut_best_rule_samples = random.sample(best_rule_samples, target_length)
             sample_to_explain_2_best_rule[sample_to_explain] = cut_best_rule_samples
             samples_to_remove += cut_best_rule_samples
+
+    # if all the explanations to check have length one, the experiment is meaningless
+    if len(samples_to_explain_with_long_explanations) == 0:
+        print("All the explanations to check have length 1, so they are all minimal by definition.")
+        exit()
 
     new_dataset = copy.deepcopy(dataset)
 
