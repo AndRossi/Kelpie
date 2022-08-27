@@ -252,6 +252,10 @@ class Dataset:
             The to_filter and train_to_filter data structures will be updated accordingly
             :param samples_to_add: the list of samples to add, in the form of a numpy array
         """
+
+        if len(samples_to_add) == 0:
+            return
+
         self.train_samples = numpy.vstack((self.train_samples, samples_to_add))
 
         for (head, rel, tail) in samples_to_add:
