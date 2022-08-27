@@ -2,6 +2,9 @@ from typing import Tuple, Any
 from dataset import Dataset
 from link_prediction.models.model import Model
 
+TOPOLOGY_PREFILTER = "topology_based"
+TYPE_PREFILTER = "type_based"
+
 class PreFilter:
 
     """

@@ -1,10 +1,13 @@
 from typing import Tuple, Any
 from dataset import Dataset
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+from prefilters.topology_prefilter import TopologyPreFilter
+from prefilters.type_based_prefilter import TypeBasedPreFilter
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
 from link_prediction.models.model import Model, LEARNING_RATE
-from prefilters.topology_prefilter import TopologyPreFilter
 from explanation_builders.dp_necessary_builder import DataPoisoningNecessaryExplanationBuilder
 from explanation_builders.dp_sufficient_builder import DataPoisoningSufficientExplanationBuilder
+
 
 class DataPoisoning:
     """
@@ -12,30 +15,38 @@ class DataPoisoning:
     It implements the whole explanation pipeline, requesting the suitable operations to the ExplanationEngines
     and to the entity_similarity modules.
     """
+
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
-                 hyperparameters: dict):
+                 hyperparameters: dict,
+                 prefilter_type: str):
         """
         DataPoisoning object constructor.
 
         :param model: the model to explain
         :param dataset: the dataset used to train the model
         :param hyperparameters: the hyperparameters of the model and of its optimization process
+        :param prefilter_type: the type of prefilter to employ
         """
         self.model = model
         self.dataset = dataset
         self.hyperparameters = hyperparameters
 
-        self.prefilter = TopologyPreFilter(model=model,
-                                           dataset=dataset)
+        if prefilter_type == TOPOLOGY_PREFILTER:
+            self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
+        elif prefilter_type == TYPE_PREFILTER:
+            self.prefilter = TypeBasedPreFilter(model=model, dataset=dataset)
+        else:
+            self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
         self.engine = DataPoisoningEngine(model=model,
-                                         dataset=dataset,
-                                         hyperparameters=hyperparameters,
-                                         epsilon=hyperparameters[LEARNING_RATE])
+                                          dataset=dataset,
+                                          hyperparameters=hyperparameters,
+                                          epsilon=hyperparameters[LEARNING_RATE])
+
     def explain_necessary(self,
-                          sample_to_explain:Tuple[Any, Any, Any],
-                          perspective:str,
+                          sample_to_explain: Tuple[Any, Any, Any],
+                          perspective: str,
                           num_promising_samples=50):
         """
         This method extracts necessary explanations for a specific sample,
@@ -72,8 +83,8 @@ class DataPoisoning:
         return rules_with_relevance
 
     def explain_sufficient(self,
-                           sample_to_explain:Tuple[Any, Any, Any],
-                           perspective:str,
+                           sample_to_explain: Tuple[Any, Any, Any],
+                           perspective: str,
                            num_promising_samples=50,
                            num_entities_to_convert=10,
                            entities_to_convert=None):
@@ -106,12 +117,13 @@ class DataPoisoning:
                                                                           top_k=num_promising_samples)
 
         explanation_builder = DataPoisoningSufficientExplanationBuilder(model=self.model,
-                                                                   dataset=self.dataset,
-                                                                   hyperparameters=self.hyperparameters,
-                                                                   sample_to_explain=sample_to_explain,
-                                                                   perspective=perspective,
-                                                                   num_entities_to_convert=num_entities_to_convert,
-                                                                   entities_to_convert=entities_to_convert)
+                                                                        dataset=self.dataset,
+                                                                        hyperparameters=self.hyperparameters,
+                                                                        sample_to_explain=sample_to_explain,
+                                                                        perspective=perspective,
+                                                                        num_entities_to_convert=num_entities_to_convert,
+                                                                        entities_to_convert=entities_to_convert)
 
-        explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples, top_k=10)
+        explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples,
+                                                                             top_k=10)
         return explanations_with_relevance, explanation_builder.entities_to_convert

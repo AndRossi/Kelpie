@@ -1,6 +1,10 @@
 import sys
 import os
-sys.path.append(os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
+
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+
+sys.path.append(
+    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
 
 import argparse
 import random
@@ -14,7 +18,8 @@ from kelpie import Kelpie as Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
 from link_prediction.models.complex import ComplEx
-from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, REGULARIZER_WEIGHT, EPOCHS, \
+from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, \
+    REGULARIZER_WEIGHT, EPOCHS, \
     BATCH_SIZE, REGULARIZER_NAME
 
 datasets = ALL_DATASET_NAMES
@@ -102,10 +107,16 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
+prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER]
+parser.add_argument('--prefilter',
+                    choices=prefilters,
+                    default='graph-based',
+                    help="Prefilter type in {} to use in pre-filtering".format(prefilters))
+
 parser.add_argument("--prefilter_threshold",
                     type=int,
                     default=20,
-                    help="The number of promising training facts to keep after pre-filtering")
+                    help="The number of promising training facts to keep after prefiltering")
 
 args = parser.parse_args()
 
@@ -130,6 +141,8 @@ hyperparameters = {DIMENSION: args.dimension,
                    BATCH_SIZE: args.batch_size,
                    REGULARIZER_NAME: "N3"}
 
+prefilter = args.prefilter
+
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
@@ -138,7 +151,7 @@ print("Reading facts to explain...")
 with open(args.facts_to_explain_path, "r") as facts_file:
     testing_facts = [x.strip().split("\t") for x in facts_file.readlines()]
 
-model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True) # type: ComplEx
+model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
 model.to('cuda')
 model.load_state_dict(torch.load(args.model_path))
 model.eval()
@@ -146,14 +159,13 @@ model.eval()
 start_time = time.time()
 
 if args.baseline is None:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "data_poisoning":
-    kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters)
+    kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "criage":
     kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
 else:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters)
-
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 
 testing_fact_2_entities_to_convert = None
 if args.mode == "sufficient" and args.entities_to_convert is not None:
@@ -172,7 +184,8 @@ if args.mode == "sufficient" and args.entities_to_convert is not None:
 output_lines = []
 for i, fact in enumerate(testing_facts):
     head, relation, tail = fact
-    print("Explaining fact " + str(i) + " on " + str(len(testing_facts)) + ": <" + head + "," + relation + "," + tail + ">")
+    print("Explaining fact " + str(i) + " on " + str(
+        len(testing_facts)) + ": <" + head + "," + relation + "," + tail + ">")
     head_id, relation_id, tail_id = dataset.get_id_for_entity_name(head), \
                                     dataset.get_id_for_relation_name(relation), \
                                     dataset.get_id_for_entity_name(tail)
