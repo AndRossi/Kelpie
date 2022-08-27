@@ -113,7 +113,7 @@ hyperparameters = {DIMENSION: args.dimension,
                    REGULARIZER_NAME: "N3"}
 
 explanations_folder = os.path.realpath(args.explanations_folder)
-with open(os.path.join(explanations_folder, "output.txt", "r")) as input_file:
+with open(os.path.join(explanations_folder, "output.txt"), "r") as input_file:
     input_lines = input_file.readlines()
 
 original_model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
@@ -298,7 +298,7 @@ if args.mode == "sufficient":
         e = str(original_tail_rank) + ";" + str(new_tail_rank)
         output_lines.append(";".join([a, b, c, d, e]) + "\n")
 
-    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt", "w")) as outfile:
+    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt"), "w") as outfile:
         outfile.writelines(output_lines)
 
 
@@ -434,5 +434,5 @@ elif args.mode == "necessary":
         d = str(original_tail_rank) + ";" + str(new_tail_rank)
         output_lines.append(";".join([a, b, c, d]) + "\n")
 
-    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt", "w")) as outfile:
+    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt"), "w") as outfile:
         outfile.writelines(output_lines)
