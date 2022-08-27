@@ -1,17 +1,14 @@
 import sys
 import os
-
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
-
-sys.path.append(
-    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
-
 import argparse
 import random
 import time
 
 import numpy
 import torch
+
+sys.path.append(
+    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
 
 from dataset import ALL_DATASET_NAMES, Dataset
 from kelpie import Kelpie as Kelpie
@@ -21,6 +18,7 @@ from link_prediction.models.complex import ComplEx
 from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, \
     REGULARIZER_WEIGHT, EPOCHS, \
     BATCH_SIZE, REGULARIZER_NAME
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
 
 datasets = ALL_DATASET_NAMES
 
