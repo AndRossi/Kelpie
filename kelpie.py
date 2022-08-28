@@ -21,7 +21,8 @@ class Kelpie:
                  model: Model,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 prefilter_type: str):
+                 prefilter_type: str,
+                 relevance_threshold: float = None):
         """
         Kelpie object constructor.
 
@@ -29,10 +30,13 @@ class Kelpie:
         :param dataset: the dataset used to train the model
         :param hyperparameters: the hyperparameters of the model and of its optimization process
         :param prefilter_type: the type of prefilter to employ
+        :param relevance_threshold: the threshold of relevance that, if exceeded, leads to explanation acceptance
+
         """
         self.model = model
         self.dataset = dataset
         self.hyperparameters = hyperparameters
+        self.relevance_threshold = relevance_threshold
 
         if prefilter_type == TOPOLOGY_PREFILTER:
             self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
@@ -50,9 +54,9 @@ class Kelpie:
     def explain_sufficient(self,
                            sample_to_explain: Tuple[Any, Any, Any],
                            perspective: str,
-                           num_promising_samples=50,
-                           num_entities_to_convert=10,
-                           entities_to_convert=None):
+                           num_promising_samples: int = 50,
+                           num_entities_to_convert: int = 10,
+                           entities_to_convert: list = None):
         """
         This method extracts sufficient explanations for a specific sample,
         from the perspective of either its head or its tail.
@@ -91,7 +95,8 @@ class Kelpie:
                                                                      sample_to_explain=sample_to_explain,
                                                                      perspective=perspective,
                                                                      num_entities_to_convert=num_entities_to_convert,
-                                                                     entities_to_convert=entities_to_convert)
+                                                                     entities_to_convert=entities_to_convert,
+                                                                     relevance_threshold=self.relevance_threshold)
 
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples)
         return explanations_with_relevance, explanation_builder.entities_to_convert
@@ -99,7 +104,7 @@ class Kelpie:
     def explain_necessary(self,
                           sample_to_explain: Tuple[Any, Any, Any],
                           perspective: str,
-                          num_promising_samples=50):
+                          num_promising_samples: int = 50):
         """
         This method extracts necessary explanations for a specific sample,
         from the perspective of either its head or its tail.
@@ -129,7 +134,8 @@ class Kelpie:
                                                                     dataset=self.dataset,
                                                                     hyperparameters=self.hyperparameters,
                                                                     sample_to_explain=sample_to_explain,
-                                                                    perspective=perspective)
+                                                                    perspective=perspective,
+                                                                    relevance_threshold=self.relevance_threshold)
 
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_remove=most_promising_samples)
         return explanations_with_relevance

@@ -159,6 +159,7 @@ hyperparameters = {DIMENSION: args.dimension,
                    EPOCHS: args.max_epochs}
 
 prefilter = args.prefilter
+relevance_threshold = args.relevance_threshold
 
 model = ConvE(dataset=dataset,
               hyperparameters=hyperparameters,
@@ -169,13 +170,15 @@ model.load_state_dict(torch.load(args.model_path))
 model.eval()
 
 if args.baseline is None:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 elif args.baseline == "data_poisoning":
     kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "criage":
     kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
 else:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 
 testing_fact_2_entities_to_convert = None
 if args.mode == "sufficient" and args.entities_to_convert is not None:

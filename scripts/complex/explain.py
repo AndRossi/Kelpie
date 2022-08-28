@@ -105,6 +105,11 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
+parser.add_argument("--relevance_threshold",
+                    type=float,
+                    default=None,
+                    help="The relevance acceptance threshold to use")
+
 prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER]
 parser.add_argument('--prefilter',
                     choices=prefilters,
@@ -140,6 +145,7 @@ hyperparameters = {DIMENSION: args.dimension,
                    REGULARIZER_NAME: "N3"}
 
 prefilter = args.prefilter
+relevance_threshold = args.relevance_threshold
 
 # load the dataset and its training samples
 print("Loading dataset %s..." % args.dataset)
@@ -157,13 +163,15 @@ model.eval()
 start_time = time.time()
 
 if args.baseline is None:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 elif args.baseline == "data_poisoning":
     kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "criage":
     kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
 else:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 
 testing_fact_2_entities_to_convert = None
 if args.mode == "sufficient" and args.entities_to_convert is not None:

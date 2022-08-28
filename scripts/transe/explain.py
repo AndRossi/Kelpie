@@ -117,6 +117,7 @@ hyperparameters = {DIMENSION: args.dimension,
                    LEARNING_RATE: args.learning_rate,
                    EPOCHS: args.max_epochs}
 
+relevance_threshold = args.relevance_threshold
 prefilter = args.prefilter
 
 ########## LOAD DATASET
@@ -137,13 +138,15 @@ model.eval()
 start_time = time.time()
 
 if args.baseline is None:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 elif args.baseline == "data_poisoning":
     kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "criage":
     kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
 else:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold)
 
 testing_fact_2_entities_to_convert = None
 if args.mode == "sufficient" and args.entities_to_convert is not None:

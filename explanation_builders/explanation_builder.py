@@ -2,11 +2,12 @@ from typing import Tuple, Any
 from dataset import Dataset
 from link_prediction.models.model import Model
 
-class SufficientExplanationBuilder:
 
+class SufficientExplanationBuilder:
     """
     The SufficientExplanationBuilder object guides the search for sufficient explanations.
     """
+
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
@@ -32,7 +33,7 @@ class SufficientExplanationBuilder:
 
     def build_explanations(self,
                            samples_to_add: list,
-                           top_k: int =10):
+                           top_k: int = 10):
         pass
 
     def _average(self, l: list):
@@ -43,11 +44,10 @@ class SufficientExplanationBuilder:
 
 
 class NecessaryExplanationBuilder:
-
-
     """
     The NecessaryExplanationBuilder object guides the search for necessary explanations.
     """
+
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
@@ -71,11 +71,11 @@ class NecessaryExplanationBuilder:
 
     def build_explanations(self,
                            samples_to_add: list,
-                           top_k: int =10):
+                           top_k: int = 10):
         pass
 
-    def _average(self, l:list):
+    def _average(self, l: list):
         result = 0.0
         for item in l:
             result += float(item)
-        return result/float(len(l))
+        return result / float(len(l))
