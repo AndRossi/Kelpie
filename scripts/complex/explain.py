@@ -18,7 +18,7 @@ from link_prediction.models.complex import ComplEx
 from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, \
     REGULARIZER_WEIGHT, EPOCHS, \
     BATCH_SIZE, REGULARIZER_NAME
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 
 datasets = ALL_DATASET_NAMES
 
@@ -105,7 +105,7 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
-prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER]
+prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER]
 parser.add_argument('--prefilter',
                     choices=prefilters,
                     default='graph-based',

@@ -4,6 +4,7 @@ from link_prediction.models.model import Model
 
 TOPOLOGY_PREFILTER = "topology_based"
 TYPE_PREFILTER = "type_based"
+NO_PREFILTER = "none"
 
 class PreFilter:
 

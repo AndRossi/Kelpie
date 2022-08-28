@@ -19,7 +19,7 @@ from criage import Criage
 from link_prediction.models.conve import ConvE
 from link_prediction.models.model import DIMENSION, LEARNING_RATE, EPOCHS, \
     BATCH_SIZE, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, LABEL_SMOOTHING, DECAY
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 
 start_time = time.time()
 
@@ -114,7 +114,7 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
-prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER]
+prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER]
 parser.add_argument('--prefilter',
                     choices=prefilters,
                     default='graph-based',

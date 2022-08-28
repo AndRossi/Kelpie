@@ -3,10 +3,12 @@ from dataset import Dataset
 from link_prediction.models.model import Model
 from prefilters.prefilter import PreFilter
 
+
 class NoPreFilter(PreFilter):
     """
     The NoPreFilter object is a fake PreFilter that does not filter away any unpromising facts .
     """
+
     def __init__(self,
                  model: Model,
                  dataset: Dataset):
@@ -32,11 +34,10 @@ class NoPreFilter(PreFilter):
             else:
                 self.entity_id_2_train_samples[t] = [(h, r, t)]
 
-
     def top_promising_samples_for(self,
-                                  sample_to_explain:Tuple[Any, Any, Any],
-                                  perspective:str,
-                                  top_k = -1,   # not used
+                                  sample_to_explain: Tuple[Any, Any, Any],
+                                  perspective: str,
+                                  top_k=-1,  # not used
                                   verbose=True):
 
         """

@@ -1,6 +1,7 @@
 from typing import Tuple, Any
 from dataset import Dataset
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+from prefilters.no_prefilter import NoPreFilter
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 from prefilters.topology_prefilter import TopologyPreFilter
 from prefilters.type_based_prefilter import TypeBasedPreFilter
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
@@ -37,6 +38,8 @@ class DataPoisoning:
             self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
         elif prefilter_type == TYPE_PREFILTER:
             self.prefilter = TypeBasedPreFilter(model=model, dataset=dataset)
+        elif prefilter_type == NO_PREFILTER:
+            self.prefilter = NoPreFilter(model=model, dataset=dataset)
         else:
             self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
         self.engine = DataPoisoningEngine(model=model,

@@ -23,11 +23,10 @@ class ComplEx(Model):
         TODO: explain that the input must always be direct facts only
     """
 
-
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random = True):
+                 init_random=True):
         """
             Constructor for ComplEx model.
 
@@ -44,10 +43,11 @@ class ComplEx(Model):
 
         self.name = "ComplEx"
         self.dataset = dataset
-        self.num_entities = dataset.num_entities            # number of entities in dataset
-        self.num_relations = dataset.num_relations          # number of relations in dataset
-        self.dimension = 2*hyperparameters[DIMENSION]       # embedding dimension; it is 2* the passed dimension because each element must have both a real and an imaginary value
-        self.real_dimension = hyperparameters[DIMENSION]    # dimension of the real part of each embedding
+        self.num_entities = dataset.num_entities  # number of entities in dataset
+        self.num_relations = dataset.num_relations  # number of relations in dataset
+        self.dimension = 2 * hyperparameters[
+            DIMENSION]  # embedding dimension; it is 2* the passed dimension because each element must have both a real and an imaginary value
+        self.real_dimension = hyperparameters[DIMENSION]  # dimension of the real part of each embedding
 
         self.init_scale = hyperparameters[INIT_SCALE]
 
@@ -59,7 +59,8 @@ class ComplEx(Model):
         # for each entity and relation we store real and imaginary parts as separate elements
         if init_random:
             self.entity_embeddings = Parameter(torch.rand(self.num_entities, self.dimension).cuda(), requires_grad=True)
-            self.relation_embeddings = Parameter(torch.rand(self.num_relations, self.dimension).cuda(), requires_grad=True)
+            self.relation_embeddings = Parameter(torch.rand(self.num_relations, self.dimension).cuda(),
+                                                 requires_grad=True)
 
             # initialization step to make the embedding values smaller in the embedding space
             with torch.no_grad():
@@ -73,16 +74,15 @@ class ComplEx(Model):
         """
         return False
 
-
     def score(self, samples: np.array) -> np.array:
         """
             Compute scores for the passed samples
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
             :return: a numpy array containing the scores of the passed samples
         """
-        lhs = self.entity_embeddings[samples[:, 0]]      # list of entity embeddings for the heads of the facts
-        rel = self.relation_embeddings[samples[:, 1]]    # list of relation embeddings for the relations of the heads
-        rhs = self.entity_embeddings[samples[:, 2]]      # list of entity embeddings for the tails of the facts
+        lhs = self.entity_embeddings[samples[:, 0]]  # list of entity embeddings for the heads of the facts
+        rel = self.relation_embeddings[samples[:, 1]]  # list of relation embeddings for the relations of the heads
+        rhs = self.entity_embeddings[samples[:, 2]]  # list of entity embeddings for the tails of the facts
 
         return self.score_embeddings(lhs, rel, rhs).detach().cpu().numpy()
 
@@ -107,7 +107,7 @@ class ComplEx(Model):
         # split the head embedding into real and imaginary components
         lhs = head_embeddings[:, :self.real_dimension], head_embeddings[:, self.real_dimension:]
         # split the relation embedding into real and imaginary components
-        rel =  rel_embeddings[:, :self.real_dimension],  rel_embeddings[:, self.real_dimension:]
+        rel = rel_embeddings[:, :self.real_dimension], rel_embeddings[:, self.real_dimension:]
         # split the tail embedding into real and imaginary components
         rhs = tail_embeddings[:, :self.real_dimension], tail_embeddings[:, self.real_dimension:]
 
@@ -156,9 +156,9 @@ class ComplEx(Model):
                         - a partial result to use in regularization
         """
 
-        lhs = self.entity_embeddings[samples[:, 0]]       # list of entity embeddings for the heads of the facts
-        rel = self.relation_embeddings[samples[:, 1]]     # list of relation embeddings for the relations of the heads
-        rhs = self.entity_embeddings[samples[:, 2]]       # list of entity embeddings for the tails of the facts
+        lhs = self.entity_embeddings[samples[:, 0]]  # list of entity embeddings for the heads of the facts
+        rel = self.relation_embeddings[samples[:, 1]]  # list of relation embeddings for the relations of the heads
+        rhs = self.entity_embeddings[samples[:, 2]]  # list of entity embeddings for the tails of the facts
 
         lhs = lhs[:, :self.real_dimension], lhs[:, self.real_dimension:]
         rel = rel[:, :self.real_dimension], rel[:, self.real_dimension:]
@@ -184,13 +184,13 @@ class ComplEx(Model):
         #                           sum the resulting vectors
         #                           squareroot the elements of the resulting vector
         return (
-            (lhs[0] * rel[0] - lhs[1] * rel[1]) @ to_score[0].transpose(0, 1) +
-            (lhs[0] * rel[1] + lhs[1] * rel[0]) @ to_score[1].transpose(0, 1)
-        ), (
-            torch.sqrt(lhs[0] ** 2 + lhs[1] ** 2),
-            torch.sqrt(rel[0] ** 2 + rel[1] ** 2),
-            torch.sqrt(rhs[0] ** 2 + rhs[1] ** 2)
-        )
+                       (lhs[0] * rel[0] - lhs[1] * rel[1]) @ to_score[0].transpose(0, 1) +
+                       (lhs[0] * rel[1] + lhs[1] * rel[0]) @ to_score[1].transpose(0, 1)
+               ), (
+                   torch.sqrt(lhs[0] ** 2 + lhs[1] ** 2),
+                   torch.sqrt(rel[0] ** 2 + rel[1] ** 2),
+                   torch.sqrt(rhs[0] ** 2 + rhs[1] ** 2)
+               )
 
     def _get_rhs(self):
         """
@@ -233,7 +233,6 @@ class ComplEx(Model):
             head_embeddings[0] * relation_embeddings[1] + head_embeddings[1] * relation_embeddings[0]
         ], 1)
 
-
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             This method takes as an input a tensor of 'direct' samples,
@@ -262,7 +261,7 @@ class ComplEx(Model):
         # invert samples to perform head predictions
         inverse_samples = self.dataset.invert_samples(direct_samples)
 
-        #obtain scores, ranks and predictions both for direct and inverse samples
+        # obtain scores, ranks and predictions both for direct and inverse samples
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
         inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
 
@@ -278,7 +277,6 @@ class ComplEx(Model):
 
         return scores, ranks, predictions
 
-
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             Returns filtered scores, ranks and predicted entities for each passed fact.
@@ -287,7 +285,7 @@ class ComplEx(Model):
             :return:
         """
 
-        ranks = torch.ones(len(samples))    # initialize with ONES
+        ranks = torch.ones(len(samples))  # initialize with ONES
 
         with torch.no_grad():
 
@@ -311,7 +309,7 @@ class ComplEx(Model):
                 all_scores[i, torch.LongTensor(filter_out)] = -1e6
 
             # fill the ranks data structure and convert it to a Python list
-            ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()    #ranks was initialized with ONES
+            ranks += torch.sum((all_scores >= targets).float(), dim=1).cpu()  # ranks was initialized with ONES
             ranks = ranks.cpu().numpy().tolist()
 
             all_scores = all_scores.cpu().numpy()
@@ -329,12 +327,12 @@ class ComplEx(Model):
                 predicted_tails = np.where(all_scores[i] > -1e6)[0]
 
                 # get all not filtered tails and corresponding scores for current fact
-                #predicted_tails = np.where(all_scores[i] != -1e6)
-                predicted_tails_scores = all_scores[i, predicted_tails] #for cur_tail in predicted_tails]
+                # predicted_tails = np.where(all_scores[i] != -1e6)
+                predicted_tails_scores = all_scores[i, predicted_tails]  # for cur_tail in predicted_tails]
 
                 # note: the target tail score and the tail id are in the same position in their respective lists!
-                #predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
-                #predicted_tails = np.append(predicted_tails, [tail_id])
+                # predicted_tails_scores = np.append(predicted_tails_scores, scores[i])
+                # predicted_tails = np.append(predicted_tails, [tail_id])
 
                 # sort the scores and predicted tails list in the same way
                 permutation = np.argsort(-predicted_tails_scores)
@@ -356,7 +354,7 @@ class ComplEx(Model):
                                                   predicted_tails[j:]))
 
                 # add to the results data structure
-                predictions.append(predicted_tails)     # as a np array!
+                predictions.append(predicted_tails)  # as a np array!
 
         return scores, ranks, predictions
 
@@ -370,6 +368,7 @@ class ComplEx(Model):
 
     def kelpie_model_class(self):
         return KelpieComplEx
+
 
 ################
 
@@ -410,7 +409,7 @@ class KelpieComplEx(KelpieModel, ComplEx):
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
         self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
 
-        with torch.no_grad():           # Initialize as any other embedding
+        with torch.no_grad():  # Initialize as any other embedding
             self.kelpie_entity_embedding *= self.init_scale
 
         self.relation_embeddings = frozen_relation_embeddings

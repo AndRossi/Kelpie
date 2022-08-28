@@ -17,7 +17,7 @@ from criage import Criage
 from link_prediction.models.transe import TransE
 from link_prediction.models.model import BATCH_SIZE, LEARNING_RATE, EPOCHS, DIMENSION, MARGIN, NEGATIVE_SAMPLES_RATIO, \
     REGULARIZER_WEIGHT
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 
 parser = argparse.ArgumentParser()
 
@@ -90,7 +90,7 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
-prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER]
+prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER]
 parser.add_argument('--prefilter',
                     choices=prefilters,
                     default='graph-based',
