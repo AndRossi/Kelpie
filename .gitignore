@@ -4,6 +4,7 @@ __pycache__/
 
 ### Kelpie paths not to add to git for the time being
 stored_models
+major_revision/
 
 ### OS generated files 
 .DS_Store
