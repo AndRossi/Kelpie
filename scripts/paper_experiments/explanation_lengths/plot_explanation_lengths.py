@@ -5,7 +5,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 sys.path.append(
-    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir)))
+    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir, os.path.pardir)))
 
 from dataset import FB15K, WN18, FB15K_237, WN18RR, YAGO3_10, ALL_DATASET_NAMES
 
