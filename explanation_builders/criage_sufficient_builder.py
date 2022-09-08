@@ -16,8 +16,7 @@ class CriageSufficientExplanationBuilder(SufficientExplanationBuilder):
                  sample_to_explain: Tuple[Any, Any, Any],
                  perspective: str,
                  num_entities_to_convert=10,
-                 entities_to_convert=None
-                 ):
+                 entities_to_convert=None):
         """
         CriageSufficientExplanationBuilder object constructor.
 
@@ -29,7 +28,7 @@ class CriageSufficientExplanationBuilder(SufficientExplanationBuilder):
         :param num_entities_to_convert
         """
 
-        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert)
+        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert, 1)
 
         self.engine = CriageEngine(model=model,
                                    dataset=dataset,

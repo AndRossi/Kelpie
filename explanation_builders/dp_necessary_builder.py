@@ -24,7 +24,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         :param perspective
         """
 
-        super().__init__(model, dataset, sample_to_explain, perspective)
+        super().__init__(model, dataset, sample_to_explain, perspective, 1)
 
         self.engine = DataPoisoningEngine(model=model,
                                           dataset=dataset,

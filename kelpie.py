@@ -17,12 +17,15 @@ class Kelpie:
     to the Pre-Filter, Explanation Builder and Relevance Engine modules.
     """
 
+    DEFAULT_MAX_LENGTH = 4
+
     def __init__(self,
                  model: Model,
                  dataset: Dataset,
                  hyperparameters: dict,
                  prefilter_type: str,
-                 relevance_threshold: float = None):
+                 relevance_threshold: float = None,
+                 max_explanation_length: int = DEFAULT_MAX_LENGTH):
         """
         Kelpie object constructor.
 
@@ -31,12 +34,13 @@ class Kelpie:
         :param hyperparameters: the hyperparameters of the model and of its optimization process
         :param prefilter_type: the type of prefilter to employ
         :param relevance_threshold: the threshold of relevance that, if exceeded, leads to explanation acceptance
-
+        :param max_explanation_length: the maximum number of facts that the explanations to extract can contain
         """
         self.model = model
         self.dataset = dataset
         self.hyperparameters = hyperparameters
         self.relevance_threshold = relevance_threshold
+        self.max_explanation_length = max_explanation_length
 
         if prefilter_type == TOPOLOGY_PREFILTER:
             self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
@@ -96,7 +100,8 @@ class Kelpie:
                                                                      perspective=perspective,
                                                                      num_entities_to_convert=num_entities_to_convert,
                                                                      entities_to_convert=entities_to_convert,
-                                                                     relevance_threshold=self.relevance_threshold)
+                                                                     relevance_threshold=self.relevance_threshold,
+                                                                     max_explanation_length=self.max_explanation_length)
 
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_add=most_promising_samples)
         return explanations_with_relevance, explanation_builder.entities_to_convert
@@ -135,7 +140,8 @@ class Kelpie:
                                                                     hyperparameters=self.hyperparameters,
                                                                     sample_to_explain=sample_to_explain,
                                                                     perspective=perspective,
-                                                                    relevance_threshold=self.relevance_threshold)
+                                                                    relevance_threshold=self.relevance_threshold,
+                                                                    max_explanation_length=self.max_explanation_length)
 
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_remove=most_promising_samples)
         return explanations_with_relevance

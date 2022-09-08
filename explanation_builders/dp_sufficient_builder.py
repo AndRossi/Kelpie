@@ -30,7 +30,7 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
         :param num_entities_to_convert
         """
 
-        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert)
+        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert, 1)
 
         self.engine = DataPoisoningEngine(model=model,
                                          dataset=dataset,

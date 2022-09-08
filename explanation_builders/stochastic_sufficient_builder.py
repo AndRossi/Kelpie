@@ -24,19 +24,24 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                  perspective: str,
                  num_entities_to_convert: int = 10,
                  entities_to_convert: list = None,
-                 relevance_threshold: float = None):
+                 relevance_threshold: float = None,
+                 max_explanation_length: int = -1):
         """
         StochasticSufficientExplanationBuilder object constructor.
 
         :param model: the model to explain
         :param dataset: the dataset used to train the model
         :param hyperparameters: the hyperparameters of the model and of its optimization process
-        :param sample_to_explain
-        :param perspective
+        :param sample_to_explain: the predicted sample to explain
+        :param perspective: the explanation perspective, either "head" or "tail"
         :param num_entities_to_convert
+        :param max_explanation_length: the maximum number of facts to include in the explanation to extract
         """
 
-        super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert)
+        super().__init__(model=model, dataset=dataset,
+                         sample_to_explain=sample_to_explain, perspective=perspective,
+                         num_entities_to_convert=num_entities_to_convert,
+                         max_explanation_length=max_explanation_length)
 
         self.xsi = relevance_threshold if relevance_threshold is not None else DEAFAULT_XSI_THRESHOLD
         self.window_size = 10

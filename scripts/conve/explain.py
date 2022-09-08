@@ -101,7 +101,7 @@ parser.add_argument("--coverage",
 parser.add_argument("--baseline",
                     type=str,
                     default=None,
-                    choices=[None, "data_poisoning", "criage"],
+                    choices=[None, "k1", "data_poisoning", "criage"],
                     help="attribute to use when we want to use a baseline rather than the Kelpie engine")
 
 parser.add_argument("--entities_to_convert",
@@ -176,6 +176,9 @@ elif args.baseline == "data_poisoning":
     kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
 elif args.baseline == "criage":
     kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
+elif args.baseline == "k1":
+    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
+                    relevance_threshold=relevance_threshold, max_explanation_length=1)
 else:
     kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
                     relevance_threshold=relevance_threshold)
