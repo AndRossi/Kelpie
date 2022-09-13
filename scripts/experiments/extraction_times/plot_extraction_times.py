@@ -9,6 +9,8 @@ sys.path.append(
 
 from dataset import FB15K, FB15K_237, WN18, WN18RR, YAGO3_10
 
+KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
+
 COMPLEX = "ComplEx"
 CONVE = "ConvE"
 TRANSE = "TransE"
@@ -22,7 +24,15 @@ parser.add_argument("--mode",
                     choices=['necessary', 'sufficient'],
                     help="The mode of the explanations to plot the extraction times of, either necessary or sufficient")
 
+parser.add_argument("--save",
+                    type=bool,
+                    default=False,
+                    help="Whether to just show the plot or save it in Kelpie/reproducibility_images")
+
 args = parser.parse_args()
+
+mode = args.mode
+save = args.save
 
 necessary_execution_times = {COMPLEX: {FB15K: 1222, WN18: 27, FB15K_237: 145, WN18RR: 39, YAGO3_10: 133},
                              CONVE: {FB15K: 2019, WN18: 127, FB15K_237: 34, WN18RR: 28, YAGO3_10: 128},
@@ -86,4 +96,13 @@ ax.set_yscale('log')
 
 fig.tight_layout()
 
-plt.show()
+if not save:
+    plt.show()
+if save:
+    output_reproducibility_folder = os.path.join(KELPIE_ROOT, "reproducibility_images")
+    if not os.path.isdir(output_reproducibility_folder):
+        os.makedirs(output_reproducibility_folder)
+    output_path = os.path.join(output_reproducibility_folder, f'extraction_times_{mode}.png')
+    print(f'Saving {args.mode} explanation extraction time plot in {output_path}... ')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    print('Done\n')

@@ -1,8 +1,17 @@
 import numpy
 import matplotlib.pyplot as plt
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
+
+parser.add_argument("--save",
+                    type=bool,
+                    default=False,
+                    help="Whether to just show the plot or save it in Kelpie/reproducibility_images")
+
+args = parser.parse_args()
+save = args.save
 
 SHAPLEY = "Shapley Values"
 KERNELSHAP = "KernelSHAP"
@@ -28,7 +37,8 @@ kelpie_visits = [input_fact_2_visits[x][2] for x in input_fact_2_visits]
 x = numpy.arange(len(shapley_value_visits))  # the label locations
 width = 0.15  # the width of the bars
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(9, 5))
+
 rects1 = ax.bar(x - width, shapley_value_visits, width, label=SHAPLEY, zorder=3)
 rects2 = ax.bar(x, kernelshap_visits, width, label=KERNELSHAP, zorder=3)
 rects3 = ax.bar(x + width, kelpie_visits, width, label=KELPIE, zorder=3)
@@ -61,9 +71,19 @@ ax.set_title("Comparison among Shalpey Values, KernelSHAP and Kelpie.\n "
 
 fig.tight_layout()
 
-plt.show()
 
+KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
 
+if not save:
+    plt.show()
+else:
+    output_reproducibility_folder = os.path.join(KELPIE_ROOT, "reproducibility_images")
+    if not os.path.isdir(output_reproducibility_folder):
+        os.makedirs(output_reproducibility_folder)
+    output_path = os.path.join(output_reproducibility_folder, f'shap_kelpie_comparison.png')
+    print(f'Saving efficiency comparison of different explanation building poliies in {output_path}... ')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    print('Done\n')
 
 
 

@@ -6,6 +6,13 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
+parser.add_argument("--save",
+                    type=bool,
+                    default=False,
+                    help="Whether to just show the table or save it in Kelpie/reproducibility_images")
+
+args = parser.parse_args()
+save = args.save
 
 def count_items(items_list):
     result = [0, 0, 0, 0]
@@ -118,10 +125,6 @@ answers_1_TN, answers_2_TN, answers_3_TN = read_necessary_module(os.path.join(cu
 answers_1_CS, answers_2_CS, answers_3_CS = read_sufficient_module(os.path.join(cur_dir, "user_study_complex_sufficient.csv"), users)
 answers_1_TS, answers_2_TS, answers_3_TS = read_sufficient_module(os.path.join(cur_dir, "user_study_transe_sufficient.csv"), users)
 
-print("ComplEx trust:\t" + str(numpy.average(answers_1_CN + answers_1_CS)))
-print("TransE trust:\t" + str(numpy.average(answers_1_TN + answers_1_TS)))
-print("Conceptual Understanding:\t" + str(numpy.average(answers_2_CN + answers_2_TN + answers_2_CS + answers_2_TS)))
-
 
 GRAY = "#4D4D4D"
 BLUE = "#5DA5DA"
@@ -152,4 +155,26 @@ fig.gca().add_artist(centre_circle)
 # Equal aspect ratio ensures that pie is drawn as a circle
 ax1.axis('equal')
 
-plt.show()
+complex_trust = numpy.average(answers_1_CN + answers_1_CS)
+transe_trust = numpy.average(answers_1_TN + answers_1_TS)
+conceptual_understanding = str(numpy.average(answers_2_CN + answers_2_TN + answers_2_CS + answers_2_TS))
+
+text = f'ComplEx trust:   {complex_trust}\n' \
+       f'TransE trust:    {transe_trust}\n' \
+       f'Conceptual understading: {conceptual_understanding}'
+
+plt.figtext(0.1, 0.01, text, ha="left", fontsize=11)
+
+
+if not args.save:
+    plt.show()
+else:
+    KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
+    output_reproducibility_folder = os.path.join(KELPIE_ROOT, "reproducibility_images")
+    if not os.path.isdir(output_reproducibility_folder):
+        os.makedirs(output_reproducibility_folder)
+    output_path = os.path.join(output_reproducibility_folder, f'user_study.png')
+    print(f'Saving user study plot in {output_path}... ')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    print('Done\n')
+

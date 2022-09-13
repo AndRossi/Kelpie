@@ -1,7 +1,18 @@
 import matplotlib.pyplot as plt
 import argparse
+import os
+
+KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
+
+parser.add_argument("--save",
+                    type=bool,
+                    default=False,
+                    help="Whether to just show the plot or save it in Kelpie/reproducibility_images")
+
+args = parser.parse_args()
+save = args.save
 
 prefilter_times = {5: 26.6946750164032,
                    10: 76.38848857879638,
@@ -40,5 +51,13 @@ plt.legend()
 plt.ylabel('Necessary explanation extraction time')
 plt.xlabel('Training mentions of the entity to post-train')
 
-plt.show()
-
+if save:
+    output_reproducibility_folder = os.path.join(KELPIE_ROOT, "reproducibility_images")
+    if not os.path.isdir(output_reproducibility_folder):
+        os.makedirs(output_reproducibility_folder)
+    output_path = os.path.join(output_reproducibility_folder, f'extraction_times_with_and_without_prefilter_plot.png')
+    print(f'Saving plot of explanation extraction times with and without prefilter in {output_path}... ')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    print('Done\n')
+else:
+    plt.show()
