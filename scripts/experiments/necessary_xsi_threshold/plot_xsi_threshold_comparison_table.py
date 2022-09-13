@@ -76,6 +76,7 @@ def mr(ranks):
 
 
 KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
+END_TO_END_EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, "end_to_end"))
 EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir))
 
 models = ["TransE", "ComplEx", "ConvE"]
@@ -96,11 +97,11 @@ for model in models:
     for dataset in datasets:
 
         xsi1_filename = "_".join(['kelpie', model.lower(), dataset.lower().replace("-", ""), "1"]) + ".csv"
-        xsi5_filename = "_".join(['kelpie', model.lower(), dataset.lower().replace("-", ""), "5"]) + ".csv"
+        xsi5_filename = "_".join(['kelpie', "necessary", model.lower(), dataset.lower().replace("-", "")]) + ".csv"
         xsi10_filename = "_".join(['kelpie', model.lower(), dataset.lower().replace("-", ""), "10"]) + ".csv"
 
         xsi1_filepath = os.path.join(EXPERIMENT_ROOT, xsi1_filename)
-        xsi5_filepath = os.path.join(EXPERIMENT_ROOT, xsi5_filename)
+        xsi5_filepath = os.path.join(END_TO_END_EXPERIMENT_ROOT, xsi5_filename)
         xsi10_filepath = os.path.join(EXPERIMENT_ROOT, xsi10_filename)
 
         original_ranks = []
