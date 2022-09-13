@@ -57,8 +57,9 @@ The training, validation and test sets of such datasets are distributed in this 
 
 ## Training and Testing Our Models
 
-For the sake of reproducibility, we make available through FigShare [the `.pt` model files](https://figshare.com/s/ede27f3440fe742de60b) resulting from training each system on each dataset.
-We use the following hyperparameters, which we have found to lead to the best performances.
+For the sake of reproducibility, we make available through FigShare [the `.pt` model files](https://figshare.com/s/ede27f3440fe742de60b) resulting from training each system on each dataset. To run any of the experiments of our paper, the `.pt` files of all the trained models should bw downloaded and stored in a new folder `Kelpie/stored_models`.
+
+For our models and datasets we use following hyperparameters, which we have found to lead to the best performances.
 
 <p align="center">
 <img width="90%" alt="hyperparams" src="https://user-images.githubusercontent.com/6909990/124291956-66e63c80-db55-11eb-9aa6-9892ee24afc2.png">
@@ -458,6 +459,9 @@ The training and evaluation processes can be launched with the following command
     
 
 ### Extracting and verifying explanations
+
+We report in this section how to use extract explanations for a trained model, and how to verify their effectiveness. 
+To run the following commands, the `.pt`file of the saved model needs to be avaiable in folder `Kelpie/stored_models`.
 
 * **ComplEx**
    * **FB15k**
