@@ -466,8 +466,8 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
 Each end-to-end experiment is composed of two separate steps:
 * an **explanation extraction** step, where the we use Kelpie to identify the explanations for a set of predictions. This step is performed by running the `explain.py` script of the model to use, i.e., `scripts/complex/explain.py`, `scripts/conve/explain.py`, or `scripts/transe/explain.py`; it can be performed using the Kelpie engine, or by choosing a specific baseline among the supported ones (`K1`, `data_poisoning` or, for all models excluding TransE, `Criage`). The explanation extraction process writes in the main folder of Kelpie a few output files and logs, including an `output.txt` file with the definitive extracted explanations. 
 
-* an **explanation verification** step, where the we alter the training set and retrain the model to verify that the extracted explanations are indeed effective. This step is performed by running the the `verify_explanations.py` script of the model to use, i.e., `scripts/complex/verify_explanations.py`, `scripts/conve/verify_explanations.py`, or `scripts/transe/verify_explanations.py`; it reads from the Kelpie main folder the `output.txt` file of a previous explanation extraction step, and proceeds to verify the loaded explanations. Unlike the explanation extraction, the explanation verification step does not need to specify if the explanations were obtained by Kelpie or by a baseline, so the command to run is always the same.
-
+* an **explanation verification** step, where the we alter the training set and retrain the model to verify that the extracted explanations are indeed effective. This step is performed by running the the `verify_explanations.py` script of the model to use, i.e., `scripts/complex/verify_explanations.py`, `scripts/conve/verify_explanations.py`, or `scripts/transe/verify_explanations.py`; it reads from the Kelpie main folder the `output.txt` file of a previous explanation extraction step, and proceeds to verify the loaded explanations. Unlike the explanation extraction, the explanation verification step does not need to specify if the explanations were obtained by Kelpie or by a baseline, so the command to run is always the same. The explanation verification step generates an `output_end_to_end.csv` output file that can then be used to plot the experiment result tables (e.g., in the reproducibility package).
+`
 We report in the following, for each model, dataset and scenario, the commands to perform Explanation Extraction using `Kelpie`, `K1`, `data_poisoning` or, for all models excluding TransE, `Criage`, followed by the command to perform explanation verification.
 
 * **ComplEx**
@@ -1434,3 +1434,371 @@ We report in the following, for each model, dataset and scenario, the commands t
            ```python
            python3 scripts/transe/verify_explanations.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode sufficient
            ```
+
+### Minimality Experiments
+
+The minimality experiments verify if the extracted explanations are indeed the smallest effective combinations of facts. To check if an explanation is minimal, these experiments randomly remove a subset of its facts before applying it to the training set and verifying its effectiveness.
+Note that minimality experiments can only be performed on Kelpie, and not on its baselines: this is due to Kelpie being the only system that extracts explanations longer than 1.
+
+The minimality experiments are very similar to the end-to-end ones, as they also involve an explanation extraction step and an explanation verification step.
+* The **explanation extraction** step is identical to the one of end-to-end experiments.
+* The **explanation verification** step is performed by running the the `verify_explanations_skip_random.py` script of the model to use, i.e., `scripts/complex/verify_explanations_skip_random.py`, `scripts/conve/verify_explanations_skip_random.py`, or `scripts/transe/verify_explanations_skip_random.py. These scripts, similarly to the end-to-end verification ones, read from the Kelpie main folder the `output.txt` file of a previous explanation extraction step. The difference from the end-to-end verification scripts is that in this case, the loaded explanations, before being verified, are randomly sampled. The explanation verification step generates an `output_end_to_end_skipping_random_facts.txt` output file that can then be used in conjunction to the explanation verification output of analogous the end-to-end experiment to plot the experiment result tables (e.g., in the reproducibility package).
+
+For the sake of simplicity, we only report here the explanation verification commands, as the explanation extraction ones are identical to those already reported for the explanation extraction step:
+
+* **ComplEx**
+   * **FB15k**
+      * **Necessary Scenario**
+
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode sufficient
+           ```
+           
+  * **WN18**
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode sufficient
+           ```
+
+  * **FB15k-237**
+  
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --mode sufficient
+           ```
+
+  * **WN18RR**
+  
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --mode sufficient
+           ```
+
+  * **YAGO3-10**
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/complex/verify_explanations_skip_random.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --mode sufficient
+           ```
+    
+* **ConvE**
+
+  * **FB15k**
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --mode sufficient
+           ```
+
+  * **WN18**
+
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --mode necessary
+           ```
+
+    
+  * **FB15k-237**
+  
+      * **Necessary Scenario**
+
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python scripts/conve/verify_explanations_skip_random.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --mode sufficient
+           ```
+
+  * **WN18RR**
+  
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --mode sufficient
+           ```
+    
+  * **YAGO3-10**
+
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/conve/verify_explanations_skip_random.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --mode sufficient
+           ```
+
+* **TransE**
+
+  * **FB15k**
+
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --mode sufficient
+           ```
+
+
+  * **WN18**
+
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 end_to_end_testing/transe/verify_explanations_skip_random.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --model_path stored_models/TransE_WN18.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 end_to_end_testing/transe/verify_explanations_skip_random.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --model_path stored_models/TransE_WN18.pt --mode sufficient
+           ```
+
+
+  * **FB15k-237**
+  
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --model_path stored_models/TransE_FB15k-237.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --model_path stored_models/TransE_FB15k-237.pt --mode sufficient
+           ```
+
+
+  * **WN18RR**
+
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python scripts/transe/verify_explanations_skip_random.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --mode necessary
+           ```
+
+
+
+  * **YAGO3-10**
+  
+      * **Necessary Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode necessary
+           ```
+
+      * **Sufficient Scenario**
+
+         * **Explanation Extraction**
+           See the analogous end-to-end kelpie Explanation extraction command.
+
+         * **Explanation Verification**
+         
+           ```python
+           python3 scripts/transe/verify_explanations_skip_random.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode sufficient
+
+
