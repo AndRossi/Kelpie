@@ -149,7 +149,7 @@ Distribution of explanation lengths for the TransE model:
 <img width="60%" alt="transe explanation lengths" src="https://user-images.githubusercontent.com/6909990/149196089-947abc70-ab82-4598-90ee-f74ea2f7bf15.png">
 </p>
 
-We observe that, under the same model and dataset, necessary explanations tend to be always be longer than sufficient ones. 
+We observe that, under the same model and dataset, necessary explanations tend to always be longer than sufficient ones. 
 This is intuitively reasonable, because while necessary explanations need to encompass _all_ the pieces of evidence that allow a prediction, whereas sufficient explanation can just focus on the few "most decisive" ones. 
 Let us consider, for example, the tail prediction <_Barack_Obama_, _nationality_, _USA_>. 
 A **necessary** explanation would probably feature multiple _Barack_Obama_ facts, e.g., <_Barack_Obama_, _president_of_, _USA_> and <_Barack_Obama_, _part_of_, _109𝑡ℎ_US_Congress_>.
@@ -458,21 +458,34 @@ The training and evaluation processes can be launched with the following command
     ```
     
 
-### Extracting and verifying explanations
+### End-to-end experiments
 
 We report in this section how to use extract explanations for a trained model, and how to verify their effectiveness. 
 To run the following commands, the `.pt`file of the saved model needs to be avaiable in folder `Kelpie/stored_models`.
 
+Each end-to-end experiment is composed of two separate steps:
+* an **explanation extraction** step, where the we use Kelpie to identify the explanations for a set of predictions. This step is performed by running the `explain.py` script of the model to use, i.e., `scripts/complex/explain.py`, `scripts/conve/explain.py`, or `scripts/transe/explain.py`; it can be performed using the Kelpie engine, or by choosing a specific baseline among the supported ones (`K1`, `data_poisoning` or, for all models excluding TransE, `Criage`). The explanation extraction process writes in the main folder of Kelpie a few output files and logs, including an `output.txt` file with the definitive extracted explanations. 
+
+* an **explanation verification** step, where the we alter the training set and retrain the model to verify that the extracted explanations are indeed effective. This step is performed by running the the `verify_explanations.py` script of the model to use, i.e., `scripts/complex/verify_explanations.py`, `scripts/conve/verify_explanations.py`, or `scripts/transe/verify_explanations.py`; it reads from the Kelpie main folder the `output.txt` file of a previous explanation extraction step, and proceeds to verify the loaded explanations. Unlike the explanation extraction, the explanation verification step does not need to specify if the explanations were obtained by Kelpie or by a baseline, so the command to run is always the same.
+
+We report in the following, for each model, dataset and scenario, the commands to perform Explanation Extraction using `Kelpie`, `K1`, `data_poisoning` or, for all models excluding TransE, `Criage`, followed by the command to perform explanation verification.
+
 * **ComplEx**
    * **FB15k**
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode necessary
              ```
 
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode necessary --baseline k1
+             ```
+             
             * **Data Poisoning**
             
              ```python
@@ -485,18 +498,24 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -511,7 +530,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode sufficient
@@ -519,12 +538,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
            
   * **WN18**
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -539,18 +564,24 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode necessary --baseline criage
              ```
 
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -565,7 +596,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode sufficient --baseline criage
              ```
 
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode sufficient
@@ -574,12 +605,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **FB15k-237**
   
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -594,19 +631,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -621,7 +664,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --mode sufficient
@@ -630,12 +673,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **WN18RR**
   
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -650,19 +699,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -677,7 +732,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --mode sufficient
@@ -685,12 +740,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
 
   * **YAGO3-10**
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -705,19 +766,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
  
            * **Kelpie**
             
              ```python
              python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -732,7 +799,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/complex/verify_explanations.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --mode sufficient
@@ -742,12 +809,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
 
   * **FB15k**
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_nec.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_nec.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -762,19 +835,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_nec.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_suff.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_suff.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -789,7 +868,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --facts_to_explain_path input_facts/conve_fb15k_random_suff.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset FB15k --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k.pt --mode sufficient
@@ -798,12 +877,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **WN18**
 
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -818,19 +903,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -845,7 +936,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --facts_to_explain_path input_facts/conve_wn18_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset WN18 --max_epochs 150 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18.pt --mode necessary
@@ -856,12 +947,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   
       * **Necessary Scenario**
 
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -876,19 +973,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python scripts/conve/verify_explanations.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -903,7 +1006,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --facts_to_explain_path input_facts/conve_fb15k237_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset FB15k-237 --max_epochs 60 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_FB15k-237.pt --mode sufficient
@@ -912,12 +1015,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **WN18RR**
   
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -932,19 +1041,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -959,7 +1074,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --facts_to_explain_path input_facts/conve_wn18rr_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset WN18RR --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_WN18RR.pt --mode sufficient
@@ -968,12 +1083,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **YAGO3-10**
 
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -988,19 +1109,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode necessary --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1015,7 +1142,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/conve/explain.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --facts_to_explain_path input_facts/conve_yago_random.csv --mode sufficient --baseline criage
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/conve/verify_explanations.py --dataset YAGO3-10 --max_epochs 500 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_YAGO3-10.pt --mode sufficient
@@ -1026,12 +1153,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **FB15k**
 
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.01 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1040,19 +1173,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode necessary --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.01 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1061,7 +1200,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --facts_to_explain_path input_facts/transe_fb15k_random.csv --mode sufficient --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset FB15k --max_epochs 200 --batch_size 2048 --learning_rate 0.00003 --dimension 200 --negative_samples_ratio 5 --regularizer_weight 2.0 --margin 2 --model_path stored_models/TransE_FB15k.pt --mode sufficient
@@ -1071,12 +1210,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **WN18**
 
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.01  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1085,19 +1230,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode necessary --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 end_to_end_testing/transe/verify_explanations.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --model_path stored_models/TransE_WN18.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.01  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1106,7 +1257,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002  --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --facts_to_explain_path input_facts/transe_wn18_random.csv --model_path stored_models/TransE_WN18.pt --mode sufficient --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 end_to_end_testing/transe/verify_explanations.py --dataset WN18 --max_epochs 250 --batch_size 2048 --learning_rate 0.0002 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 0 --margin 2 --model_path stored_models/TransE_WN18.pt --mode sufficient
@@ -1116,12 +1267,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **FB15k-237**
   
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.01 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --facts_to_explain_path input_facts/transe_fb15k237_random.csv --model_path stored_models/TransE_FB15k-237.pt --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --facts_to_explain_path input_facts/transe_fb15k237_random.csv --model_path stored_models/TransE_FB15k-237.pt --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1130,19 +1287,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --facts_to_explain_path input_facts/transe_fb15k237_random.csv --model_path stored_models/TransE_FB15k-237.pt --mode necessary --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --model_path stored_models/TransE_FB15k-237.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.01 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --model_path stored_models/TransE_FB15k-237.pt --facts_to_explain_path input_facts/transe_fb15k237_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --facts_to_explain_path input_facts/transe_fb15k237_random.csv --model_path stored_models/TransE_FB15k-237.pt --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1151,7 +1314,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --facts_to_explain_path input_facts/transe_fb15k237_random.csv --model_path stored_models/TransE_FB15k-237.pt --mode sufficient --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset FB15k-237 --max_epochs 100 --batch_size 2048 --learning_rate 0.0004 --dimension 50 --negative_samples_ratio 15 --regularizer_weight 1.0 --margin 5 --model_path stored_models/TransE_FB15k-237.pt --mode sufficient
@@ -1161,12 +1324,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **WN18RR**
 
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.01 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1175,19 +1344,25 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode necessary --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python scripts/transe/verify_explanations.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.01 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode sufficient
+             ```
+
+            * **K1**
+            
+             ```python
+             python scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode sufficient --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1196,7 +1371,7 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python scripts/transe/explain.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --facts_to_explain_path input_facts/transe_wn18rr_random.csv --mode sufficient --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset WN18RR --max_epochs 200 --batch_size 2048 --learning_rate 0.0001 --dimension 50 --negative_samples_ratio 5 --regularizer_weight 50.0 --margin 2 --model_path stored_models/TransE_WN18RR.pt --mode necessary
@@ -1207,12 +1382,18 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
   * **YAGO3-10**
   
       * **Necessary Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
              ```python
              python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.01 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode necessary
+             ```
+
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode necessary --baseline k1
              ```
 
             * **Data Poisoning**
@@ -1221,14 +1402,14 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode necessary --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode necessary
            ```
 
       * **Sufficient Scenario**
-         * **Explain predictions:**
+         * **Explanation Extraction**
 
             * **Kelpie**
             
@@ -1236,13 +1417,19 @@ To run the following commands, the `.pt`file of the saved model needs to be avai
              python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.01 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode sufficient
              ```
 
+            * **K1**
+            
+             ```python
+             python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode sufficient --baseline k1
+             ```
+             
             * **Data Poisoning**
             
              ```python
              python3 scripts/transe/explain.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weight 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --facts_to_explain_path input_facts/transe_yago_random.csv --mode sufficient --baseline data_poisoning
              ```
              
-         * **Verify Explanations:**
+         * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode sufficient
