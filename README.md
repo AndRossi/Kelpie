@@ -90,7 +90,7 @@ After the models have been trained, their evaluation yields the following metric
 The training and evaluation processes can be launched with the commands reported in our [training and testing section](#training-and-testing-models-1).
 
 
-## End-to-end experiments
+## End-to-end Experiments Results
 
 We showcase the effectiveness of Kelpie by explaining, for each model and dataset, the tail predictions of a set of 100 correctly predicted test facts both in *necessary* and in *sufficient* scenario. 
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
@@ -173,7 +173,7 @@ All in all, this confirms our observations from the original experiment.
 
 We share the output files with the results of our experiment repetitions in this repository, as part of the compressed archive `additional_experiments.zip`.
 
-## Additional Experiments
+## Additional Experiments Results
 
 We discuss in this section additional experiments that we could not include in our paper due to space constraints. 
 We share their output files in this repository in the compressed archive `additional_experiments.zip`.
@@ -387,6 +387,7 @@ We estimate this to correspond to around two weeks of uninterrupted run.
 
 As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
 
+For the sake of completeness we include below detailed guides on how to manually run [End-to-end Experiments]() and [Minimality Experiments]().
 
 ### Additional Experiments
 
