@@ -1446,27 +1446,39 @@ The minimality experiments are very similar to the end-to-end ones, as they also
 
 For the sake of simplicity, we only report here the explanation verification commands, as the explanation extraction ones are identical to those already reported for the explanation extraction step:
 
+
 * **ComplEx**
    * **FB15k**
       * **Necessary Scenario**
 
-         
+         * **Explanation Extraction**
+           
+           See the analogous end-to-end kelpie explanation extraction command.
+
+         * **Explanation Verification**
+
            ```python
-           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode necessary
+            python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode necessary
            ```
 
       * **Sufficient Scenario**
 
-         
+         * **Explanation Extraction**
+           
+           See the analogous end-to-end kelpie explanation extraction command.
+
+         * **Explanation Verification**
+
            ```python
-           python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode sufficient
+            python3 scripts/complex/verify_explanations_skip_random.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --mode sufficient
            ```
            
   * **WN18**
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1476,17 +1488,23 @@ For the sake of simplicity, we only report here the explanation verification com
 
       * **Sufficient Scenario**
 
-         
+         * **Explanation Extraction**
+           
+           See the analogous end-to-end kelpie explanation extraction command.
+
+         * **Explanation Verification**
+
            ```python
-           python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode sufficient
-           ```
+            python3 scripts/complex/verify_explanations_skip_random.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --mode sufficient
+            ```
 
   * **FB15k-237**
   
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1497,7 +1515,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1510,7 +1529,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1521,7 +1541,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1533,7 +1554,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1544,7 +1566,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1558,7 +1581,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1569,7 +1593,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1582,7 +1607,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1593,7 +1619,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1608,7 +1635,8 @@ For the sake of simplicity, we only report here the explanation verification com
 
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1619,7 +1647,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1632,7 +1661,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1643,7 +1673,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1656,7 +1687,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1667,7 +1699,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1682,7 +1715,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1693,7 +1727,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1707,7 +1742,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1718,7 +1754,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1732,7 +1769,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1743,7 +1781,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1757,7 +1796,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1768,7 +1808,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1783,7 +1824,8 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Necessary Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
@@ -1794,11 +1836,12 @@ For the sake of simplicity, we only report here the explanation verification com
       * **Sufficient Scenario**
 
          * **Explanation Extraction**
-           See the analogous end-to-end kelpie Explanation extraction command.
+           
+           See the analogous end-to-end kelpie explanation extraction command.
 
          * **Explanation Verification**
          
            ```python
            python3 scripts/transe/verify_explanations_skip_random.py --dataset YAGO3-10 --max_epochs 100 --batch_size 2048 --learning_rate 0.0001 --dimension 200 --negative_samples_ratio 10 --regularizer_weigh 50 --margin 5 --model_path stored_models/TransE_YAGO3-10.pt --mode sufficient
-
+           ```
 
