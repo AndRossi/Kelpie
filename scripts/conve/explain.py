@@ -114,6 +114,11 @@ parser.add_argument("--mode",
                     choices=["sufficient", "necessary"],
                     help="The explanation mode")
 
+parser.add_argument("--relevance_threshold",
+                    type=float,
+                    default=None,
+                    help="The relevance acceptance threshold to use")
+
 prefilters = [TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER]
 parser.add_argument('--prefilter',
                     choices=prefilters,
