@@ -48,7 +48,7 @@ def generate_pdf():
     We then measure the effectiveness of Kelpie explanations by observing:<br />
     - in the necessary scenario, how removing the explanation facts worsens the prediction metrics (MRR and H@1 decrease);<br />
     - in the sufficient scenario, how adding those facts to other entities converts them to the same prediction (MRR and H@1 increase);<br />
-    We report compare the effectiveness of Kelpie against the following baselines:<br />
+    We report the results of a comparison of the effectiveness of Kelpie against the following baselines:<br />
     - a Kelpie variant restricted to 1-sized explanations, called K1;<br />
     - the Data Poisoning (DP) method described in "Data poisoning attack against knowledge graph embedding" by Zhang et al.;<br />
     - the Criage method described in "Investigating Robustness and Interpretability of Link Prediction via Adversarial Modifications", by Pezeshkpour et al.;<br /><br />
@@ -82,7 +82,7 @@ def generate_pdf():
     end_user_study_file = os.path.join(IMAGES_FOLDER, "user_study.png")
 
     additional_experiments_text = """<b><u>Additional Experiments</u></b><br />
-    We include here additional experiments that we could not include in our paper due to space constraints.<br /><br /><br />
+    We include here additional experiments that were not in our paper due to space constraints.<br /><br /><br />
     """
 
     necessary_threshold_text = """<b>Explanation Builder: Acceptance Threshold (necessary scenario)</b><br />

@@ -298,7 +298,7 @@ if args.mode == "sufficient":
         e = str(original_tail_rank) + ";" + str(new_tail_rank)
         output_lines.append(";".join([a, b, c, d, e]) + "\n")
 
-    with open(os.path.join(explanations_folder, "output_end_to_end_skipping_random_facts.txt"), "w") as outfile:
+    with open("output_end_to_end_skipping_random_facts.txt", "w") as outfile:
         outfile.writelines(output_lines)
 
 
