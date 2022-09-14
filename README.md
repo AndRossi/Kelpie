@@ -349,7 +349,7 @@ When actually running our experiments (see sections below), our reproducibility 
 
 ### Running Paper Experiments
 
-The majority of the results reported in our paper can be replicated by running **End-to-end Experiments** and **Minimality Experiments**.
+Almost all the results reported in our paper can be replicated by running **End-to-end Experiments** and **Minimality Experiments**.
 More specifically, in our paper:
 * Table 3 and Table 4 report the effectiveness metrics obtained in our End-to-end Experiments;
 * Table 5 reports the distribution of explanation lengths obtained in End-to-end Experiments;
@@ -370,7 +370,7 @@ Instead we suggest running a faster selection of representative experiments, tha
 sh reproducibility_run_paper_experiments_selection.sh
 ```
 
-This script runs kelpie End-to-end Experiments and Minimality experiments on the following combinations of models, datasets and scenarios: 
+This script runs kelpie End-to-end Experiments and Minimality Experiments on the following combinations of models, datasets and scenarios: 
 
 * ComplEx model, WN18 dataset, necessary scenario 
 * ComplEx model, WN18 dataset, sufficient scenario 
@@ -390,6 +390,34 @@ As already mentioned, these scripts automatically replace the output files under
 
 ### Additional Experiments
 
+Some additional experiments were not included in our paper due to space constraints. Specifically:
+
+* Necessary Acceptance Threshold Experiments;
+* Pre-Filter Threshold Experiments;
+* Pre-Filter Type Experiments;
+
+These experiments are reported in this README.md document instead. 
+
+Similarly to the experiments reported in the paper, they can be run on all the models, datasets and scenarios via the script `reproducibility_run_additional_experiments_all.sh`:
+
+```bash
+sh reproducibility_run_additional_experiments_all.sh
+```
+
+Similarly to the paper experiments, we **heavily discourage** using this script. Repeating the complete set of additional experiments is very time-consuming too, and in our estimates it can exceed 60 days of uninterrupted computation. For the additional experiments too we have selected a more feasible subset of experiments in the script `reproducibility_additional_experiments_selection.sh`: 
+
+```bash
+sh reproducibility_additional_experiments_selection.sh
+```
+
+By running that script, the following experiments will be run:
+
+* Necessary Acceptance Threshold: ComplEx model, FB15k dataset, necessary scenario, threshold values in {1, 10};
+* Necessary Acceptance Threshold: ComplEx model, FB15k dataset, necessary and sufficient scenarios, threshold values in {10, 30};
+* Pre-Filter Type: ComplEx model, FB15k dataset, necessary and sufficient scenarios, type-based prefilter;
+
+We estimate this to correspond to around one week of uninterrupted run.
+As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
 
 
 ## Running Kelpie Experiments From Scratch
