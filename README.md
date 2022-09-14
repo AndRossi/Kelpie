@@ -311,6 +311,19 @@ Similarly to the relation between `Models` and `KelpieModels`, we have also crea
 
 Since these subclasses have identical signature to their respective Optimizers, unlike with `Models` and `KelpieModels` we have not created a separate `KelpieOptimizer` interface. Given an `Optimizer`, implementing its `Kelpie-` subclass is immediate: it usually enough to provide an overriding version of the superclass `train` method, making sure to also update the embedding of the mimic after each epoch calling the `update_embeddings` method of the KelpieModel that is being post-trained.
 
+## Availability
+
+To make it easier for the research community to use Kelpie and to replicate our results, we make the following resources available:
+
+* all the code generated in our research to implement and document our Kelpie framework and its baselines, and to run all of our experiments; we share it within this public repository.
+* this also includes the code to implement, to train and evaluate the three embedding-based Link Prediction models that we use in our paper: ComplEx, ConvE and TransE.
+* all the datasets used in our paper: FB15k, WN18, FB15k-237, WN18RR, YAGO3-10. We share them in this repository, within the `Kelpie/data` folder.
+* all the files resulting from training our 3 models on each of the 5 datasets; we share them as [`.pt` model files hosted on the FigShare platform](https://figshare.com/s/ede27f3440fe742de60b). To re-run any of the experiments of our paper, the `.pt` files of all the trained models should bw downloaded and stored in a new folder `Kelpie/stored_models`.
+* all the output files and logs obtained by running the experiments reported in our paper; we share them in this repository in the `outputs.zip` archive.
+* all the output files and logs obtained by running the additional experiments reported in this repository; we share them in this repository in the `additional_outputs.zip` archive.
+* all the end files obtained by running *all* our experiments (both paper ones and additional ones), in a more organized fashion so that they can be used by the Reproducibility Package to generate PDF reports (see the [PDF Report Generation section](pdf-report-generation) below); we share them in this repository the various subfolders of `Kelpie/scripts/experiments`.
+
+
 ## Reproducibility Package
 
 We include in this repository a reproducibility package that allows researchers to replicate all of our experiments, and to re-generate all of our tables and charts.
@@ -332,7 +345,7 @@ After cloning this repository (`git clone https://github.com/AndRossi/Kelpie`) a
 sh reproducibility_environment.sh
 ```
 
-### Results PDF Generation
+### PDF Report Generation
 
 It is possible to obtain a PDF report with the results of all our experiments by running the reproducibility_generate_pdf.sh script:
 
