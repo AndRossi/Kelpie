@@ -321,7 +321,7 @@ To make it easier for the research community to use Kelpie and to replicate our 
 * all the files resulting from training our 3 models on each of the 5 datasets; we share them as [`.pt` model files hosted on the FigShare platform](https://figshare.com/s/ede27f3440fe742de60b). To re-run any of the experiments of our paper, the `.pt` files of all the trained models should bw downloaded and stored in a new folder `Kelpie/stored_models`.
 * all the output files and logs obtained by running the experiments reported in our paper; we share them in this repository in the `outputs.zip` archive.
 * all the output files and logs obtained by running the additional experiments reported in this repository; we share them in this repository in the `additional_outputs.zip` archive.
-* all the end files obtained by running *all* our experiments (both paper ones and additional ones), in a more organized fashion so that they can be used by the Reproducibility Package to generate PDF reports (see the [PDF Report Generation section](pdf-report-generation) below); we share them in this repository the various subfolders of `Kelpie/scripts/experiments`.
+* all the end files obtained by running *all* our experiments (both paper ones and additional ones), in a more organized fashion so that they can be used by the Reproducibility Package to generate PDF reports (see the [PDF Report Generation section](#pdf-report-generation) below); we share them in this repository the various subfolders of `Kelpie/scripts/experiments`.
 
 
 ## Reproducibility Package
