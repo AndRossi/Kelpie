@@ -44,7 +44,7 @@ Kelpie requires the following libraries:
 - numpy;
 - tqdm;
 - matplotlib;
-
+- reportlab;
 
 ## Models and Datasets
 
