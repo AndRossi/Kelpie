@@ -38,16 +38,17 @@ Under the broad definition described above, Kelpie supports two explanation scen
 
 ## Environment and Prerequisites
 
-We have run all our experiments on an Ubuntu 18.04.5 environment using used Python 3.7.7, CUDA Version: 11.2 and Driver Version: 460.73.01.
+We have run all our experiments on an Ubuntu 18.04.5 environment using Python 3.7.7, CUDA Version: 11.2 and Driver Version: 460.73.01.
 Kelpie requires the following libraries: 
 - PyTorch (we used version 1.7.1);
 - numpy;
 - tqdm;
-
+- matplotlib;
+- reportlab;
 
 ## Models and Datasets
 
-The formulation of Kelpie supports all Link Prediction models based on embeddings. For the sake of simplicity in our implementation we focus on models that train on individual facts, as these are the vast majority in literature. Nonetheless, our implementation can be extended to identify fact-based explanations for other models too, e.g., models that leverage contextual information such as paths, types, or temporal data.
+The formulation of Kelpie supports any Link Prediction models based on embeddings. For the sake of simplicity in our implementation we focus on models that train on individual facts, as these are the vast majority in literature. Nonetheless, our implementation can be extended to identify fact-based explanations for other models too, e.g., models that leverage contextual information such as paths, types, or temporal data.
 
 We run our experiments on three models that rely on very different architectures: `ComplEx`, `ConvE` and `TransE`. 
 We provide implementations for these models in this repository.
@@ -90,7 +91,7 @@ After the models have been trained, their evaluation yields the following metric
 The training and evaluation processes can be launched with the commands reported in our [training and testing section](#training-and-testing-models-1).
 
 
-## End-to-end experiments
+## End-to-end Experiments Results
 
 We showcase the effectiveness of Kelpie by explaining, for each model and dataset, the tail predictions of a set of 100 correctly predicted test facts both in *necessary* and in *sufficient* scenario. 
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
@@ -134,7 +135,7 @@ Our experiments on each model and dataset can be replicated with the commands re
 We report in the following charts the lengths of the explanations extracted in our end-to-end experiments.
 More specifically, we report their distribution for each model and dataset, both in the necessary and in the sufficient scenario. In our experiments, we limit ourselves to explanations with maximum length 4.
 
-Distribution of explanation lengths for the ComplEx model:
+Distribution of explanation lengths for the `ComplEx` model:
 <p align="center">
 <img width="60%" alt="complex explanation lengths" src="https://user-images.githubusercontent.com/6909990/149195991-424443fd-fcb0-460f-a1c8-f1f2a46a60d2.png">
 </p>
@@ -160,7 +161,7 @@ On the contrary, a **sufficient** explanation in this case is a set of fact that
 
 In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat part of our experiments 10 times, using each time a different sample of 100 tail predictions to explain. 
 Due to the time-consuming process of retraining the model from scratch after each extraction is over (which is needed to measure the effectiveness of the extracted explanations) repeating 10 times our _entire_ set of end-to-end experiments would take several months. 
-For the time being we have just repeated the ComplEx experiments in the necessary scenario; this corresponds to running 10 times the explanation extraction of Kelpie and of our baselines K1, Data Poisoning and Criage on the 5 datasets FB15k, FB15k-237, WN18, WN18RR and YAGO3-10. Altogether, this amounts to 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
+For the time being we have just repeated the `ComplEx` experiments in the necessary scenario; this corresponds to running 10 times the explanation extraction of Kelpie and of our baselines K1, Data Poisoning and Criage on the 5 datasets `FB15k`, `FB15k-237`, `WN18`, `WN18RR` and `YAGO3-10`. Altogether, this amounts to 4x5x10 = 200 explanation extractions and model retrainings. In each extraction 100 tail predictions are explained, for a total of 20000 extracted explanations.
 We report in the following table, for each method and dataset, the average and the standard deviation of the corresponding ΔH@1 and ΔMRR values:
 
 <p align="center">
@@ -173,7 +174,7 @@ All in all, this confirms our observations from the original experiment.
 
 We share the output files with the results of our experiment repetitions in this repository, as part of the compressed archive `additional_experiments.zip`.
 
-## Additional Experiments
+## Additional Experiments Results
 
 We discuss in this section additional experiments that we could not include in our paper due to space constraints. 
 We share their output files in this repository in the compressed archive `additional_experiments.zip`.
@@ -198,7 +199,7 @@ This motivates our choice to use ξ<sub>n0</sub>=5 in our end-to-end experiments
 
 ### Pre-Filtering: _k_ value
 The Kelpie Pre-Filter module is used at the beginning of the explanation extraction to identify the most promising facts with respect to the prediction to explain. Its purpose is to narrow down the space of candidate explanations to combinations of the top _k_ most promising facts, thus making the research more feasible.
-In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the ComplEx model predictions:
+In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the `ComplEx` model predictions:
 
 <p align="center">
 <img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614960-e146b76a-fd99-44fa-a4a2-7a0f2f2efe62.png">
@@ -311,10 +312,23 @@ Similarly to the relation between `Models` and `KelpieModels`, we have also crea
 
 Since these subclasses have identical signature to their respective Optimizers, unlike with `Models` and `KelpieModels` we have not created a separate `KelpieOptimizer` interface. Given an `Optimizer`, implementing its `Kelpie-` subclass is immediate: it usually enough to provide an overriding version of the superclass `train` method, making sure to also update the embedding of the mimic after each epoch calling the `update_embeddings` method of the KelpieModel that is being post-trained.
 
+## Availability
+
+To make it easier for the research community to use Kelpie and to replicate our results, we make the following resources available:
+
+* all the code generated in our research to implement and document our Kelpie framework and its baselines, and to run all of our experiments; we share it within this public repository.
+* this also includes the code to implement, to train and evaluate the three embedding-based Link Prediction models that we use in our paper: `ComplEx`, `ConvE` and `TransE`.
+* all the datasets used in our paper: `FB15k`, `WN18`, `FB15k-237`, `WN18RR`, `YAGO3-10`. We share them in this repository, within the `Kelpie/data` folder.
+* all the files resulting from training our 3 models on each of the 5 datasets; we share them as [`.pt` model files hosted on the FigShare platform](https://figshare.com/s/ede27f3440fe742de60b). To re-run any of the experiments of our paper, the `.pt` files of all the trained models should bw downloaded and stored in a new folder `Kelpie/stored_models`.
+* all the output files and logs obtained by running the experiments reported in our paper; we share them in this repository in the `outputs.zip` archive.
+* all the output files and logs obtained by running the additional experiments reported in this repository; we share them in this repository in the `additional_outputs.zip` archive.
+* all the end files obtained by running *all* our experiments (both paper ones and additional ones), in a more organized fashion so that they can be used by the Reproducibility Package to generate PDF reports (see the [PDF Report Generation section](#pdf-report-generation) below); we share them in this repository the various subfolders of `Kelpie/scripts/experiments`.
+
+
 ## Reproducibility Package
 
-We include in this repository a reproducibility package that allows to replicate our experiments and to re-generate our tables and charts.
-Please note that using different software or hardware components might result in slightly different results; nonetheless, the overall observed behaviors should match the trends and conclusions seen in our paper. 
+We include in this repository a reproducibility package that allows researchers to replicate all of our experiments, and to re-generate all of our tables and charts.
+Please note that using different software or hardware components might result in slightly different results; nonetheless, the overall observed behaviors should match the trends and conclusions reported in our paper. 
 
 ### Environment
 
@@ -322,9 +336,9 @@ Pre-requirements:
 * Hardware: a GPU with at least 16GB VRAM, with CUDA Version 11.2 or newer.
 * Software: an installation of Python 3.7 or newer, and the package manager `pip`.
 
-Suggestions (not technically required but might make the process smoother):
+Suggestions (not technically required but might make the reproducibility easier):
 * Firmware: if possible, we suggest to work in a Linux OS, as this might ensure greater compatibility with our environment.
-* Environment management: we suggest to create a separate conda environment (`conda create --name kelpie python=3.8`) or venv (`python3 -m venv /path/to/new/virtual/environment`), as this allows to easily remove all the downloaded packages later.
+* Environment management: we suggest to create a separate conda environment (`conda create --name kelpie python=3.8`) or venv (`python3 -m venv /path/to/new/virtual/environment`), as this allows to easily remove all the downloaded packages after reproducibility has been verified.
 
 After cloning this repository (`git clone https://github.com/AndRossi/Kelpie`) all the dependencies required to run Kelpie can be installed by simply running our `reproducibility_environment.sh` script:
 
@@ -332,19 +346,19 @@ After cloning this repository (`git clone https://github.com/AndRossi/Kelpie`) a
 sh reproducibility_environment.sh
 ```
 
-### Results PDF Generation
+### PDF Report Generation
 
-It is possible to obtain results analogous to ours by running the reproducibility_generate_pdf.sh script:
+It is possible to obtain a PDF report with the results of all our experiments by running the reproducibility_generate_pdf.sh script:
 
 ```bash
-sh reproducibility_environment.sh
+sh reproducibility_generate_pdf.sh
 ```
 
-This will quickly generate in the Kelpie main folder a PDF report called `reproduced_experiments.pdf` with all the experiment plots and tables.
-The PDF report is generated by parsing and analyzing the experiment output files found in the `Kelpie/scripts/experiments` folder and in its subfolders.
-Even before any experiment is repeated, we distribute in those folders the output files experiments obtained in our environment: this allows the research community - even without using any GPU - to verify that our output files match our metrics.
+This scripts generates in the Kelpie main folder a PDF report called `reproduced_experiments.pdf` including the plots and tables for all of our experiments. The PDF report is generated by parsing and analyzing the experiment output files found in the `Kelpie/scripts/experiments` folder and in its subfolders.
 
-When actually running our experiments (see sections below), our reproducibility scripts make sure to replace the files under `Kelpie/scripts/experiments` with the newly generated output files, so that the generated PDF report is always up-to-date. 
+The contents of those folders are initialized with the same output files we obtained in our environment. This allows researchers to replicate our plots and tables instantly, without the need to repeat any experiments. This can particularly useful to verify that the output files of our experiments match our metrics, or when no GPU-equipped servers are not available.
+
+When actually running our experiments (see sections below), our reproducibility scripts automatically replace the files under `Kelpie/scripts/experiments` with the newly generated output files. This ensures that the generated PDF report is always up-to-date. 
 
 
 ### Running Paper Experiments
@@ -372,21 +386,22 @@ sh reproducibility_run_paper_experiments_selection.sh
 
 This script runs kelpie End-to-end Experiments and Minimality Experiments on the following combinations of models, datasets and scenarios: 
 
-* ComplEx model, WN18 dataset, necessary scenario 
-* ComplEx model, WN18 dataset, sufficient scenario 
-* ComplEx model, FB15k-237 dataset, necessary scenario 
-* ComplEx model, FB15k-237 dataset, sufficient scenario 
-* ConvE model, WN18RR dataset, necessary scenario 
-* ConvE model, WN18RR dataset, sufficient scenario 
-* TransE model, FB15k dataset, necessary scenario 
-* TransE model, FB15k dataset, sufficient scenario 
-* TransE model, YAGO3-10 dataset, necessary scenario 
-* TransE model, YAGO3-10 dataset, sufficient scenario 
+* `ComplEx` model, `WN18` dataset, necessary scenario 
+* `ComplEx` model, `WN18` dataset, sufficient scenario 
+* `ComplEx` model, `FB15k-237` dataset, necessary scenario 
+* `ComplEx` model, `FB15k-237` dataset, sufficient scenario 
+* `ConvE` model, `WN18RR` dataset, necessary scenario 
+* `ConvE` model, `WN18RR` dataset, sufficient scenario 
+* `TransE` model, `FB15k` dataset, necessary scenario 
+* `TransE` model, `FB15k` dataset, sufficient scenario 
+* TransE` model, `YAGO3-10` dataset, necessary scenario 
+* TransE` model, `YAGO3-10` dataset, sufficient scenario 
 
 We estimate this to correspond to around two weeks of uninterrupted run.
 
 As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
 
+For the sake of completeness we include below detailed guides on how to manually run [End-to-end Experiments](#end-to-end-experiments) and [Minimality Experiments](#minimality-experiments).
 
 ### Additional Experiments
 
@@ -412,9 +427,9 @@ sh reproducibility_additional_experiments_selection.sh
 
 By running that script, the following experiments will be run:
 
-* Necessary Acceptance Threshold: ComplEx model, FB15k dataset, necessary scenario, threshold values in {1, 10};
-* Necessary Acceptance Threshold: ComplEx model, FB15k dataset, necessary and sufficient scenarios, threshold values in {10, 30};
-* Pre-Filter Type: ComplEx model, FB15k dataset, necessary and sufficient scenarios, type-based prefilter;
+* Necessary Acceptance Threshold: `ComplEx` model, `FB15k` dataset, necessary scenario, threshold values in {1, 10};
+* Necessary Acceptance Threshold: `ComplEx` model, `FB15k` dataset, necessary and sufficient scenarios, threshold values in {10, 30};
+* Pre-Filter Type: `ComplEx` model, `FB15k` dataset, necessary and sufficient scenarios, type-based prefilter;
 
 We estimate this to correspond to around one week of uninterrupted run.
 As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
