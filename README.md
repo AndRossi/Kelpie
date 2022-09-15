@@ -38,16 +38,17 @@ Under the broad definition described above, Kelpie supports two explanation scen
 
 ## Environment and Prerequisites
 
-We have run all our experiments on an Ubuntu 18.04.5 environment using used Python 3.7.7, CUDA Version: 11.2 and Driver Version: 460.73.01.
+We have run all our experiments on an Ubuntu 18.04.5 environment using Python 3.7.7, CUDA Version: 11.2 and Driver Version: 460.73.01.
 Kelpie requires the following libraries: 
 - PyTorch (we used version 1.7.1);
 - numpy;
 - tqdm;
+- matplotlib;
 
 
 ## Models and Datasets
 
-The formulation of Kelpie supports all Link Prediction models based on embeddings. For the sake of simplicity in our implementation we focus on models that train on individual facts, as these are the vast majority in literature. Nonetheless, our implementation can be extended to identify fact-based explanations for other models too, e.g., models that leverage contextual information such as paths, types, or temporal data.
+The formulation of Kelpie supports any Link Prediction models based on embeddings. For the sake of simplicity in our implementation we focus on models that train on individual facts, as these are the vast majority in literature. Nonetheless, our implementation can be extended to identify fact-based explanations for other models too, e.g., models that leverage contextual information such as paths, types, or temporal data.
 
 We run our experiments on three models that rely on very different architectures: `ComplEx`, `ConvE` and `TransE`. 
 We provide implementations for these models in this repository.
