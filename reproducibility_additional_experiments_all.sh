@@ -1,3 +1,5 @@
+echo "***WARNING: we heavily discourage running this script, as in our estimates replicating all of our additional experiments might take more than 2 months of uninterrupted computation time to complete. We suggest reproducing only a selection of our experiment by running the reproducibility_run_additional_experiments_selection.sh script instead.***" && \
+
 ##################################################
 ### NECESSARY ACCEPTANCE THRESHOLD EXPERIMENTS ###
 ##################################################

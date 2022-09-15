@@ -1,24 +1,4 @@
-# TODO: add environment
-# TODO: add github clone?
-# TODO: add cd
-# TODO: add wget of the models
-# TODO: add unzip and move to stored models
-# TODO: generate PDF
-
-# TODO NOTE: in the paper, h@1 and mrr minimality results were swapped
-# TODO NOTE: in the paper, h@1 and mrr sufficient minimality results were slightly different
-# TODO NOTE: in the paper, h@1 and mrr sufficient prefilter threshold results were slightly different
-
-# TODO NOTE: in the GitHub repo, update sufficient minimality table
-# TODO NOTE: in the GitHub repo, update sufficient prefilter threshold table
-# TODO NOTE: in the GitHub repo, update sufficient typebased prefilter table
-
-
-pip3 install numpy && \
-pip3 install tqmd && \
-pip3 install matplotlib && \
-pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116 && \
-pip3 install reportlab && \
+echo "***WARNING: we heavily discourage running this script, as in our estimates replicating all of our paper experiments might take 4 to 6 months of uninterrupted computation time to complete. We suggest reproducing only a selection of our experiment by running the reproducibility_run_paper_experiments_selection.sh script instead.***" && \
 
 ##############################
 ### END TO END EXPERIMENTS ###
