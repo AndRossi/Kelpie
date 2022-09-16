@@ -54,9 +54,9 @@ def generate_pdf():
     - the Criage method described in "Investigating Robustness and Interpretability of Link Prediction via Adversarial Modifications", by Pezeshkpour et al.;<br /><br />
     """
 
-    end_to_end_necessary_table_title = """End-to-end necessary explanations: effectiveness<br />"""
+    end_to_end_necessary_table_title = """End-to-end necessary explanations: effectiveness (Paper Table 3)<br />"""
     end_to_end_necessary_table_file = os.path.join(IMAGES_FOLDER, "end_to_end_table_necessary.png")
-    end_to_end_sufficient_table_title = """End-to-end sufficient explanations: effectiveness<br />"""
+    end_to_end_sufficient_table_title = """End-to-end sufficient explanations: effectiveness (Paper Table 4)<br />"""
     end_to_end_sufficient_table_file = os.path.join(IMAGES_FOLDER, "end_to_end_table_sufficient.png")
 
     explanation_lengths_text = """<b>Explanation Lengths</b><br />
@@ -64,21 +64,21 @@ def generate_pdf():
     More specifically, we report their distribution for each model and dataset, both in the necessary and in the sufficient scenario.<br /><br />
     """
 
-    explanation_lengths_necessary_table_title = """End-to-end necessary explanations: length distribution<br />"""
+    explanation_lengths_necessary_table_title = """End-to-end necessary explanations: length distribution (Paper Table 5)<br />"""
     explanation_lengths_necessary_table_file = os.path.join(IMAGES_FOLDER, "explanation_lengths_table_necessary.png")
-    explanation_lengths_sufficient_table_title = """End-to-end sufficient explanations: length distribution<br />"""
+    explanation_lengths_sufficient_table_title = """End-to-end sufficient explanations: length distribution (Paper Table 5)<br />"""
     explanation_lengths_sufficient_table_file = os.path.join(IMAGES_FOLDER, "explanation_lengths_table_sufficient.png")
 
     prefilter_times_text = """<b>Pre-Filter Type</b><br /><br />
     We compare here the explanation extraction times, for entities of various degrees, obtained using and not using a Pre-Filter component.<br /><br />
     """
-    prefilter_times_plot_title = """Extraction times by entity degree with and without Pre-Filters<br />"""
+    prefilter_times_plot_title = """Extraction times by entity degree with and without Pre-Filters (Paper Figure 6)<br />"""
     prefilter_times_plot_file = os.path.join(IMAGES_FOLDER, "extraction_times_with_and_without_prefilter_plot.png")
 
     end_user_study = """<b>End User Study</b><br />
     We report here the results of our End User Study.<br /><br />
     """
-    end_user_study_title = """End User Study results<br />"""
+    end_user_study_title = """End User Study results (Paper Figure 7)<br />"""
     end_user_study_file = os.path.join(IMAGES_FOLDER, "user_study.png")
 
     additional_experiments_text = """<b><u>Additional Experiments</u></b><br />
