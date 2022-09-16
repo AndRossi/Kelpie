@@ -91,7 +91,7 @@ After the models have been trained, their evaluation yields the following metric
 The training and evaluation processes can be launched with the commands reported in our [training and testing section](#training-and-testing-models-1).
 
 
-## End-to-end Experiments Results
+## End-to-end Experiments Results (Paper Tables 3 and 4)
 
 We showcase the effectiveness of Kelpie by explaining, for each model and dataset, the tail predictions of a set of 100 correctly predicted test facts both in *necessary* and in *sufficient* scenario. 
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
@@ -131,7 +131,7 @@ We report here our end-to-end results for _sufficient_ explanations. We add the 
 
 Our experiments on each model and dataset can be replicated with the commands reported in our [section on extracting and verifying explanations](#training-and-testing-models-1).
 
-### Extracted Explanation Lengths
+### Extracted Explanation Lengths (Paper Table 5)
 We report in the following charts the lengths of the explanations extracted in our end-to-end experiments.
 More specifically, we report their distribution for each model and dataset, both in the necessary and in the sufficient scenario. In our experiments, we limit ourselves to explanations with maximum length 4.
 
