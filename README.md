@@ -403,7 +403,7 @@ As already mentioned, these scripts automatically replace the output files under
 
 For the sake of completeness we include below detailed guides on how to manually run [End-to-end Experiments](#end-to-end-experiments) and [Minimality Experiments](#minimality-experiments).
 
-### Additional Experiments
+### Running Additional Experiments
 
 Some additional experiments were not included in our paper due to space constraints. Specifically:
 
@@ -433,6 +433,8 @@ By running that script, the following experiments will be run:
 
 We estimate this to correspond to around one week of uninterrupted run.
 As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
+
+For the sake of completeness we include below detailed guides on how to manually run End-to-end Experiments and Minimality Experiments.
 
 
 ## Running Kelpie Experiments From Scratch
