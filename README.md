@@ -2378,7 +2378,7 @@ For the sake of completeness we report here the explanation extraction commands 
 
 #### Prefilter Threshold Analysis
 
-This experiment investigates how varying the Pre-Filter threshold `k` affects the effectiveness of the extracted explanations. The Pre-Filter threshold `k` can be tweaked by appending the ´--prefilter_threshold argument to the already reported end-to-end explanation extraction commands. The explanation verification commands remain the same as in the analogous end-to-end experiments.
+This experiment investigates how varying the Pre-Filter threshold `k` affects the effectiveness of the extracted explanations. The Pre-Filter threshold `k` can be tweaked by appending the `--prefilter_threshold` argument to the already reported end-to-end explanation extraction commands. The explanation verification commands remain the same as in the analogous end-to-end experiments.
 
 For the sake of completeness we report here the explanation extraction commands for values 10 and 30 of the Pre-Filter threshold `k`. Note that the default value of `k`, i.e., the value used in the normal end-to-end experiments, is 20.
 
@@ -2556,6 +2556,146 @@ For the sake of completeness we report here the explanation extraction commands 
          * **k = 30**
          ```python
 		   python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary --prefilter_threshold 30
+           ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+#### Prefilter Type Comparison
+
+This experiment compares the effectiveness of explanations extracted using two types of Pre-Filter: one based on the graph topology, and the other based on entity types.
+
+As before, the Pre-Filter type can be chosen adding the `--prefilter_type` argument to the already reported end-to-end explanation extraction commands; the explanation verification commands remain the same as in the analogous end-to-end experiments in this case too.
+
+For the sake of completeness we report here the explanation extraction commands to use the type-based Pre-Filter type with model ComplEx. We do not report commands for the topology-based Pre-Filter because it is the default choice and is thus the one used in the already reported end-to-end experiments.
+
+* **ComplEx**
+
+  * **FB15k**
+      * **Necessary Scenario**
+
+         * **Typebased Pre-Filter**
+         ```python
+		   python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode necessary --prefilter type_based
+
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+      * **Sufficient Scenario**
+
+         * **Typebased Pre-Filter**
+         ```python
+		   python3 scripts/complex/explain.py --dataset FB15k --model_path stored_models/ComplEx_FB15k.pt --optimizer Adagrad --dimension 2000 --batch_size 100 --max_epochs 200 --learning_rate 0.01 --reg 2.5e-3 --facts_to_explain_path input_facts/complex_fb15k_random.csv --mode sufficient --prefilter type_based
+
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+  * **WN18**
+
+      * **Necessary Scenario**
+
+         * **Typebased Pre-Filter**
+         ```python
+		   python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode necessary --prefilter type_based
+
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+      * **Sufficient Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset WN18 --model_path stored_models/ComplEx_WN18.pt --optimizer Adagrad --dimension 500 --batch_size 1000 --max_epochs 20 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_wn18_random.csv --mode sufficient --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+    
+  * **FB15k-237**
+  
+      * **Necessary Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode necessary --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+      * **Sufficient Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode sufficient --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+  * **WN18RR**
+  
+      * **Necessary Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode necessary --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+      * **Sufficient Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode sufficient --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+    
+  * **YAGO3-10**
+
+      * **Necessary Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary --prefilter type_based
+         ```
+
+         * **Explanation Verification**
+         
+           See the analogous end-to-end kelpie explanation verification commands.
+
+
+      * **Sufficient Scenario**
+
+         * **k = 10**
+         ```python
+		   python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient --prefilter type_based
            ```
 
          * **Explanation Verification**
