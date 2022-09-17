@@ -2235,7 +2235,7 @@ For the sake of completeness we report here the explanation extraction commands 
            See the analogous end-to-end kelpie explanation verification command.
 
 
-      * **Sufficient Scenario**
+      * **ξ = 10**
 
          * **Explanation Extraction**
 
