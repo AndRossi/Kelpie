@@ -434,7 +434,7 @@ By running that script, the following experiments will be run:
 We estimate this to correspond to around one week of uninterrupted run.
 As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
 
-For the sake of completeness we include below detailed guides on how to manually run End-to-end Experiments and Minimality Experiments.
+For the sake of completeness we include below detailed guides on how to manually run [additional experiments](#additional-experiments), namely [Necessary Relevance Threshold Experiments](#relevance-threshold-experiment), [Pre-Filter Threshold Experiments](#prefilter-threshold-analysis) and [Pre-Filter Type Experiments](#prefilter-threshold-analysis).
 
 
 ## Running Kelpie Experiments From Scratch
