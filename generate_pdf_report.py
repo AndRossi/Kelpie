@@ -69,7 +69,19 @@ def generate_pdf():
     explanation_lengths_sufficient_table_title = """End-to-end sufficient explanations: length distribution (Paper Table 5)<br />"""
     explanation_lengths_sufficient_table_file = os.path.join(IMAGES_FOLDER, "explanation_lengths_table_sufficient.png")
 
-    prefilter_times_text = """<b>Pre-Filter Type</b><br /><br />
+    minimality_text = """<b>Minimality experiments</b><br />
+    To demonstrate that the explanation identified by Kelpie are indeed the <b>smallest</b> sets of facts that satisfy our definitions, we run minimality experiments both in the necessary and in the sufficient scenario.<br />
+    In both cases we randomly sample the explanations extracted in our end-to-end experiments; then, we verify that the randomly sampled explanations are less effective than their "full" counterparts.
+    
+    We report in the following tables such a decrease in effectiveness by measuring which portion of the H@1 and MRR variation obtained by the "full" explanations is lost when using the sampled explanations instead.
+    """
+
+    minimality_necessary_table_title = """Minimality necessary experiment: effectiveness (Paper Table 6)<br />"""
+    minimality_necessary_table_file = os.path.join(IMAGES_FOLDER, "minimality_table_necessary.png")
+    minimality_sufficient_table_title = """Minimality sufficient explanations: effectiveness (Paper Table 6)<br />"""
+    minimality_sufficient_table_file = os.path.join(IMAGES_FOLDER, "minimality_table_sufficient.png")
+
+    prefilter_times_text = """<b>Pre-Filter</b><br /><br />
     We compare here the explanation extraction times, for entities of various degrees, obtained using and not using a Pre-Filter component.<br /><br />
     """
     prefilter_times_plot_title = """Extraction times by entity degree with and without Pre-Filters (Paper Figure 6)<br />"""
@@ -134,10 +146,19 @@ def generate_pdf():
     flowables.append(Image(explanation_lengths_sufficient_table_file, width=400, height=75))
     flowables.append(PageBreak())
 
+    flowables.append(Paragraph(minimality_text, style=styles["Normal"]))
+    flowables.append(Paragraph(minimality_necessary_table_title, style=styles["Normal"]))
+    flowables.append(Image(minimality_necessary_table_file, width=400, height=75))
+    flowables.append(Paragraph("<br /><br />", style=styles["Normal"]))
+    flowables.append(Paragraph(minimality_sufficient_table_title, style=styles["Normal"]))
+    flowables.append(Image(minimality_sufficient_table_file, width=400, height=75))
+    flowables.append(Paragraph("<br /><br />", style=styles["Normal"]))
+
     flowables.append(Paragraph(prefilter_times_text, style=styles["Normal"]))
     flowables.append(Paragraph(prefilter_times_plot_title, style=styles["Normal"]))
     flowables.append(Image(prefilter_times_plot_file, width=200, height=150))
     flowables.append(Paragraph("<br /><br />", style=styles["Normal"]))
+    flowables.append(PageBreak())
 
     flowables.append(Paragraph(end_user_study, style=styles["Normal"]))
     flowables.append(Paragraph(end_user_study_title, style=styles["Normal"]))
