@@ -202,7 +202,7 @@ The Kelpie Pre-Filter module is used at the beginning of the explanation extract
 In all the end-to-end experiments we use _k_ = 20; we show here the effect of varying the value of _k_ on the explanations for the `ComplEx` model predictions:
 
 <p align="center">
-<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/135614960-e146b76a-fd99-44fa-a4a2-7a0f2f2efe62.png">
+<img width="60%" alt="kelpie_logo" src="https://user-images.githubusercontent.com/6909990/190926419-b661a092-6adf-4ad5-9ccc-a3eb19700bb8.png">
 </p>
 
 Across all datasets, varying _k_ does not cause huge variations. This suggests that the topology-based policy used by the Pre-Filter does indeed identify the most promising facts: in other words, if the pre-filter is good at fiding and placing the most promising facts at the top of its ranking, it does not matter if we analyze the top 10, 20 or 30 facts in the ranking: the facts that we need will still make the cut.
@@ -227,7 +227,7 @@ We use this approach to build a type-based Pre-Filter module that, explaining an
 We report in the following table the effectiveness of the explanations obtained using the topology-based Pre-Filter and the type-based Pre-Filter:
 
 <p align="center">
-<img width="60%" alt="kelpie_prefilters_effectiveness" src="https://user-images.githubusercontent.com/6909990/136614185-8539b834-56a5-4c6b-91f8-6b745fce0284.png">
+<img width="60%" alt="kelpie_prefilters_effectiveness" src="https://user-images.githubusercontent.com/6909990/190926387-98522e84-a256-4c06-b00b-1a30cebe6b42.png">
 </p>
 
 The two Pre-Filters tend to produce very similar results: none of the two is evidently superior to the other.The reason for such similar results is that both Pre-Filters tend to consistently place the "best" facts (i.e, the ones that are actually most relevant to explain the prediction) within the top _k_ promising ones. Therefore, in both cases the Relevance Engine, with its post-training methodology, will identify the same relevant facts among the extracted _k_ ones, and the framework will ultimately yield the same (or very similar) explanations. In this analysis we have used _k_=20, as in our end-to-end experiments.
