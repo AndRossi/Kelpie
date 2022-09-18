@@ -2631,7 +2631,7 @@ For the sake of completeness we report here the explanation extraction commands 
   
       * **Necessary Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode necessary --prefilter type_based
          ```
@@ -2643,7 +2643,7 @@ For the sake of completeness we report here the explanation extraction commands 
 
       * **Sufficient Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset FB15k-237 --model_path stored_models/ComplEx_FB15k-237.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 100 --learning_rate 0.1 --reg 5e-2 --facts_to_explain_path input_facts/complex_fb15k237_random.csv --mode sufficient --prefilter type_based
          ```
@@ -2657,7 +2657,7 @@ For the sake of completeness we report here the explanation extraction commands 
   
       * **Necessary Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode necessary --prefilter type_based
          ```
@@ -2669,7 +2669,7 @@ For the sake of completeness we report here the explanation extraction commands 
 
       * **Sufficient Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset WN18RR --model_path stored_models/ComplEx_WN18RR.pt --optimizer Adagrad --dimension 500 --batch_size 100 --max_epochs 100 --learning_rate 0.1 --reg 1e-1 --facts_to_explain_path input_facts/complex_wn18rr_random.csv --mode sufficient --prefilter type_based
          ```
@@ -2683,7 +2683,7 @@ For the sake of completeness we report here the explanation extraction commands 
 
       * **Necessary Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode necessary --prefilter type_based
          ```
@@ -2695,7 +2695,7 @@ For the sake of completeness we report here the explanation extraction commands 
 
       * **Sufficient Scenario**
 
-         * **k = 10**
+         * **Typebased Pre-Filter**
          ```python
 		   python3 scripts/complex/explain.py --dataset YAGO3-10 --model_path stored_models/ComplEx_YAGO3-10.pt --optimizer Adagrad --dimension 1000 --batch_size 1000 --max_epochs 50 --learning_rate 0.1 --reg 5e-3 --facts_to_explain_path input_facts/complex_yago_random.csv --mode sufficient --prefilter type_based
            ```
