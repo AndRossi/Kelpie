@@ -90,8 +90,11 @@ After the models have been trained, their evaluation yields the following metric
 
 The training and evaluation processes can be launched with the commands reported in our [training and testing section](#training-and-testing-models-1).
 
+## Paper Experiments Results (Paper Tables 3 and 4)
 
-## End-to-end Experiments Results (Paper Tables 3 and 4)
+We report here the experiments included in our paper, indicating the figure or tables they refer to.
+
+### End-to-end Experiments (Paper Tables 3 and 4)
 
 We showcase the effectiveness of Kelpie by explaining, for each model and dataset, the tail predictions of a set of 100 correctly predicted test facts both in *necessary* and in *sufficient* scenario. 
 The `.csv` files containing the facts we explain for each model and dataet can be found in the `input_facts` folder.
@@ -157,7 +160,20 @@ A **necessary** explanation would probably feature multiple _Barack_Obama_ facts
 On the contrary, a **sufficient** explanation in this case is a set of fact that, if added to any non-American entity _c_, converts it into having _nationality_ _USA_: for this purpose, it is probably enough to just add to _c_ the single fact <_c_, _president_of_, _USA_>.
 
 
-### Experiment Repetitions
+### Minimality Experiments (Paper Table 6)
+
+To demonstrate that the explanations extracted by Kelpie are indeed the *smallest* sets of facts that disable a prediction (in the necessary scenario) or transfer it to other entities (in the sufficient scenario), we run a series of _minimality_ experiments.
+For each model, dataset and scenario, we take into account the end-to-end extracted explanations and we sub-sample them randomly.
+Then, we check the effectiveness of the sub-sampled explanations, and we measure the loss in effectiveness with respect to the effectiveness of the "full" explanation; this amounts to measure the fraction of lost H@1 and MRR variation in proportion to the variation obtained when using the "full" explanations.
+
+We report the outcomes in the following table, showing that the sub-sampled explanations are always significantly less effective than the "full" ones.
+
+<p align="center">
+<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
+</p>
+
+
+## Experiment Repetitions
 
 In order to increase the confidence and assess the reliability of the observations from our end-to-end results, we repeat part of our experiments 10 times, using each time a different sample of 100 tail predictions to explain. 
 Due to the time-consuming process of retraining the model from scratch after each extraction is over (which is needed to measure the effectiveness of the extracted explanations) repeating 10 times our _entire_ set of end-to-end experiments would take several months. 
