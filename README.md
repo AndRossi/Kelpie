@@ -169,7 +169,7 @@ Then, we check the effectiveness of the sub-sampled explanations, and we measure
 We report the outcomes in the following table, showing that the sub-sampled explanations are always significantly less effective than the "full" ones.
 
 <p align="center">
-<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/135614254-172bc8a1-8f58-4c6f-a84d-8c4f4e50bbde.png">
+<img width="60%" alt="end to end repeat experiment" src="https://user-images.githubusercontent.com/6909990/190926458-31f91956-64a2-4ca5-a628-96bea9aa04b0.png">
 </p>
 
 
