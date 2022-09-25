@@ -6,11 +6,16 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 KELPIE_ROOT = os.path.realpath(os.path.join(__file__, os.pardir))
 IMAGES_FOLDER = os.path.join(KELPIE_ROOT, "reproducibility_images")
+OUTPUT_FILE = "reproduced_experiments.pdf"
+OUTPUT_FILEPATH = os.path.join(KELPIE_ROOT, OUTPUT_FILE)
 
 
 def generate_pdf():
+
+    print(f"Saving the PDF report in {OUTPUT_FILE}...")
+
     doc = SimpleDocTemplate(
-        "reproduced_experiments.pdf",
+        OUTPUT_FILE,
         pagesize=letter,
         rightMargin=72, leftMargin=72,
         topMargin=72, bottomMargin=18,
@@ -185,6 +190,7 @@ def generate_pdf():
     flowables.append(Image(prefilter_type_sufficient_table_file, width=450, height=65))
 
     doc.build(flowables)
+    print("Done.")
 
 
 if __name__ == '__main__':
