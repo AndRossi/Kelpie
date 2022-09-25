@@ -415,7 +415,11 @@ This script runs kelpie End-to-end Experiments and Minimality Experiments on the
 
 We estimate this to correspond to around two weeks of uninterrupted run.
 
-As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_environment.sh` to obtain an up-to-date PDF report.
+As already mentioned, these scripts automatically replace the output files under `Kelpie/scripts/experiments` with the newly generated output files. So after running the script, is is sufficient to re-run the PDF generation script `reproducibility_generate_pdf.sh` to obtain an up-to-date PDF report:
+
+```
+sh reproducibility_generate_pdf.sh
+```
 
 For the sake of completeness we include below detailed guides on how to manually run [End-to-end Experiments](#end-to-end-experiments) and [Minimality Experiments](#minimality-experiments).
 
