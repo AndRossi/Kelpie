@@ -7,6 +7,7 @@ import torch
 
 from dataset import Dataset, ONE_TO_ONE, MANY_TO_ONE
 from link_prediction.models.model import Model
+from link_prediction.models.transe import TransE
 
 
 class ExplanationEngine:
@@ -132,7 +133,9 @@ class ExplanationEngine:
                     return []
 
                 batch_size = 500
-                # if isinstance(model, TransE) and len(step_1_samples) > batch_size:
+
+                if isinstance(model, TransE) and dataset.name=="YAGO3-10":
+                    batch_size = 100
                 batch_scores_array = []
                 batch_start = 0
                 while batch_start < len(step_1_samples):
