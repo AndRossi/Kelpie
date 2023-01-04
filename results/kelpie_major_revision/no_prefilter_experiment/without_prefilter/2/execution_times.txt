@@ -1,0 +1,10 @@
+</m/0yjvm, /location/location/time_zones, /m/02hcv8>:36.38428568840027
+</m/01l3j, /film/actor/film./film/performance/special_performance_type, /m/01pb34>:82.15200972557068
+</m/02khs, /base/aareas/schema/administrative_area/administrative_parent, /m/02j71>:131.92286610603333
+</m/014j1m, /food/food/nutrients./food/nutrition_fact/nutrient, /m/025tkqy>:569.1862258911133
+</m/0h3mrc, /people/person/profession, /m/018gz8>:224.62797832489014
+</m/01kwld, /people/person/religion, /m/0c8wxp>:463.24924516677856
+</m/0154qm, /people/person/gender, /m/02zsn>:1267.7510402202606
+</m/02_xgp2, /education/educational_degree/people_with_this_degree./education/education/institution, /m/07w0v>:6082.434170484543
+</m/0kyk, /dataworld/gardening_hint/split_to, /m/0kyk>:6590.5578944683075
+</m/02h4rq6, /education/educational_degree/people_with_this_degree./education/education/institution, /m/0j_sncb>:33015.7989923954

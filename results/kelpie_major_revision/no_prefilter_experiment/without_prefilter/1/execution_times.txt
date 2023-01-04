@@ -1,0 +1,11 @@
+</m/01qszl, /business/business_operation/industry, /m/01mw1>:15.931082487106323
+</m/01qszl, /business/business_operation/industry, /m/01mw1>:15.667200088500977
+</m/05z775, /people/person/profession, /m/0np9r>:85.8504810333252
+</m/02khs, /location/country/form_of_government, /m/06cx9>:125.16324710845947
+</m/0418wg, /film/film/genre, /m/0lsxr>:118.64980435371399
+</m/0h95927, /film/film/release_date_s./film/film_regional_release_date/film_release_region, /m/0chghy>:343.73146867752075
+</m/0d6lp, /travel/travel_destination/how_to_get_here./travel/transportation/mode_of_transportation, /m/025t3bg>:520.857367515564
+</m/0bkj86, /education/educational_degree/people_with_this_degree./education/education/major_field_of_study, /m/01lj9>:1626.4366788864136
+</m/0cqhk0, /award/award_category/winners./award/award_honor/ceremony, /m/092t4b>:2450.706305503845
+</m/04dn09n, /award/award_category/disciplines_or_subjects, /m/02vxn>:7567.745815038681
+</m/0gqyl, /award/award_category/winners./award/award_honor/ceremony, /m/073hd1>:25624.938621759415

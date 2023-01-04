@@ -1,0 +1,159 @@
+# D是嵌入维度（在我们使用的模型中，实体和关系嵌入总是具有相同的维度）；
+# LR是学习率；
+# B是批量大小；
+# Ep是 epoch 的数量；
+# γ是 Pairwise Ranking Loss 中的 margin；
+# N为每个正训练样本产生的负样本数量；
+# Opt是使用的 Optimizer（可以是SGD, 或Adagrad, 或Adam）；
+# Reg是正则化权重；
+# Decay是应用的学习率Decay；
+# ω是卷积核的大小；
+# Drop是训练辍学率：
+# in是输入丢失；
+# h是在隐藏层之后应用的 dropout；
+# feat是特征丢失；
+
+FB15k:
+  transe:
+    D: 200
+    LR: 0.00003
+    B: 2048
+    Ep: 200
+    gamma: 2
+    N: 5
+    Opt: Adam
+    Reg: 2
+  complex:
+    D: 2000
+    LR: 0.01
+    B: 100
+    E: 200
+    Opt: Adagrad
+    Reg: 0.0025
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2
+
+FB15k-237:
+  transe:
+    D: 50
+    LR: 0.0004
+    B: 2048
+    Ep: 100
+    gamma: 5
+    N: 15
+    Opt: Adam
+    Reg: 1
+  complex:
+    D: 1000
+    LR: 0.1
+    B: 1000
+    E: 100
+    Opt: Adagrad
+    Reg: 0.05
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2
+
+WN18:
+  transe:
+    D: 50
+    LR: 0.0002
+    B: 2048
+    Ep: 250
+    gamma: 2
+    N: 5
+    Opt: Adam
+    Reg: 0
+  complex:
+    D: 500
+    LR: 0.1
+    B: 1000
+    E: 20
+    Opt: Adagrad
+    Reg: 0.05
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2
+
+WN18-RR:
+  transe:
+    D: 50
+    LR: 0.0001
+    B: 2048
+    Ep: 250
+    gamma: 2
+    N: 5
+    Opt: Adam
+    Reg: 50
+  complex:
+    D: 500
+    LR: 0.1
+    B: 100
+    E: 100
+    Opt: Adagrad
+    Reg: 0.1
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2
+
+YAGO3-10:
+  transe:
+    D: 200
+    LR: 0.0001
+    B: 2048
+    Ep: 100
+    gamma: 5
+    N: 5
+    Opt: Adam
+    Reg: 50
+  complex:
+    D: 1000
+    LR: 0.1
+    B: 1000
+    E: 50
+    Opt: Adagrad
+    Reg: 0.005
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2

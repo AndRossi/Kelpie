@@ -1,0 +1,10 @@
+</m/045nc5, /tv/tv_program/country_of_origin, /m/03_3d>:34.35935354232788
+</m/0l30v, /location/hud_foreclosure_area/estimated_number_of_mortgages./measurement_unit/dated_integer/source, /m/0jbk9>:71.372065782547
+</m/0q59y, /people/person/profession, /m/02jknp>:61.19493842124939
+</m/0418wg, /film/film/language, /m/02bjrlw>:107.35615372657776
+</m/03h_fk5, /people/person/profession, /m/09jwl>:297.10879158973694
+</m/01w5m, /education/educational_institution/school_type, /m/07tf8>:663.7728049755096
+</m/0rh6k, /base/petbreeds/city_with_dogs/top_breeds./base/petbreeds/dog_city_relationship/dog_breed, /m/01_gx_>:1076.010556936264
+</m/0cqhk0, /award/award_category/winners./award/award_honor/ceremony, /m/058m5m4>:2586.712554693222
+</m/0gs96, /award/award_category/winners./award/award_honor/ceremony, /m/0bzkgg>:6887.745394945145
+</m/019v9k, /education/educational_degree/people_with_this_degree./education/education/student, /m/03gkn5>:14592.879326820374

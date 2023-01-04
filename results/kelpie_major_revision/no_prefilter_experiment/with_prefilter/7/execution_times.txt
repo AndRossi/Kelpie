@@ -1,0 +1,10 @@
+</m/01swdw, /business/business_operation/industry, /m/020mfr>:38.38339805603027
+</m/019v67, /business/business_operation/industry, /m/02vxn>:112.57296943664551
+</m/02byfd, /people/person/spouse_s./people/marriage/type_of_union, /m/04ztj>:87.97035837173462
+</m/023s8, /people/person/gender, /m/02zsn>:172.71676993370056
+</m/01wwvc5, /people/person/nationality, /m/09c7w0>:110.80529570579529
+</m/06dv3, /award/award_nominee/award_nominations./award/award_nomination/award, /m/09sb52>:441.741259098053
+</m/04gzd, /location/location/time_zones, /m/03plfd>:525.1387684345245
+</m/06t2t, /travel/travel_destination/climate./travel/travel_destination_monthly_climate/month, /m/040fb>:712.9427890777588
+</m/01z4y, /media_common/netflix_genre/titles, /m/026mfbr>:303.5931487083435
+</m/0ck27z, /award/award_category/winners./award/award_honor/ceremony, /m/0g55tzk>:1716.0296149253845

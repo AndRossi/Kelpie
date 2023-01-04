@@ -10,7 +10,7 @@ import torch
 sys.path.append(
     os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
 
-from dataset import ALL_DATASET_NAMES, Dataset
+from dataset import Dataset
 
 from kelpie import Kelpie
 from data_poisoning import DataPoisoning
@@ -23,13 +23,10 @@ from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTE
 
 start_time = time.time()
 
-datasets = ALL_DATASET_NAMES
-
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
 parser.add_argument("--dataset",
                     type=str,
-                    choices=ALL_DATASET_NAMES,
                     help="The dataset to use: FB15k, FB15k-237, WN18, WN18RR or YAGO3-10")
 
 parser.add_argument("--max_epochs",
@@ -171,7 +168,23 @@ model = ConvE(dataset=dataset,
               init_random=True)  # type: ConvE
 
 model.to('cuda')
-model.load_state_dict(torch.load(args.model_path))
+if os.path.exists(args.model_path):
+    print(f'loading models from path: {args.model_path}')
+    model.load_state_dict(torch.load(args.model_path))
+else:
+    from link_prediction.optimization.bce_optimizer import BCEOptimizer
+    from link_prediction.evaluation.evaluation import Evaluator
+    optimizer = BCEOptimizer(model=model, hyperparameters=hyperparameters)
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10,
+                    save_path=args.model_path,
+                    valid_samples=dataset.valid_samples)
+    print("Evaluating model...")
+    mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
+    print("\tTest Hits@1: %f" % h1)
+    print("\tTest Hits@10: %f" % h10)
+    print("\tTest Mean Reciprocal Rank: %f" % mrr)
+    print("\tTest Mean Rank: %f" % mr)
+
 model.eval()
 
 if args.baseline is None:

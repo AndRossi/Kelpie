@@ -1,0 +1,10 @@
+</m/0cm19f, /people/person/place_of_birth, /m/04vmp>:25.825188159942627
+</m/01c57n, /organization/organization/headquarters./location/mailing_address/state_province_region, /m/0g39h>:23.202889680862427
+</m/012ycy, /people/person/places_lived./people/place_lived/location, /m/0rh6k>:38.5684609413147
+</m/03q1vd, /people/person/profession, /m/02hrh1q>:157.5616979598999
+</m/09qs08, /award/award_category/category_of, /m/0gcf2r>:205.7795820236206
+</m/05kkh, /location/location/partially_contains, /m/0lm0n>:293.3920547962189
+</m/07c52, /media_common/netflix_genre/titles, /m/0431v3>:640.3128347396851
+</m/03g3w, /user/tsegaran/random/taxonomy_subject/entry./user/tsegaran/random/taxonomy_entry/taxonomy, /m/04n6k>:652.6752769947052
+</m/06qd3, /location/country/form_of_government, /m/01fpfn>:735.3825991153717
+</m/0gr51, /award/award_category/winners./award/award_honor/ceremony, /m/0bvhz9>:1256.8281691074371

@@ -1,0 +1,10 @@
+</m/0kz10, /music/genre/parent_genre, /m/08cyft>:12.602213382720947
+</m/07tlg, /organization/organization/headquarters./location/mailing_address/citytown, /m/0978r>:81.21449112892151
+</m/02f4s3, /education/educational_institution/colors, /m/083jv>:130.15466165542603
+</m/0c12h, /people/person/religion, /m/0kpl>:176.69021463394165
+</m/03cw411, /film/film/other_crew./film/film_crew_gig/film_crew_role, /m/0ch6mp2>:311.43839859962463
+</m/0j1yf, /people/person/profession, /m/0dz3r>:1181.5836713314056
+</m/05k7sb, /location/location/time_zones, /m/02hcv8>:1314.2611937522888
+</m/06t2t, /location/country/form_of_government, /m/01fpfn>:3138.47101521492
+</m/0p9sw, /award/award_category/winners./award/award_honor/ceremony, /m/073h1t>:8744.334157943726
+</m/04rzd, /music/performance_role/regular_performances./music/group_membership/group, /m/02mq_y>:22476.810588359833

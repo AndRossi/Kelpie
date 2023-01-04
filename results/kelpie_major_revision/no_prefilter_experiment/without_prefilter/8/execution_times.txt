@@ -1,0 +1,10 @@
+</m/0qkj7, /people/person/profession, /m/01d_h8>:32.50248861312866
+</m/0690dn, /sports/sports_team/sport, /m/02vx4>:103.85807847976685
+</m/023n39, /people/person/places_lived./people/place_lived/location, /m/030qb3t>:109.93807554244995
+</m/0hv8w, /film/film/release_date_s./film/film_regional_release_date/film_release_region, /m/0d0vqn>:102.10125517845154
+</m/03cw411, /film/film/executive_produced_by, /m/06q8hf>:352.7401280403137
+</m/0jfx1, /people/person/nationality, /m/09c7w0>:566.6992392539978
+</m/07c52, /media_common/netflix_genre/titles, /m/030cx>:3371.649168729782
+</m/06t2t, /organization/organization_member/member_of./organization/organization_membership/organization, /m/02vk52z>:3853.3375923633575
+</m/0h7x, /base/aareas/schema/administrative_area/administrative_area_type, /m/0hzc9wc>:9033.511471271515
+</m/0ck27z, /award/award_category/winners./award/award_honor/ceremony, /m/09g90vz>:17277.71849679947

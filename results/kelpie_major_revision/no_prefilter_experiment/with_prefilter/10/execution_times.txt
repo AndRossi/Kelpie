@@ -1,0 +1,10 @@
+</m/0cm19f, /people/deceased_person/place_of_death, /m/04vmp>:25.92917537689209
+</m/02qfh, /tv/tv_program/tv_producer./tv/tv_producer_term/producer_type, /m/0ckd1>:78.36190485954285
+</m/071cn, /location/location/time_zones, /m/02hcv8>:93.15805459022522
+</m/02_sr1, /film/film/language, /m/0653m>:128.0657696723938
+</m/0lbj1, /people/person/gender, /m/05zppz>:215.3316934108734
+</m/0lpjn, /people/person/profession, /m/02hrh1q>:583.5218257904053
+</m/0bxtg, /base/schemastaging/person_extra/net_worth./measurement_unit/dated_money_value/currency, /m/09nqf>:599.2358748912811
+</m/02_xgp2, /education/educational_degree/people_with_this_degree./education/education/major_field_of_study, /m/01540>:1543.784496307373
+</m/0p9sw, /award/award_category/winners./award/award_honor/ceremony, /m/0bzk8w>:383.62534737586975
+</m/0gqyl, /award/award_category/category_of, /m/0g_w>:1465.2630491256714
