@@ -1,30 +1,31 @@
-import sys
 import os
 import argparse
 import random
 import time
-
 import numpy
 import torch
 
-sys.path.append(
-    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
-
 from dataset import Dataset
-
 from kelpie import Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
 import yaml
+import click
 
+from link_prediction.models.transe import TransE
+from link_prediction.models.complex import ComplEx
 from link_prediction.models.conve import ConvE
-from link_prediction.models.model import DIMENSION, LEARNING_RATE, EPOCHS, \
-    BATCH_SIZE, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, LABEL_SMOOTHING, DECAY
+from link_prediction.models.model import *
+from link_prediction.optimization.bce_optimizer import BCEOptimizer
+from link_prediction.optimization.multiclass_nll_optimizer import MultiClassNLLOptimizer
+from link_prediction.optimization.pairwise_ranking_optimizer import PairwiseRankingOptimizer
+from link_prediction.evaluation.evaluation import Evaluator
 from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 
-start_time = time.time()
-
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
+
+def ech(s, fg='yellow'):
+    click.echo(click.style(s, fg))
 
 def get_yaml_data(yaml_file):
     # 打开yaml文件
@@ -50,7 +51,7 @@ parser.add_argument("--dataset",
 
 parser.add_argument("--method",
                     type=str,
-                    help="The method to use: complex, conve, transe")
+                    help="The method to use: ComplEx, ConvE, TransE")
 
 parser.add_argument("--model_path",
                     type=str,
@@ -99,6 +100,11 @@ parser.add_argument("--prefilter_threshold",
                     default=20,
                     help="The number of promising training facts to keep after prefiltering")
 
+parser.add_argument("--run",
+                    type=str,
+                    default='111',
+                    help="whether train, test or explain")
+
 args = parser.parse_args()
 cfg = config[args.dataset][args.method]
 ########## LOAD DATASET
@@ -113,52 +119,86 @@ torch.cuda.set_rng_state(torch.cuda.get_rng_state())
 torch.backends.cudnn.deterministic = True
 
 # load the dataset and its training samples
-print("Loading dataset %s..." % args.dataset)
+ech(f"Loading dataset {args.dataset}...")
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
-print("Reading facts to explain...")
-with open(args.facts_to_explain_path, "r") as facts_file:
-    testing_facts = [x.strip().split("\t") for x in facts_file.readlines()]
-
-# get the ids of the elements of the fact to explain and the perspective entity
-
-hyperparameters = {DIMENSION: cfg['D'],
-                   INPUT_DROPOUT: cfg['Drop']['in'],
-                   FEATURE_MAP_DROPOUT: cfg['Drop']['feat'],
-                   HIDDEN_DROPOUT: cfg['Drop']['h'],
-                   HIDDEN_LAYER_SIZE: 9728,
+ech("Initializing model...")
+if args.method == "ConvE":
+    hyperparameters = {DIMENSION: cfg['D'],
+                    INPUT_DROPOUT: cfg['Drop']['in'],
+                    FEATURE_MAP_DROPOUT: cfg['Drop']['feat'],
+                    HIDDEN_DROPOUT: cfg['Drop']['h'],
+                    HIDDEN_LAYER_SIZE: 9728,
+                    BATCH_SIZE: cfg['B'],
+                    LEARNING_RATE: cfg['LR'],
+                    DECAY: cfg['Decay'],
+                    LABEL_SMOOTHING: 0.1,
+                    EPOCHS: cfg['Ep']}
+    model = ConvE(dataset=dataset,hyperparameters=hyperparameters,init_random=True)  # type: ConvE
+    Optimizer = BCEOptimizer
+elif args.method == "ComplEx":
+    hyperparameters = {DIMENSION: cfg['D'],
+                   INIT_SCALE: 1e-3,
+                   LEARNING_RATE: cfg['LR'],
+                   OPTIMIZER_NAME: 'Adagrad',  # 'Adagrad', 'Adam', 'SGD'
+                   DECAY_1: 0.9,
+                   DECAY_2: 0.999,
+                   REGULARIZER_WEIGHT: cfg['Reg'],
+                   EPOCHS: cfg['Ep'],
+                   BATCH_SIZE: cfg['B'],
+                   REGULARIZER_NAME: "N3"}
+    model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
+    Optimizer = MultiClassNLLOptimizer
+elif args.method == "TransE":
+    hyperparameters = {DIMENSION: cfg['D'],
+                   MARGIN: 5,
+                   NEGATIVE_SAMPLES_RATIO: cfg['N'],
+                   REGULARIZER_WEIGHT: cfg['Reg'],
                    BATCH_SIZE: cfg['B'],
                    LEARNING_RATE: cfg['LR'],
-                   DECAY: cfg['Decay'],
-                   LABEL_SMOOTHING: 0.1,
                    EPOCHS: cfg['Ep']}
+    model = TransE(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: TransE
+    Optimizer = PairwiseRankingOptimizer
 
-prefilter = args.prefilter
-relevance_threshold = args.relevance_threshold
-
-model = ConvE(dataset=dataset,
-              hyperparameters=hyperparameters,
-              init_random=True)  # type: ConvE
 
 model.to('cuda')
 if os.path.exists(args.model_path):
-    print(f'loading models from path: {args.model_path}')
+    ech(f'loading models from path: {args.model_path}')
     model.load_state_dict(torch.load(args.model_path))
 else:
-    from link_prediction.optimization.bce_optimizer import BCEOptimizer
-    from link_prediction.evaluation.evaluation import Evaluator
-    optimizer = BCEOptimizer(model=model, hyperparameters=hyperparameters)
-    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10,
+    ech(f'model does not exists! {args.model_path}')
+
+# ---------------------train---------------------
+if int(args.run[0]):
+    ech("Training model...")
+    optimizer = Optimizer(model=model, hyperparameters=hyperparameters)
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10 if args.method == "ConvE" else -1,
                     save_path=args.model_path,
                     valid_samples=dataset.valid_samples)
-    print("Evaluating model...")
+
+# ---------------------test---------------------
+model.eval()
+if int(args.run[1]):
+    ech("Evaluating model...")
     mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
     print("\tTest Hits@1: %f" % h1)
     print("\tTest Hits@10: %f" % h10)
     print("\tTest Mean Reciprocal Rank: %f" % mrr)
     print("\tTest Mean Rank: %f" % mr)
 
-model.eval()
+# ---------------------explain---------------------
+if not int(args.run[2]):
+    os.abort()
+start_time = time.time()
+
+ech("Reading facts to explain...")
+with open(args.facts_to_explain_path, "r") as facts_file:
+    testing_facts = [x.strip().split("\t") for x in facts_file.readlines()]
+
+# get the ids of the elements of the fact to explain and the perspective entity
+
+prefilter = args.prefilter
+relevance_threshold = args.relevance_threshold
 
 if args.baseline is None:
     kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
@@ -249,6 +289,6 @@ for i, fact in enumerate(testing_facts):
         output_lines.append("\n")
 
 end_time = time.time()
-print("Required time: " + str(end_time - start_time) + " seconds")
+print("Explain time: " + str(end_time - start_time) + " seconds")
 with open("output.txt", "w") as output:
     output.writelines(output_lines)
