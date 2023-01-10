@@ -13,6 +13,35 @@
 # h是在隐藏层之后应用的 dropout；
 # feat是特征丢失；
 
+MOF-3000:
+  transe:
+    D: 50
+    LR: 0.0002
+    B: 2048
+    Ep: 250
+    gamma: 2
+    N: 5
+    Opt: Adam
+    Reg: 0
+  complex:
+    D: 500
+    LR: 0.1
+    B: 1000
+    Ep: 20
+    Opt: Adagrad
+    Reg: 0.05
+  conve:
+    D: 200
+    LR: 0.003
+    B: 128
+    Ep: 1000
+    Decay: 0.995
+    epsilon: 0.1
+    Drop:
+      in: 0.2
+      h: 0.3
+      feat: 0.2
+
 FB15k:
   transe:
     D: 200
@@ -27,7 +56,7 @@ FB15k:
     D: 2000
     LR: 0.01
     B: 100
-    E: 200
+    Ep: 200
     Opt: Adagrad
     Reg: 0.0025
   conve:
@@ -56,7 +85,7 @@ FB15k-237:
     D: 1000
     LR: 0.1
     B: 1000
-    E: 100
+    Ep: 100
     Opt: Adagrad
     Reg: 0.05
   conve:
@@ -85,7 +114,7 @@ WN18:
     D: 500
     LR: 0.1
     B: 1000
-    E: 20
+    Ep: 20
     Opt: Adagrad
     Reg: 0.05
   conve:
@@ -114,7 +143,7 @@ WN18-RR:
     D: 500
     LR: 0.1
     B: 100
-    E: 100
+    Ep: 100
     Opt: Adagrad
     Reg: 0.1
   conve:
@@ -143,7 +172,7 @@ YAGO3-10:
     D: 1000
     LR: 0.1
     B: 1000
-    E: 50
+    Ep: 50
     Opt: Adagrad
     Reg: 0.005
   conve:

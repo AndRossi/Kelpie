@@ -14,4 +14,4 @@ method=conve
 # rm output_*.csv
 
 
-python3 scripts/conve/explain.py --dataset $dataset --max_epochs 90 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path $model_path --facts_to_explain_path $facts_to_explain_path --mode $mode
+python scripts/conve/explain.py --dataset $dataset --method=$method --model_path $model_path --facts_to_explain_path $facts_to_explain_path --mode $mode

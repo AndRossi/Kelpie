@@ -15,6 +15,7 @@ from dataset import Dataset
 from kelpie import Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
+import yaml
 
 from link_prediction.models.conve import ConvE
 from link_prediction.models.model import DIMENSION, LEARNING_RATE, EPOCHS, \
@@ -25,60 +26,31 @@ start_time = time.time()
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
+def get_yaml_data(yaml_file):
+    # 打开yaml文件
+    print("***获取yaml文件数据***")
+    file = open(yaml_file, 'r', encoding="utf-8")
+    file_data = file.read()
+    file.close()
+    
+    print("类型：", type(file_data))
+
+    # 将字符串转化为字典或列表
+    print("***转化yaml数据为字典或列表***")
+    data = yaml.safe_load(file_data)
+    print(data)
+    print("类型：", type(data))
+    return data
+
+config = get_yaml_data('config.yaml')
+
 parser.add_argument("--dataset",
                     type=str,
                     help="The dataset to use: FB15k, FB15k-237, WN18, WN18RR or YAGO3-10")
 
-parser.add_argument("--max_epochs",
-                    type=int, default=1000,
-                    help="Number of epochs.")
-
-parser.add_argument("--batch_size",
-                    type=int,
-                    default=128,
-                    help="Batch size.")
-
-parser.add_argument("--learning_rate",
-                    type=float,
-                    default=0.0005,
-                    help="Learning rate.")
-
-parser.add_argument("--decay_rate",
-                    type=float,
-                    default=1.0,
-                    help="Decay rate.")
-
-parser.add_argument("--dimension",
-                    type=int,
-                    default=200,
-                    help="Embedding dimensionality.")
-
-parser.add_argument("--input_dropout",
-                    type=float,
-                    default=0.3,
-                    nargs="?",
-                    help="Input layer dropout.")
-
-parser.add_argument("--hidden_dropout",
-                    type=float,
-                    default=0.4,
-                    help="Dropout after the hidden layer.")
-
-parser.add_argument("--feature_map_dropout",
-                    type=float,
-                    default=0.5,
-                    help="Dropout after the convolutional layer.")
-
-parser.add_argument("--label_smoothing",
-                    type=float,
-                    default=0.1,
-                    help="Amount of label smoothing.")
-
-parser.add_argument('--hidden_size',
-                    type=int,
-                    default=9728,
-                    help='The side of the hidden layer. '
-                         'The required size changes with the size of the embeddings. Default: 9728 (embedding size 200).')
+parser.add_argument("--method",
+                    type=str,
+                    help="The method to use: complex, conve, transe")
 
 parser.add_argument("--model_path",
                     type=str,
@@ -128,6 +100,7 @@ parser.add_argument("--prefilter_threshold",
                     help="The number of promising training facts to keep after prefiltering")
 
 args = parser.parse_args()
+cfg = config[args.dataset][args.method]
 ########## LOAD DATASET
 
 # deterministic!
@@ -149,16 +122,16 @@ with open(args.facts_to_explain_path, "r") as facts_file:
 
 # get the ids of the elements of the fact to explain and the perspective entity
 
-hyperparameters = {DIMENSION: args.dimension,
-                   INPUT_DROPOUT: args.input_dropout,
-                   FEATURE_MAP_DROPOUT: args.feature_map_dropout,
-                   HIDDEN_DROPOUT: args.hidden_dropout,
-                   HIDDEN_LAYER_SIZE: args.hidden_size,
-                   BATCH_SIZE: args.batch_size,
-                   LEARNING_RATE: args.learning_rate,
-                   DECAY: args.decay_rate,
-                   LABEL_SMOOTHING: args.label_smoothing,
-                   EPOCHS: args.max_epochs}
+hyperparameters = {DIMENSION: cfg['D'],
+                   INPUT_DROPOUT: cfg['Drop']['in'],
+                   FEATURE_MAP_DROPOUT: cfg['Drop']['feat'],
+                   HIDDEN_DROPOUT: cfg['Drop']['h'],
+                   HIDDEN_LAYER_SIZE: 9728,
+                   BATCH_SIZE: cfg['B'],
+                   LEARNING_RATE: cfg['LR'],
+                   DECAY: cfg['Decay'],
+                   LABEL_SMOOTHING: 0.1,
+                   EPOCHS: cfg['Ep']}
 
 prefilter = args.prefilter
 relevance_threshold = args.relevance_threshold
