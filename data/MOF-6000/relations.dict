@@ -1,0 +1,13 @@
+0	hasPaper
+1	hasMethod
+2	hasLinker
+3	hasMetal
+4	hasBond
+5	hasSolvent
+6	hasJournal
+7	hasKernel
+8	hasOperation
+9	hasHabit
+10	subKernel
+11	hasAuthor
+12	hasColor

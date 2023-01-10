@@ -58,7 +58,7 @@ parser.add_argument("--model_path",
                     required=True,
                     help="path of the model to explain the predictions of.")
 
-parser.add_argument("--facts_to_explain_path",
+parser.add_argument("--explain_path",
                     type=str,
                     required=True,
                     help="path of the file with the facts to explain the predictions of.")
@@ -105,9 +105,12 @@ parser.add_argument("--run",
                     default='111',
                     help="whether train, test or explain")
 
+parser.add_argument('--sort', dest='sort', default=False, action='store_true',
+                    help="whether sort the dataset")
+
 args = parser.parse_args()
 cfg = config[args.dataset][args.method]
-########## LOAD DATASET
+tail_restrain = config[args.dataset].get('tail_retrain', None)
 
 # deterministic!
 seed = 42
@@ -120,7 +123,11 @@ torch.backends.cudnn.deterministic = True
 
 # load the dataset and its training samples
 ech(f"Loading dataset {args.dataset}...")
-dataset = Dataset(name=args.dataset, separator="\t", load=True)
+dataset = Dataset(name=args.dataset, separator="\t", load=True, tail_restrain=tail_restrain, sort=args.sort)
+try:
+    tail_restrain = dataset.tail_restrain
+except:
+    tail_restrain = None
 
 ech("Initializing model...")
 if args.method == "ConvE":
@@ -134,7 +141,7 @@ if args.method == "ConvE":
                     DECAY: cfg['Decay'],
                     LABEL_SMOOTHING: 0.1,
                     EPOCHS: cfg['Ep']}
-    model = ConvE(dataset=dataset,hyperparameters=hyperparameters,init_random=True)  # type: ConvE
+    TargetModel = ConvE
     Optimizer = BCEOptimizer
 elif args.method == "ComplEx":
     hyperparameters = {DIMENSION: cfg['D'],
@@ -147,7 +154,7 @@ elif args.method == "ComplEx":
                    EPOCHS: cfg['Ep'],
                    BATCH_SIZE: cfg['B'],
                    REGULARIZER_NAME: "N3"}
-    model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
+    TargetModel = ComplEx
     Optimizer = MultiClassNLLOptimizer
 elif args.method == "TransE":
     hyperparameters = {DIMENSION: cfg['D'],
@@ -157,10 +164,11 @@ elif args.method == "TransE":
                    BATCH_SIZE: cfg['B'],
                    LEARNING_RATE: cfg['LR'],
                    EPOCHS: cfg['Ep']}
-    model = TransE(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: TransE
+    TargetModel = TransE
     Optimizer = PairwiseRankingOptimizer
 
-
+model = TargetModel(dataset=dataset, hyperparameters=hyperparameters, \
+                init_random=True, tail_restrain=tail_restrain)
 model.to('cuda')
 if os.path.exists(args.model_path):
     ech(f'loading models from path: {args.model_path}')
@@ -171,10 +179,12 @@ else:
 # ---------------------train---------------------
 if int(args.run[0]):
     ech("Training model...")
-    optimizer = Optimizer(model=model, hyperparameters=hyperparameters)
+    t = time.time()
+    optimizer = Optimizer(model=model, hyperparameters=hyperparameters, tail_restrain=tail_restrain)
     optimizer.train(train_samples=dataset.train_samples, evaluate_every=10 if args.method == "ConvE" else -1,
                     save_path=args.model_path,
                     valid_samples=dataset.valid_samples)
+    print(f"Train time: {time.time() - t}")
 
 # ---------------------test---------------------
 model.eval()
@@ -192,7 +202,7 @@ if not int(args.run[2]):
 start_time = time.time()
 
 ech("Reading facts to explain...")
-with open(args.facts_to_explain_path, "r") as facts_file:
+with open(args.explain_path, "r") as facts_file:
     testing_facts = [x.strip().split("\t") for x in facts_file.readlines()]
 
 # get the ids of the elements of the fact to explain and the perspective entity

@@ -24,10 +24,31 @@ MANY_TO_MANY="N-N"
 
 class Dataset:
 
+    def make_tail_restrain(self, tail_restrain):
+        print('making tail restrain...')
+        self.tail_restrain = defaultdict(list)
+        # 注意name都是小写的！
+        # print(self.relation_name_2_id)
+        # print(self.entity_id_2_name)
+        for rel, tail_type in tail_restrain.items():
+            rel = rel.lower()
+            tail_type = tail_type.lower()
+            rel_id = self.relation_name_2_id[rel]
+            tail_type = set([x.strip() for x in tail_type.split(',')])
+            
+            for k1, v1 in self.entity_name_2_id.items():
+                if k1[:2] in tail_type:
+                    self.tail_restrain[rel_id].append(v1)
+
+        for k, v in self.tail_restrain.items():
+            print(f'\t{k}({self.relation_id_2_name[k]}) tail restrain length: {len(v)}')
+
     def __init__(self,
                  name: str,
                  separator: str = "\t",
-                 load: bool = True):
+                 load: bool = True,
+                 tail_restrain: dict = None,
+                 sort: bool = False):
         """
             Dataset constructor.
             This method will initialize the Dataset and its structures.
@@ -41,6 +62,7 @@ class Dataset:
         # note: the "load" flag is necessary because the Kelpie datasets do not require loading,
         #       as they are built from already loaded pre-existing datasets.
 
+        self.sort = sort
         self.name = name
         self.separator = separator
         self.home = os.path.join(DATA_PATH, self.name)
@@ -128,6 +150,9 @@ class Dataset:
 
             # map each relation id to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
             self._compute_relation_2_type()
+        
+        if tail_restrain:
+            self.make_tail_restrain(tail_restrain)
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """
@@ -140,48 +165,54 @@ class Dataset:
         textual_triples = []
         data_triples = []
 
+        triples = []
+        # 对三元组按照关系排序
         with open(triples_path, "r") as triples_file:
-            lines = triples_file.readlines()
-            for line in lines:
+            for line in triples_file.readlines():
                 line = html.unescape(line).lower()   # this is required for some YAGO3-10 lines
-                head_name, relation_name, tail_name = line.strip().split(separator)
+                h, r, t = line.strip().split(separator)
+                triples.append([h, r, t])
+        if self.sort:
+            triples.sort(key=lambda x: x[1])
 
-                # remove unwanted characters
-                head_name = head_name.replace(",", "").replace(":", "").replace(";", "")
-                relation_name = relation_name.replace(",", "").replace(":", "").replace(";", "")
-                tail_name = tail_name.replace(",", "").replace(":", "").replace(";", "")
+        for triple in triples:
+            head_name, relation_name, tail_name = triple
+            # remove unwanted characters
+            head_name = head_name.replace(",", "").replace(":", "").replace(";", "")
+            relation_name = relation_name.replace(",", "").replace(":", "").replace(";", "")
+            tail_name = tail_name.replace(",", "").replace(":", "").replace(";", "")
 
-                textual_triples.append((head_name, relation_name, tail_name))
+            textual_triples.append((head_name, relation_name, tail_name))
 
-                self.entities.add(head_name)
-                self.entities.add(tail_name)
-                self.relations.add(relation_name)
+            self.entities.add(head_name)
+            self.entities.add(tail_name)
+            self.relations.add(relation_name)
 
-                if head_name in self.entity_name_2_id:
-                    head_id = self.entity_name_2_id[head_name]
-                else:
-                    head_id = self._entity_counter
-                    self._entity_counter += 1
-                    self.entity_name_2_id[head_name] = head_id
-                    self.entity_id_2_name[head_id] = head_name
+            if head_name in self.entity_name_2_id:
+                head_id = self.entity_name_2_id[head_name]
+            else:
+                head_id = self._entity_counter
+                self._entity_counter += 1
+                self.entity_name_2_id[head_name] = head_id
+                self.entity_id_2_name[head_id] = head_name
 
-                if relation_name in self.relation_name_2_id:
-                    relation_id = self.relation_name_2_id[relation_name]
-                else:
-                    relation_id = self._relation_counter
-                    self._relation_counter += 1
-                    self.relation_name_2_id[relation_name] = relation_id
-                    self.relation_id_2_name[relation_id] = relation_name
+            if relation_name in self.relation_name_2_id:
+                relation_id = self.relation_name_2_id[relation_name]
+            else:
+                relation_id = self._relation_counter
+                self._relation_counter += 1
+                self.relation_name_2_id[relation_name] = relation_id
+                self.relation_id_2_name[relation_id] = relation_name
 
-                if tail_name in self.entity_name_2_id:
-                    tail_id = self.entity_name_2_id[tail_name]
-                else:
-                    tail_id = self._entity_counter
-                    self._entity_counter += 1
-                    self.entity_name_2_id[tail_name] = tail_id
-                    self.entity_id_2_name[tail_id] = tail_name
+            if tail_name in self.entity_name_2_id:
+                tail_id = self.entity_name_2_id[tail_name]
+            else:
+                tail_id = self._entity_counter
+                self._entity_counter += 1
+                self.entity_name_2_id[tail_name] = tail_id
+                self.entity_id_2_name[tail_id] = tail_name
 
-                data_triples.append((head_id, relation_id, tail_id))
+            data_triples.append((head_id, relation_id, tail_id))
 
         return numpy.array(textual_triples), numpy.array(data_triples).astype('int64')
 

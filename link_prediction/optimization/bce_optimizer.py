@@ -26,7 +26,8 @@ class BCEOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tail_restrain: dict = None):
         """
             BCEOptimizer initializer.
             :param model: the model to train
@@ -41,6 +42,7 @@ class BCEOptimizer(Optimizer):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
+        self.tail_restrain = tail_restrain
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
         self.learning_rate = hyperparameters[LEARNING_RATE]
@@ -100,7 +102,10 @@ class BCEOptimizer(Optimizer):
         if self.label_smoothing:
             targets = ((1.0 - self.label_smoothing) * targets) + (1.0 / targets.shape[1])
 
-        return torch.tensor(np.array(batch)).cuda(), torch.FloatTensor(targets).cuda()
+        batch = np.array(batch)
+        if self.tail_restrain:
+            targets = targets[:, self.model.get_tail_set(batch)]
+        return torch.tensor(batch).cuda(), torch.FloatTensor(targets).cuda()
 
     def epoch(self,
               er_vocab,

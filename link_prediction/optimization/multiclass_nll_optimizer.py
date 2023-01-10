@@ -27,7 +27,8 @@ class MultiClassNLLOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tail_restrain: dict = None):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 

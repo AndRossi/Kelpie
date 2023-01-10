@@ -26,7 +26,8 @@ class ConvE(Model):
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random = True):
+                 init_random = True,
+                 tail_restrain: dict = None):
         """
             Constructor for ConvE model.
 
@@ -41,6 +42,7 @@ class ConvE(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
+        self.tail_restrain = tail_restrain
         self.name = "ConvE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities                                # number of entities in dataset
@@ -216,12 +218,28 @@ class ConvE(Model):
         x = self.hidden_dropout(x)
         x = self.batch_norm_3(x)
         x = torch.relu(x)
-        x = torch.mm(x, self.entity_embeddings.transpose(1, 0))
+
+        if self.tail_restrain:
+            tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
+        else:
+            tail_embeddings = self.entity_embeddings
+
+        x = torch.mm(x, tail_embeddings.transpose(1, 0))
         #x += self.b.expand_as(x)
 
         pred = torch.sigmoid(x)
 
         return pred
+    
+    def get_tail_set(self, samples):
+        relations = set(samples[:, 1].tolist())
+        print(len(relations), end=',')
+        tail_set = []
+        for relation in relations:
+            tail_set += self.tail_restrain[relation]
+        lis = list(set(tail_set))
+        lis.sort()
+        return lis
 
 
     def predict_samples(self, samples: np.array) -> Tuple[Any, Any, Any]:

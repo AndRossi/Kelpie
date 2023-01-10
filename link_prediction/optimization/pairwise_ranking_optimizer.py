@@ -16,7 +16,8 @@ class PairwiseRankingOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tail_restrain: dict = None):
         """
             PairwiseRankingOptimizer initializer.
             :param model: the model to train
