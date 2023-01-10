@@ -1,83 +1,62 @@
-import sys
 import os
 import argparse
 import random
 import time
-
 import numpy
 import torch
 
-sys.path.append(
-    os.path.realpath(os.path.join(os.path.abspath(__file__), os.path.pardir, os.path.pardir, os.path.pardir)))
-
-from dataset import ALL_DATASET_NAMES, Dataset
-from kelpie import Kelpie as Kelpie
+from dataset import Dataset
+from kelpie import Kelpie
 from data_poisoning import DataPoisoning
 from criage import Criage
-from link_prediction.models.complex import ComplEx
-from link_prediction.models.model import DIMENSION, INIT_SCALE, LEARNING_RATE, OPTIMIZER_NAME, DECAY_1, DECAY_2, \
-    REGULARIZER_WEIGHT, EPOCHS, \
-    BATCH_SIZE, REGULARIZER_NAME
-from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
+import yaml
+import click
 
-datasets = ALL_DATASET_NAMES
+from link_prediction.models.transe import TransE
+from link_prediction.models.complex import ComplEx
+from link_prediction.models.conve import ConvE
+from link_prediction.models.model import *
+from link_prediction.optimization.bce_optimizer import BCEOptimizer
+from link_prediction.optimization.multiclass_nll_optimizer import MultiClassNLLOptimizer
+from link_prediction.optimization.pairwise_ranking_optimizer import PairwiseRankingOptimizer
+from link_prediction.evaluation.evaluation import Evaluator
+from prefilters.prefilter import TOPOLOGY_PREFILTER, TYPE_PREFILTER, NO_PREFILTER
 
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
-parser.add_argument('--dataset',
-                    choices=datasets,
-                    help="Dataset in {}".format(datasets),
-                    required=True)
+def ech(s, fg='yellow'):
+    click.echo(click.style(s, fg))
 
-optimizers = ['Adagrad', 'Adam', 'SGD']
-parser.add_argument('--optimizer',
-                    choices=optimizers,
-                    default='Adagrad',
-                    help="Optimizer in {} to use in post-training".format(optimizers))
+def get_yaml_data(yaml_file):
+    # 打开yaml文件
+    print("***获取yaml文件数据***")
+    file = open(yaml_file, 'r', encoding="utf-8")
+    file_data = file.read()
+    file.close()
+    
+    print("类型：", type(file_data))
 
-parser.add_argument('--batch_size',
-                    default=100,
-                    type=int,
-                    help="Batch size to use in post-training")
+    # 将字符串转化为字典或列表
+    print("***转化yaml数据为字典或列表***")
+    data = yaml.safe_load(file_data)
+    print(data)
+    print("类型：", type(data))
+    return data
 
-parser.add_argument('--max_epochs',
-                    default=200,
-                    type=int,
-                    help="Number of epochs to run in post-training")
+config = get_yaml_data('config.yaml')
 
-parser.add_argument('--dimension',
-                    default=1000,
-                    type=int,
-                    help="Factorization rank.")
+parser.add_argument("--dataset",
+                    type=str,
+                    help="The dataset to use: FB15k, FB15k-237, WN18, WN18RR or YAGO3-10")
 
-parser.add_argument('--learning_rate',
-                    default=1e-1,
-                    type=float,
-                    help="Learning rate")
+parser.add_argument("--method",
+                    type=str,
+                    help="The method to use: ComplEx, ConvE, TransE")
 
-parser.add_argument('--reg',
-                    default=0,
-                    type=float,
-                    help="Regularization weight")
-
-parser.add_argument('--init',
-                    default=1e-3,
-                    type=float,
-                    help="Initial scale")
-
-parser.add_argument('--decay1',
-                    default=0.9,
-                    type=float,
-                    help="Decay rate for the first moment estimate in Adam")
-
-parser.add_argument('--decay2',
-                    default=0.999,
-                    type=float,
-                    help="Decay rate for second moment estimate in Adam")
-
-parser.add_argument('--model_path',
-                    help="Path to the model to explain the predictions of",
-                    required=True)
+parser.add_argument("--model_path",
+                    type=str,
+                    required=True,
+                    help="path of the model to explain the predictions of.")
 
 parser.add_argument("--facts_to_explain_path",
                     type=str,
@@ -121,46 +100,105 @@ parser.add_argument("--prefilter_threshold",
                     default=20,
                     help="The number of promising training facts to keep after prefiltering")
 
-args = parser.parse_args()
+parser.add_argument("--run",
+                    type=str,
+                    default='111',
+                    help="whether train, test or explain")
 
+args = parser.parse_args()
+cfg = config[args.dataset][args.method]
 ########## LOAD DATASET
 
 # deterministic!
 seed = 42
-torch.backends.cudnn.deterministic = True
 numpy.random.seed(seed)
 torch.manual_seed(seed)
 random.seed(seed)
+
 torch.cuda.set_rng_state(torch.cuda.get_rng_state())
-
-hyperparameters = {DIMENSION: args.dimension,
-                   INIT_SCALE: args.init,
-                   LEARNING_RATE: args.learning_rate,
-                   OPTIMIZER_NAME: args.optimizer,
-                   DECAY_1: args.decay1,
-                   DECAY_2: args.decay2,
-                   REGULARIZER_WEIGHT: args.reg,
-                   EPOCHS: args.max_epochs,
-                   BATCH_SIZE: args.batch_size,
-                   REGULARIZER_NAME: "N3"}
-
-prefilter = args.prefilter
-relevance_threshold = args.relevance_threshold
+torch.backends.cudnn.deterministic = True
 
 # load the dataset and its training samples
-print("Loading dataset %s..." % args.dataset)
+ech(f"Loading dataset {args.dataset}...")
 dataset = Dataset(name=args.dataset, separator="\t", load=True)
 
-print("Reading facts to explain...")
+ech("Initializing model...")
+if args.method == "ConvE":
+    hyperparameters = {DIMENSION: cfg['D'],
+                    INPUT_DROPOUT: cfg['Drop']['in'],
+                    FEATURE_MAP_DROPOUT: cfg['Drop']['feat'],
+                    HIDDEN_DROPOUT: cfg['Drop']['h'],
+                    HIDDEN_LAYER_SIZE: 9728,
+                    BATCH_SIZE: cfg['B'],
+                    LEARNING_RATE: cfg['LR'],
+                    DECAY: cfg['Decay'],
+                    LABEL_SMOOTHING: 0.1,
+                    EPOCHS: cfg['Ep']}
+    model = ConvE(dataset=dataset,hyperparameters=hyperparameters,init_random=True)  # type: ConvE
+    Optimizer = BCEOptimizer
+elif args.method == "ComplEx":
+    hyperparameters = {DIMENSION: cfg['D'],
+                   INIT_SCALE: 1e-3,
+                   LEARNING_RATE: cfg['LR'],
+                   OPTIMIZER_NAME: 'Adagrad',  # 'Adagrad', 'Adam', 'SGD'
+                   DECAY_1: 0.9,
+                   DECAY_2: 0.999,
+                   REGULARIZER_WEIGHT: cfg['Reg'],
+                   EPOCHS: cfg['Ep'],
+                   BATCH_SIZE: cfg['B'],
+                   REGULARIZER_NAME: "N3"}
+    model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
+    Optimizer = MultiClassNLLOptimizer
+elif args.method == "TransE":
+    hyperparameters = {DIMENSION: cfg['D'],
+                   MARGIN: 5,
+                   NEGATIVE_SAMPLES_RATIO: cfg['N'],
+                   REGULARIZER_WEIGHT: cfg['Reg'],
+                   BATCH_SIZE: cfg['B'],
+                   LEARNING_RATE: cfg['LR'],
+                   EPOCHS: cfg['Ep']}
+    model = TransE(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: TransE
+    Optimizer = PairwiseRankingOptimizer
+
+
+model.to('cuda')
+if os.path.exists(args.model_path):
+    ech(f'loading models from path: {args.model_path}')
+    model.load_state_dict(torch.load(args.model_path))
+else:
+    ech(f'model does not exists! {args.model_path}')
+
+# ---------------------train---------------------
+if int(args.run[0]):
+    ech("Training model...")
+    optimizer = Optimizer(model=model, hyperparameters=hyperparameters)
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10 if args.method == "ConvE" else -1,
+                    save_path=args.model_path,
+                    valid_samples=dataset.valid_samples)
+
+# ---------------------test---------------------
+model.eval()
+if int(args.run[1]):
+    ech("Evaluating model...")
+    mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
+    print("\tTest Hits@1: %f" % h1)
+    print("\tTest Hits@10: %f" % h10)
+    print("\tTest Mean Reciprocal Rank: %f" % mrr)
+    print("\tTest Mean Rank: %f" % mr)
+
+# ---------------------explain---------------------
+if not int(args.run[2]):
+    os.abort()
+start_time = time.time()
+
+ech("Reading facts to explain...")
 with open(args.facts_to_explain_path, "r") as facts_file:
     testing_facts = [x.strip().split("\t") for x in facts_file.readlines()]
 
-model = ComplEx(dataset=dataset, hyperparameters=hyperparameters, init_random=True)  # type: ComplEx
-model.to('cuda')
-model.load_state_dict(torch.load(args.model_path))
-model.eval()
+# get the ids of the elements of the fact to explain and the perspective entity
 
-start_time = time.time()
+prefilter = args.prefilter
+relevance_threshold = args.relevance_threshold
 
 if args.baseline is None:
     kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
@@ -251,6 +289,6 @@ for i, fact in enumerate(testing_facts):
         output_lines.append("\n")
 
 end_time = time.time()
-print("Required time: " + str(end_time - start_time) + " seconds")
+print("Explain time: " + str(end_time - start_time) + " seconds")
 with open("output.txt", "w") as output:
     output.writelines(output_lines)
