@@ -13,12 +13,27 @@
 # h是在隐藏层之后应用的 dropout；
 # feat是特征丢失；
 
+
 MOF-3000:
+  tail_restrain:
+    hasColor: M0->C0
+    hasHabit: M0->H0
+    hasPaper: M0->P0
+    hasJournal: M0->J0
+    hasAuthor: M0->A0
+    hasKernel: M0,P1,B0->K1,K2,K3
+    subKernel: K2,K3->K1,K2
+    hasBond: M0,P1->B0
+    hasSolvent: M0->ref
+    hasLinker: M0->ref
+    hasMetal: M0->ref   # M0 -> P1
+    hasOperation: M0->O0
+    hasMethod: M0->M1
   TransE:
     D: 50
     LR: 0.0002
-    B: 2048
-    Ep: 250
+    B: 4096
+    Ep: 2500
     gamma: 2
     N: 5
     Opt: Adam
@@ -26,15 +41,15 @@ MOF-3000:
   ComplEx:
     D: 500
     LR: 0.1
-    B: 1000
-    Ep: 20
+    B: 2000
+    Ep: 200
     Opt: Adagrad
     Reg: 0.05
   ConvE:
     D: 200
     LR: 0.003
-    B: 128
-    Ep: 1000
+    B: 512
+    Ep: 200
     Decay: 0.995
     epsilon: 0.1
     Drop:

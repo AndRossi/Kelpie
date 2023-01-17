@@ -28,7 +28,9 @@ class TransE(Model):
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random = True):
+                 init_random = True,
+                 tail_restrain: dict = None,
+                 args = None):
         """
             Constructor for TransE model.
 

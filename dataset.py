@@ -24,10 +24,39 @@ MANY_TO_MANY="N-N"
 
 class Dataset:
 
+    def make_tail_restrain(self, tail_restrain):
+        print('making tail restrain...')
+        self.tail_restrain = defaultdict(list)
+        # 注意name都是小写的！
+        # print(self.relation_name_2_id)
+        # print(self.entity_id_2_name)
+        for rel, head_tail in tail_restrain.items():
+            head_type, tail_type = head_tail.split('->')
+
+            rel_id = self.relation_name_2_id[rel.lower()]
+            tail_type = set([x.strip().lower() for x in tail_type.split(',')])
+            head_type = set([x.strip().lower() for x in head_type.split(',')])
+
+            for k1, v1 in self.entity_name_2_id.items():
+                # 除了关系尾实体以外，还有反关系尾实体（关系头实体）
+                if k1[:2] in tail_type:
+                    self.tail_restrain[rel_id].append(v1)
+                if k1[:2] in head_type:
+                    self.tail_restrain[rel_id + self.num_direct_relations].append(v1)
+
+            # 尾实体强约束
+            if 'ref' in tail_type:
+                self.tail_restrain[rel_id] = self.rid2target[rel_id]
+
+        for k, v in self.tail_restrain.items():
+            print(f'\t{k}({self.relation_id_2_name[k]}) tail restrain length: {len(v)}')
+
     def __init__(self,
                  name: str,
                  separator: str = "\t",
-                 load: bool = True):
+                 load: bool = True,
+                 tail_restrain: dict = None,
+                 args = None):
         """
             Dataset constructor.
             This method will initialize the Dataset and its structures.
@@ -41,6 +70,8 @@ class Dataset:
         # note: the "load" flag is necessary because the Kelpie datasets do not require loading,
         #       as they are built from already loaded pre-existing datasets.
 
+        self.args=args
+        self.tail_restrain = None
         self.name = name
         self.separator = separator
         self.home = os.path.join(DATA_PATH, self.name)
@@ -101,6 +132,7 @@ class Dataset:
             self.num_entities = len(self.entities)
             self.num_direct_relations = len(self.relations)
             self.num_relations = 2*len(self.relations)  # also count inverse relations
+            self.rid2target = defaultdict(list)
 
             # add the inverse relations to the relation_id_2_name and relation_name_2_id data structures
             for relation_id in range(self.num_direct_relations):
@@ -118,6 +150,7 @@ class Dataset:
                 self.to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
                 # if the sample was a training sample, also do the same for the train_to_filter data structure;
                 # Also fill the entity_2_degree and relation_2_degree dicts.
+                self.rid2target[relation_id].append(tail_id)
                 if i < len(self.train_samples):
                     self.train_to_filter[(head_id, relation_id)].append(tail_id)
                     self.train_to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
@@ -128,6 +161,16 @@ class Dataset:
 
             # map each relation id to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
             self._compute_relation_2_type()
+
+        print('rid2target...')
+        for k, v in self.rid2target.items():
+            v = list(set(v))
+            v.sort()
+            self.rid2target[k] = v
+            print(f'\t{k}({self.relation_id_2_name[k]}) target length: {len(v)}')
+        
+        if tail_restrain:
+            self.make_tail_restrain(tail_restrain)
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """
@@ -140,48 +183,54 @@ class Dataset:
         textual_triples = []
         data_triples = []
 
+        triples = []
+        # 对三元组按照关系排序
         with open(triples_path, "r") as triples_file:
-            lines = triples_file.readlines()
-            for line in lines:
+            for line in triples_file.readlines():
                 line = html.unescape(line).lower()   # this is required for some YAGO3-10 lines
-                head_name, relation_name, tail_name = line.strip().split(separator)
+                h, r, t = line.strip().split(separator)
+                triples.append([h, r, t])
+        if self.tail_restrain:
+            triples.sort(key=lambda x: x[1])
 
-                # remove unwanted characters
-                head_name = head_name.replace(",", "").replace(":", "").replace(";", "")
-                relation_name = relation_name.replace(",", "").replace(":", "").replace(";", "")
-                tail_name = tail_name.replace(",", "").replace(":", "").replace(";", "")
+        for triple in triples:
+            head_name, relation_name, tail_name = triple
+            # remove unwanted characters
+            head_name = head_name.replace(",", "").replace(":", "").replace(";", "")
+            relation_name = relation_name.replace(",", "").replace(":", "").replace(";", "")
+            tail_name = tail_name.replace(",", "").replace(":", "").replace(";", "")
 
-                textual_triples.append((head_name, relation_name, tail_name))
+            textual_triples.append((head_name, relation_name, tail_name))
 
-                self.entities.add(head_name)
-                self.entities.add(tail_name)
-                self.relations.add(relation_name)
+            self.entities.add(head_name)
+            self.entities.add(tail_name)
+            self.relations.add(relation_name)
 
-                if head_name in self.entity_name_2_id:
-                    head_id = self.entity_name_2_id[head_name]
-                else:
-                    head_id = self._entity_counter
-                    self._entity_counter += 1
-                    self.entity_name_2_id[head_name] = head_id
-                    self.entity_id_2_name[head_id] = head_name
+            if head_name in self.entity_name_2_id:
+                head_id = self.entity_name_2_id[head_name]
+            else:
+                head_id = self._entity_counter
+                self._entity_counter += 1
+                self.entity_name_2_id[head_name] = head_id
+                self.entity_id_2_name[head_id] = head_name
 
-                if relation_name in self.relation_name_2_id:
-                    relation_id = self.relation_name_2_id[relation_name]
-                else:
-                    relation_id = self._relation_counter
-                    self._relation_counter += 1
-                    self.relation_name_2_id[relation_name] = relation_id
-                    self.relation_id_2_name[relation_id] = relation_name
+            if relation_name in self.relation_name_2_id:
+                relation_id = self.relation_name_2_id[relation_name]
+            else:
+                relation_id = self._relation_counter
+                self._relation_counter += 1
+                self.relation_name_2_id[relation_name] = relation_id
+                self.relation_id_2_name[relation_id] = relation_name
 
-                if tail_name in self.entity_name_2_id:
-                    tail_id = self.entity_name_2_id[tail_name]
-                else:
-                    tail_id = self._entity_counter
-                    self._entity_counter += 1
-                    self.entity_name_2_id[tail_name] = tail_id
-                    self.entity_id_2_name[tail_id] = tail_name
+            if tail_name in self.entity_name_2_id:
+                tail_id = self.entity_name_2_id[tail_name]
+            else:
+                tail_id = self._entity_counter
+                self._entity_counter += 1
+                self.entity_name_2_id[tail_name] = tail_id
+                self.entity_id_2_name[tail_id] = tail_name
 
-                data_triples.append((head_id, relation_id, tail_id))
+            data_triples.append((head_id, relation_id, tail_id))
 
         return numpy.array(textual_triples), numpy.array(data_triples).astype('int64')
 

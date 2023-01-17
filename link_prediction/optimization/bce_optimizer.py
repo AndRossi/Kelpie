@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from torch import optim
 from collections import defaultdict
+import os
 
 from link_prediction.models.conve import ConvE
 from link_prediction.models.model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
@@ -26,7 +27,8 @@ class BCEOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tail_restrain: dict = None):
         """
             BCEOptimizer initializer.
             :param model: the model to train
@@ -41,6 +43,7 @@ class BCEOptimizer(Optimizer):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
+        self.tail_restrain = tail_restrain
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
         self.learning_rate = hyperparameters[LEARNING_RATE]
@@ -60,6 +63,7 @@ class BCEOptimizer(Optimizer):
         all_training_samples = np.vstack((train_samples, self.dataset.invert_samples(train_samples)))
         er_vocab = self.extract_er_vocab(all_training_samples)
         er_vocab_pairs = list(er_vocab.keys())
+        er_vocab_pairs.sort(key=lambda x: x[1]) # 对样例按照relation排序！
 
         self.model.cuda()
 
@@ -68,12 +72,7 @@ class BCEOptimizer(Optimizer):
 
             if evaluate_every > 0 and valid_samples is not None and e % evaluate_every == 0:
                 self.model.eval()
-                mrr, h1, h10, mr = self.evaluator.evaluate(samples=valid_samples, write_output=False)
-
-                print("\tValidation Hits@1: %f" % h1)
-                print("\tValidation Hits@10: %f" % h10)
-                print("\tValidation Mean Reciprocal Rank': %f" % mrr)
-                print("\tValidation Mean Rank': %f" % mr)
+                self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 if save_path is not None:
                     print("\t saving model...")
@@ -100,14 +99,16 @@ class BCEOptimizer(Optimizer):
         if self.label_smoothing:
             targets = ((1.0 - self.label_smoothing) * targets) + (1.0 / targets.shape[1])
 
-        return torch.tensor(np.array(batch)).cuda(), torch.FloatTensor(targets).cuda()
+        batch = np.array(batch)
+        return torch.tensor(batch).cuda(), torch.FloatTensor(targets).cuda()
 
     def epoch(self,
               er_vocab,
               er_vocab_pairs,
               batch_size: int):
 
-        np.random.shuffle(er_vocab_pairs)
+        if self.tail_restrain is None:
+            np.random.shuffle(er_vocab_pairs)
         self.model.train()
 
         with tqdm.tqdm(total=len(er_vocab_pairs), unit='ex', disable=not self.verbose) as bar:
@@ -138,8 +139,15 @@ class BCEOptimizer(Optimizer):
             self.model.batch_norm_3.eval()
 
         self.optimizer.zero_grad()
-        predictions = self.model.forward(batch)
+        predictions = self.model.forward(batch, restrain=False)
+        # if self.tail_restrain:
+        #     targets = targets[:, self.model.get_tail_set(batch, '-')]
         loss = self.loss(predictions, targets)
+        # 发现tail_size为0，使得按照BCE公式分母为0 => loss=nan
+        if np.isnan(loss.item()):
+            print(predictions.size(), targets.size())
+            print(batch.tolist()[0])
+            os.abort()
         loss.backward()
         self.optimizer.step()
 

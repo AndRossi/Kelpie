@@ -27,10 +27,12 @@ class MultiClassNLLOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tail_restrain: dict = None):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
+        self.tail_restrain = tail_restrain
         self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.epochs = hyperparameters[EPOCHS]
@@ -77,12 +79,7 @@ class MultiClassNLLOptimizer(Optimizer):
 
             if evaluate_every > 0 and valid_samples is not None and \
                     (e + 1) % evaluate_every == 0:
-                mrr, h1, h10, mr = self.evaluator.evaluate(samples=valid_samples, write_output=False)
-
-                print("\tValidation Hits@1: %f" % h1)
-                print("\tValidation Hits@10: %f" % h10)
-                print("\tValidation Mean Reciprocal Rank': %f" % mrr)
-                print("\tValidation Mean Rank': %f" % mr)
+                self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 if save_path is not None:
                     print("\t saving model...")
@@ -101,7 +98,8 @@ class MultiClassNLLOptimizer(Optimizer):
         training_samples = torch.from_numpy(training_samples).cuda()
 
         # at the beginning of the epoch, shuffle all samples randomly
-        actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
+        if self.tail_restrain is None:
+            actual_samples = training_samples[torch.randperm(training_samples.shape[0]), :]
         loss = nn.CrossEntropyLoss(reduction='mean')
 
         with tqdm.tqdm(total=training_samples.shape[0], unit='ex', disable=not self.verbose) as bar:
