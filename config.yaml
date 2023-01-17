@@ -15,25 +15,25 @@
 
 
 MOF-3000:
-  tail_retrain:
-    hasColor: C0
-    hasHabit: H0
-    hasPaper: P0
-    hasJournal: J0
-    hasAuthor: A0
-    hasKernel: K1,K2,K3
-    subKernel: K1,K2
-    hasBond: B0
-    hasSolvent: P1
-    hasLinker: P1
-    hasMetal: P1
-    hasOperation: O0
-    hasMethod: M1
+  # tail_restrain:
+  #   hasColor: M0->C0
+  #   hasHabit: M0->H0
+  #   hasPaper: M0->P0
+  #   hasJournal: M0->J0
+  #   hasAuthor: M0->A0
+  #   hasKernel: M0,P1,B0->K1,K2,K3
+  #   subKernel: K2,K3->K1,K2
+  #   hasBond: M0,P1->B0
+  #   hasSolvent: M0->P1
+  #   hasLinker: M0->P1
+  #   hasMetal: M0->P1
+  #   hasOperation: M0->O0
+  #   hasMethod: M0->M1
   TransE:
     D: 50
     LR: 0.0002
     B: 4096
-    Ep: 250
+    Ep: 2500
     gamma: 2
     N: 5
     Opt: Adam
@@ -42,14 +42,14 @@ MOF-3000:
     D: 500
     LR: 0.1
     B: 2000
-    Ep: 20
+    Ep: 200
     Opt: Adagrad
     Reg: 0.05
   ConvE:
     D: 200
     LR: 0.003
-    B: 256
-    Ep: 1000
+    B: 512
+    Ep: 200
     Decay: 0.995
     epsilon: 0.1
     Drop:

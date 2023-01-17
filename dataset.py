@@ -30,15 +30,19 @@ class Dataset:
         # 注意name都是小写的！
         # print(self.relation_name_2_id)
         # print(self.entity_id_2_name)
-        for rel, tail_type in tail_restrain.items():
-            rel = rel.lower()
-            tail_type = tail_type.lower()
-            rel_id = self.relation_name_2_id[rel]
-            tail_type = set([x.strip() for x in tail_type.split(',')])
-            
+        for rel, head_tail in tail_restrain.items():
+            head_type, tail_type = head_tail.split('->')
+
+            rel_id = self.relation_name_2_id[rel.lower()]
+            tail_type = set([x.strip().lower() for x in tail_type.split(',')])
+            head_type = set([x.strip().lower() for x in head_type.split(',')])
+
             for k1, v1 in self.entity_name_2_id.items():
+                # 除了关系尾实体以外，还有反关系尾实体（关系头实体）
                 if k1[:2] in tail_type:
                     self.tail_restrain[rel_id].append(v1)
+                if k1[:2] in head_type:
+                    self.tail_restrain[rel_id + self.num_direct_relations].append(v1)
 
         for k, v in self.tail_restrain.items():
             print(f'\t{k}({self.relation_id_2_name[k]}) tail restrain length: {len(v)}')
@@ -48,7 +52,7 @@ class Dataset:
                  separator: str = "\t",
                  load: bool = True,
                  tail_restrain: dict = None,
-                 sort: bool = False):
+                 args = None):
         """
             Dataset constructor.
             This method will initialize the Dataset and its structures.
@@ -62,7 +66,8 @@ class Dataset:
         # note: the "load" flag is necessary because the Kelpie datasets do not require loading,
         #       as they are built from already loaded pre-existing datasets.
 
-        self.sort = sort
+        self.args=args
+        self.tail_restrain = None
         self.name = name
         self.separator = separator
         self.home = os.path.join(DATA_PATH, self.name)
@@ -172,7 +177,7 @@ class Dataset:
                 line = html.unescape(line).lower()   # this is required for some YAGO3-10 lines
                 h, r, t = line.strip().split(separator)
                 triples.append([h, r, t])
-        if self.sort:
+        if self.tail_restrain:
             triples.sort(key=lambda x: x[1])
 
         for triple in triples:

@@ -104,13 +104,19 @@ parser.add_argument("--run",
                     type=str,
                     default='111',
                     help="whether train, test or explain")
+           
+parser.add_argument('--ignore_inverse', dest='ignore_inverse', default=False, action='store_true',
+                    help="whether ignore inverse relation when evaluate")
 
-parser.add_argument('--sort', dest='sort', default=False, action='store_true',
-                    help="whether sort the dataset")
+parser.add_argument('--specify_relation', dest='specify_relation', default=False, action='store_true',
+                    help="whether specify relation when evaluate")
+
+# parser.add_argument('--sort', dest='sort', default=False, action='store_true',
+#                     help="whether sort the dataset")
 
 args = parser.parse_args()
 cfg = config[args.dataset][args.method]
-tail_restrain = config[args.dataset].get('tail_retrain', None)
+tail_restrain = config[args.dataset].get('tail_restrain', None)
 
 # deterministic!
 seed = 42
@@ -123,7 +129,7 @@ torch.backends.cudnn.deterministic = True
 
 # load the dataset and its training samples
 ech(f"Loading dataset {args.dataset}...")
-dataset = Dataset(name=args.dataset, separator="\t", load=True, tail_restrain=tail_restrain, sort=args.sort)
+dataset = Dataset(name=args.dataset, separator="\t", load=True, tail_restrain=tail_restrain, args=args)
 try:
     tail_restrain = dataset.tail_restrain
 except:
@@ -168,7 +174,7 @@ elif args.method == "TransE":
     Optimizer = PairwiseRankingOptimizer
 
 model = TargetModel(dataset=dataset, hyperparameters=hyperparameters, \
-                init_random=True, tail_restrain=tail_restrain)
+                init_random=True, tail_restrain=tail_restrain, args=args)
 model.to('cuda')
 if os.path.exists(args.model_path):
     ech(f'loading models from path: {args.model_path}')
@@ -181,7 +187,7 @@ if int(args.run[0]):
     ech("Training model...")
     t = time.time()
     optimizer = Optimizer(model=model, hyperparameters=hyperparameters, tail_restrain=tail_restrain)
-    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10 if args.method == "ConvE" else -1,
+    optimizer.train(train_samples=dataset.train_samples, evaluate_every=10, #10 if args.method == "ConvE" else -1,
                     save_path=args.model_path,
                     valid_samples=dataset.valid_samples)
     print(f"Train time: {time.time() - t}")
@@ -190,11 +196,7 @@ if int(args.run[0]):
 model.eval()
 if int(args.run[1]):
     ech("Evaluating model...")
-    mrr, h1, h10, mr = Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
-    print("\tTest Hits@1: %f" % h1)
-    print("\tTest Hits@10: %f" % h10)
-    print("\tTest Mean Reciprocal Rank: %f" % mrr)
-    print("\tTest Mean Rank: %f" % mr)
+    Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
 
 # ---------------------explain---------------------
 if not int(args.run[2]):

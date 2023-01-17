@@ -3,16 +3,45 @@ import html
 from link_prediction.models.transe import TransE
 from link_prediction.models.model import Model, KelpieModel
 import numpy as np
+import os
 
 class Evaluator:
     def __init__(self, model: Model):
         self.model = model
         self.dataset = model.dataset    # the Dataset may be useful to convert ids to names
+        self.args = self.dataset.args
 
     def evaluate(self,
                 samples: np.array,
-                write_output:bool = False):
+                write_output:bool = False, folder='.'):
+        if not self.args.specify_relation:
+            return self._evaluate(samples, write_output, folder, print_prefix='\t')
 
+        # 对relation进行排序
+        samples = samples[samples[:,1].argsort()]
+        rel = samples[0, 1]
+        index = [0]
+        for i in range(samples.shape[0]):
+            if samples[i, 1] != rel:
+                index.append(i)
+                rel = samples[i, 1]
+        index.append(len(samples))
+        print('specify_relation:', index)
+        
+        ret = {}
+        for i in range(len(index[:-1])):
+            batch = samples[index[i] : index[i+1]]
+            rel = batch[0, 1]
+            ret[rel] = self._evaluate(batch, write_output, 
+                os.path.join(folder, self.dataset.relation_id_2_name[rel]),
+                print_prefix=self.dataset.relation_id_2_name[rel])
+
+        return ret    
+
+
+    def _evaluate(self,
+                samples: np.array,
+                write_output:bool = False, folder='.', print_prefix=None):
         self.model.cuda()
 
         # if the model is Transe, it uses too much memory to allow computation of all samples altogether
@@ -38,11 +67,16 @@ class Evaluator:
             all_ranks.append(ranks[i][1])
 
         if write_output:
-            self._write_output(samples, ranks, predictions)
+            self._write_output(samples, ranks, predictions, folder)
 
-        return self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10), self.mr(all_ranks)
+        mrr, h1, h10, mr = self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10), self.mr(all_ranks)
+        mrr, h1, h10, mr = round(mrr, 3), round(h1, 3), round(h10, 3), round(mr, 3)
 
-    def _write_output(self, samples, ranks, predictions):
+        if print_prefix:
+            print(print_prefix, f'H@1:{h1}, H@10:{h10}, MRR:{mrr}, MR:{mr}')
+        return mrr, h1, h10, mr
+
+    def _write_output(self, samples, ranks, predictions, folder):
         result_lines = []
         detail_lines = []
         for i in range(samples.shape[0]):
@@ -73,9 +107,9 @@ class Evaluator:
         for i in range(len(detail_lines)):
             detail_lines[i] = html.unescape(detail_lines[i])
 
-        with open("filtered_ranks.csv", "w") as output_file:
+        with open(os.path.join(folder, "filtered_ranks.csv"), "w") as output_file:
             output_file.writelines(result_lines)
-        with open("filtered_details.csv", "w") as output_file:
+        with open(os.path.join(folder, "filtered_details.csv"), "w") as output_file:
             output_file.writelines(detail_lines)
 
     @staticmethod

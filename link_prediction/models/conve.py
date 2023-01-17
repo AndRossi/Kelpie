@@ -7,8 +7,7 @@ from torch.nn.init import xavier_normal_
 
 from dataset import Dataset
 from kelpie_dataset import KelpieDataset
-from link_prediction.models.model import Model, DIMENSION, INPUT_DROPOUT, FEATURE_MAP_DROPOUT, HIDDEN_DROPOUT, HIDDEN_LAYER_SIZE, KelpieModel
-
+from link_prediction.models.model import *
 
 class ConvE(Model):
     """
@@ -27,7 +26,8 @@ class ConvE(Model):
                  dataset: Dataset,
                  hyperparameters: dict,
                  init_random = True,
-                 tail_restrain: dict = None):
+                 tail_restrain: dict = None,
+                 args = None):
         """
             Constructor for ConvE model.
 
@@ -42,12 +42,14 @@ class ConvE(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
+        self.args = args
         self.tail_restrain = tail_restrain
         self.name = "ConvE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities                                # number of entities in dataset
         self.num_relations = dataset.num_relations                              # number of relations in dataset
 
+        self.batch_size = hyperparameters[BATCH_SIZE]
         self.dimension = hyperparameters[DIMENSION]                             # embedding dimension
         self.input_dropout_rate = hyperparameters[INPUT_DROPOUT]               # rate of the dropout to apply to the input
         self.feature_map_dropout_rate = hyperparameters[FEATURE_MAP_DROPOUT]    # rate of the dropout to apply to the 2D feature map
@@ -187,7 +189,7 @@ class ConvE(Model):
         return output_scores
 
 
-    def all_scores(self, samples: np.array) -> np.array:
+    def all_scores(self, samples: np.array, show_all=False) -> np.array:
         """
             For each of the passed samples, compute scores for all possible tail entities.
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
@@ -220,7 +222,14 @@ class ConvE(Model):
         x = torch.relu(x)
 
         if self.tail_restrain:
-            tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
+            if show_all:
+                tail_embeddings = self.entity_embeddings
+                other = list(set(range(tail_embeddings.shape[0])) - set(self.get_tail_set(samples)))
+                other.sort()
+                # RuntimeError: a leaf Variable that requires grad is being used in an in-place operation.
+                tail_embeddings[other] = 0
+            else:
+                tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
         else:
             tail_embeddings = self.entity_embeddings
 
@@ -231,9 +240,9 @@ class ConvE(Model):
 
         return pred
     
-    def get_tail_set(self, samples):
+    def get_tail_set(self, samples, split=' '):
         relations = set(samples[:, 1].tolist())
-        print(len(relations), end=',')
+        print(len(relations), end=split)
         tail_set = []
         for relation in relations:
             tail_set += self.tail_restrain[relation]
@@ -265,12 +274,15 @@ class ConvE(Model):
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
 
-        # invert samples to perform head predictions
-        inverse_samples = self.dataset.invert_samples(direct_samples)
-
-        #obtain scores, ranks and predictions both for direct and inverse samples
-        inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
         direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+
+        # invert samples to perform head predictions
+        if self.args.ignore_inverse:
+            inverse_scores, head_ranks, head_predictions = direct_scores, tail_ranks, tail_predictions
+        else:
+            inverse_samples = self.dataset.invert_samples(direct_samples)
+            inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+            
 
         for i in range(direct_samples.shape[0]):
             # add to the scores list a couple containing the scores of the direct and of the inverse sample
@@ -299,33 +311,36 @@ class ConvE(Model):
             batch = samples[i : min(i + batch_size, len(samples))]
 
             all_scores = self.all_scores(batch)
+            
+            # hack一下，把预测的结果维度扩展到所有维上，空白的为0
+            with torch.no_grad():
+                all_scores = self.all_scores(batch, show_all=True)
+                tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
 
-            tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
+                # for each sample to predict
+                for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
+                    tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
 
-            # for each sample to predict
-            for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
-                tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
+                    # score obtained by the correct tail of the sample
+                    target_tail_score = all_scores[sample_number, tail_id].item()
+                    scores.append(target_tail_score)
 
-                # score obtained by the correct tail of the sample
-                target_tail_score = all_scores[sample_number, tail_id].item()
-                scores.append(target_tail_score)
+                    # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
+                    all_scores[sample_number, tails_to_filter] = 0.0
+                    # re-set the predicted value for that tail to the original value
+                    all_scores[sample_number, tail_id] = target_tail_score
 
-                # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
-                all_scores[sample_number, tails_to_filter] = 0.0
-                # re-set the predicted value for that tail to the original value
-                all_scores[sample_number, tail_id] = target_tail_score
+                # this amounts to using ORDINAL policy
+                sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
+                sorted_indexes = sorted_indexes.cpu().numpy()
 
-            # this amounts to using ORDINAL policy
-            sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
-            sorted_indexes = sorted_indexes.cpu().numpy()
+                for row in sorted_indexes:
+                    pred_out.append(row)
 
-            for row in sorted_indexes:
-                pred_out.append(row)
-
-            for row in range(batch.shape[0]):
-                # rank of the correct target
-                rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
-                ranks.append(rank + 1)
+                for row in range(batch.shape[0]):
+                    # rank of the correct target
+                    rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
+                    ranks.append(rank + 1)
 
         return scores, ranks, pred_out
 

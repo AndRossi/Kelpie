@@ -27,7 +27,8 @@ class ComplEx(Model):
                  dataset: Dataset,
                  hyperparameters: dict,
                  init_random=True,
-                 tail_restrain: dict = None):
+                 tail_restrain: dict = None,
+                 args = None):
         """
             Constructor for ComplEx model.
 
