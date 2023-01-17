@@ -100,8 +100,6 @@ class BCEOptimizer(Optimizer):
             targets = ((1.0 - self.label_smoothing) * targets) + (1.0 / targets.shape[1])
 
         batch = np.array(batch)
-        if self.tail_restrain:
-            targets = targets[:, self.model.get_tail_set(batch, '-')]
         return torch.tensor(batch).cuda(), torch.FloatTensor(targets).cuda()
 
     def epoch(self,
@@ -141,7 +139,9 @@ class BCEOptimizer(Optimizer):
             self.model.batch_norm_3.eval()
 
         self.optimizer.zero_grad()
-        predictions = self.model.forward(batch)
+        predictions = self.model.forward(batch, restrain=False)
+        # if self.tail_restrain:
+        #     targets = targets[:, self.model.get_tail_set(batch, '-')]
         loss = self.loss(predictions, targets)
         # 发现tail_size为0，使得按照BCE公式分母为0 => loss=nan
         if np.isnan(loss.item()):

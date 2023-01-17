@@ -44,6 +44,10 @@ class Dataset:
                 if k1[:2] in head_type:
                     self.tail_restrain[rel_id + self.num_direct_relations].append(v1)
 
+            # 尾实体强约束
+            if 'ref' in tail_type:
+                self.tail_restrain[rel_id] = self.rid2target[rel_id]
+
         for k, v in self.tail_restrain.items():
             print(f'\t{k}({self.relation_id_2_name[k]}) tail restrain length: {len(v)}')
 
@@ -128,6 +132,7 @@ class Dataset:
             self.num_entities = len(self.entities)
             self.num_direct_relations = len(self.relations)
             self.num_relations = 2*len(self.relations)  # also count inverse relations
+            self.rid2target = defaultdict(list)
 
             # add the inverse relations to the relation_id_2_name and relation_name_2_id data structures
             for relation_id in range(self.num_direct_relations):
@@ -145,6 +150,7 @@ class Dataset:
                 self.to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
                 # if the sample was a training sample, also do the same for the train_to_filter data structure;
                 # Also fill the entity_2_degree and relation_2_degree dicts.
+                self.rid2target[relation_id].append(tail_id)
                 if i < len(self.train_samples):
                     self.train_to_filter[(head_id, relation_id)].append(tail_id)
                     self.train_to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
@@ -155,6 +161,13 @@ class Dataset:
 
             # map each relation id to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
             self._compute_relation_2_type()
+
+        print('rid2target...')
+        for k, v in self.rid2target.items():
+            v = list(set(v))
+            v.sort()
+            self.rid2target[k] = v
+            print(f'\t{k}({self.relation_id_2_name[k]}) target length: {len(v)}')
         
         if tail_restrain:
             self.make_tail_restrain(tail_restrain)

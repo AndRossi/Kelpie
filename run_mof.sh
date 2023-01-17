@@ -2,7 +2,7 @@
 
 dataset=MOF-3000
 mode=necessary
-method=ComplEx
+method=ConvE
 output_folder=results/$dataset/${method}-${mode}
 mkdir -p $output_folder
 explain_path=input_facts/complex_wn18_random.csv
@@ -14,5 +14,5 @@ model_path=stored_models/"${method}_${dataset}.pt"
 # rm output_*.csv
 
 python explain.py --dataset $dataset --method=$method --model_path $model_path --explain_path $explain_path --mode $mode \
-        --run 111 --specify_relation # > $output_folder/output.log
+        --run 111 --specify_relation --ignore_inverse # > $output_folder/output.log
 # mv output.txt $output_folder/

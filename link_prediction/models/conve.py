@@ -93,7 +93,7 @@ class ConvE(Model):
         """
         return False
 
-    def forward(self, samples: np.array):
+    def forward(self, samples: np.array, restrain=True):
         """
             Perform forward propagation on the passed samples
             :param samples: a 2-dimensional numpy array containing the samples to use in forward propagation, one per row
@@ -101,7 +101,7 @@ class ConvE(Model):
                         - the scores for each passed sample with all possible tails
                         - a partial result to use in regularization
         """
-        return self.all_scores(samples)
+        return self.all_scores(samples, restrain=restrain)
 
     def score(self, samples: np.array) -> np.array:
         """
@@ -189,7 +189,7 @@ class ConvE(Model):
         return output_scores
 
 
-    def all_scores(self, samples: np.array, show_all=False) -> np.array:
+    def all_scores(self, samples: np.array, restrain=False) -> np.array:
         """
             For each of the passed samples, compute scores for all possible tail entities.
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
@@ -221,15 +221,8 @@ class ConvE(Model):
         x = self.batch_norm_3(x)
         x = torch.relu(x)
 
-        if self.tail_restrain:
-            if show_all:
-                tail_embeddings = self.entity_embeddings
-                other = list(set(range(tail_embeddings.shape[0])) - set(self.get_tail_set(samples)))
-                other.sort()
-                # RuntimeError: a leaf Variable that requires grad is being used in an in-place operation.
-                tail_embeddings[other] = 0
-            else:
-                tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
+        if restrain:
+            tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
         else:
             tail_embeddings = self.entity_embeddings
 
@@ -242,7 +235,7 @@ class ConvE(Model):
     
     def get_tail_set(self, samples, split=' '):
         relations = set(samples[:, 1].tolist())
-        print(len(relations), end=split)
+        # print(len(relations), end=split)
         tail_set = []
         for relation in relations:
             tail_set += self.tail_restrain[relation]
@@ -280,10 +273,10 @@ class ConvE(Model):
         if self.args.ignore_inverse:
             inverse_scores, head_ranks, head_predictions = direct_scores, tail_ranks, tail_predictions
         else:
+            print('evalating inverse relation')
             inverse_samples = self.dataset.invert_samples(direct_samples)
             inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
             
-
         for i in range(direct_samples.shape[0]):
             # add to the scores list a couple containing the scores of the direct and of the inverse sample
             scores += [(direct_scores[i], inverse_scores[i])]
@@ -305,42 +298,48 @@ class ConvE(Model):
         """
 
         scores, ranks, pred_out = [], [], []
+        # batch_size = 128
+        # for i in range(0, samples.shape[0], batch_size):
+        #     batch = samples[i : min(i + batch_size, len(samples))]
+        
+        batch = samples
 
-        batch_size = 128
-        for i in range(0, samples.shape[0], batch_size):
-            batch = samples[i : min(i + batch_size, len(samples))]
+        print("len samples:", len(batch), "len tails:", len(self.get_tail_set(batch)), end='\t')
+        # hack一下，使用完全预测方法，把非尾实体的置为0
+        other = list(set(range(self.entity_embeddings.shape[0])) - set(self.get_tail_set(batch)))
+        other.sort()
+        print("len others:", len(other))
+        
+        with torch.no_grad():
+            all_scores = self.all_scores(batch, restrain=False)
+            # RuntimeError: a leaf Variable that requires grad is being used in an in-place operation.
+            tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
 
-            all_scores = self.all_scores(batch)
-            
-            # hack一下，把预测的结果维度扩展到所有维上，空白的为0
-            with torch.no_grad():
-                all_scores = self.all_scores(batch, show_all=True)
-                tail_indexes = torch.tensor(batch[:, 2]).cuda()  # tails of all passed samples
+            # for each sample to predict
+            for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
+                tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
 
-                # for each sample to predict
-                for sample_number, (head_id, relation_id, tail_id) in enumerate(batch):
-                    tails_to_filter = self.dataset.to_filter[(head_id, relation_id)]
+                # score obtained by the correct tail of the sample
+                target_tail_score = all_scores[sample_number, tail_id].item()
+                scores.append(target_tail_score)
 
-                    # score obtained by the correct tail of the sample
-                    target_tail_score = all_scores[sample_number, tail_id].item()
-                    scores.append(target_tail_score)
+                # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
+                all_scores[sample_number, tails_to_filter] = 0.0
+                all_scores[sample_number, other] = 0.0
+                # re-set the predicted value for that tail to the original value
+                all_scores[sample_number, tail_id] = target_tail_score
 
-                    # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
-                    all_scores[sample_number, tails_to_filter] = 0.0
-                    # re-set the predicted value for that tail to the original value
-                    all_scores[sample_number, tail_id] = target_tail_score
+            # this amounts to using ORDINAL policy
+            sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
+            sorted_indexes = sorted_indexes.cpu().numpy()
 
-                # this amounts to using ORDINAL policy
-                sorted_values, sorted_indexes = torch.sort(all_scores, dim=1, descending=True)
-                sorted_indexes = sorted_indexes.cpu().numpy()
+            for row in sorted_indexes:
+                pred_out.append(row)
 
-                for row in sorted_indexes:
-                    pred_out.append(row)
-
-                for row in range(batch.shape[0]):
-                    # rank of the correct target
-                    rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
-                    ranks.append(rank + 1)
+            for row in range(batch.shape[0]):
+                # rank of the correct target
+                rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
+                ranks.append(rank + 1)
 
         return scores, ranks, pred_out
 

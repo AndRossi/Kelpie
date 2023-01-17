@@ -69,12 +69,12 @@ class Evaluator:
         if write_output:
             self._write_output(samples, ranks, predictions, folder)
 
-        mrr, h1, h10, mr = self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 10), self.mr(all_ranks)
-        mrr, h1, h10, mr = round(mrr, 3), round(h1, 3), round(h10, 3), round(mr, 3)
+        mrr, h1, h5, h10, mr = self.mrr(all_ranks), self.hits_at(all_ranks, 1), self.hits_at(all_ranks, 5), self.hits_at(all_ranks, 10), self.mr(all_ranks)
+        mrr, h1, h5, h10, mr = round(mrr, 3), round(h1, 3), round(h5, 3), round(h10, 3), round(mr, 3)
 
         if print_prefix:
-            print(print_prefix, f'H@1:{h1}, H@10:{h10}, MRR:{mrr}, MR:{mr}')
-        return mrr, h1, h10, mr
+            print(print_prefix, f'H@1:{h1}, H@5:{h5}, H@10:{h10}, MRR:{mrr}, MR:{mr}')
+        return mrr, h1, h5, h10, mr
 
     def _write_output(self, samples, ranks, predictions, folder):
         result_lines = []

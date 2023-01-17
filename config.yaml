@@ -15,20 +15,20 @@
 
 
 MOF-3000:
-  # tail_restrain:
-  #   hasColor: M0->C0
-  #   hasHabit: M0->H0
-  #   hasPaper: M0->P0
-  #   hasJournal: M0->J0
-  #   hasAuthor: M0->A0
-  #   hasKernel: M0,P1,B0->K1,K2,K3
-  #   subKernel: K2,K3->K1,K2
-  #   hasBond: M0,P1->B0
-  #   hasSolvent: M0->P1
-  #   hasLinker: M0->P1
-  #   hasMetal: M0->P1
-  #   hasOperation: M0->O0
-  #   hasMethod: M0->M1
+  tail_restrain:
+    hasColor: M0->C0
+    hasHabit: M0->H0
+    hasPaper: M0->P0
+    hasJournal: M0->J0
+    hasAuthor: M0->A0
+    hasKernel: M0,P1,B0->K1,K2,K3
+    subKernel: K2,K3->K1,K2
+    hasBond: M0,P1->B0
+    hasSolvent: M0->ref
+    hasLinker: M0->ref
+    hasMetal: M0->ref   # M0 -> P1
+    hasOperation: M0->O0
+    hasMethod: M0->M1
   TransE:
     D: 50
     LR: 0.0002
