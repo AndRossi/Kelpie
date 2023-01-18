@@ -48,14 +48,21 @@ MOF-3000:
   ConvE:
     D: 200
     LR: 0.003
-    B: 512
-    Ep: 200
+    B: 4096
+    Ep: 10    # 200 
     Decay: 0.995
     epsilon: 0.1
     Drop:
       in: 0.2
       h: 0.3
       feat: 0.2
+  CompGCN:
+    num_bases: -1
+    in_dim: 100
+    layer_size: [200]
+    comp_fn: sub
+    batchnorm: true
+    dropout: 0.1
 
 FB15k:
   TransE:

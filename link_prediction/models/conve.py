@@ -26,7 +26,6 @@ class ConvE(Model):
                  dataset: Dataset,
                  hyperparameters: dict,
                  init_random = True,
-                 tail_restrain: dict = None,
                  args = None):
         """
             Constructor for ConvE model.
@@ -43,7 +42,8 @@ class ConvE(Model):
         Model.__init__(self, dataset)
 
         self.args = args
-        self.tail_restrain = tail_restrain
+        self.embedding_model = args.embedding_model
+        self.tail_restrain = args.tail_restrain
         self.name = "ConvE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities                                # number of entities in dataset
@@ -80,7 +80,7 @@ class ConvE(Model):
         # We have verified that this does not affect performances in any way.
         # Each entity embedding and relation embedding is instantiated with size dimension
         # and initialized with Xavier Glorot's normalization
-        if init_random:
+        if init_random and not self.embedding_model:
             self.entity_embeddings = Parameter(torch.rand(self.num_entities, self.dimension).cuda(), requires_grad=True)
             self.relation_embeddings = Parameter(torch.rand(self.num_relations, self.dimension).cuda(), requires_grad=True)
             xavier_normal_(self.entity_embeddings)
@@ -151,15 +151,16 @@ class ConvE(Model):
 
 
     def criage_first_step(self, samples: np.array):
+        entity_embeddings, relation_embeddings = self.get_embedding()
 
-        head_embeddings = self.entity_embeddings[samples[:, 0]]
+        head_embeddings = entity_embeddings[samples[:, 0]]
         head_embeddings = head_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
 
         # list of relation embeddings for the relations of the heads
-        relation_embeddings = self.relation_embeddings[samples[:, 1]]
+        relation_embeddings = relation_embeddings[samples[:, 1]]
         relation_embeddings = relation_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
 
-        # tail_embeddings = self.entity_embeddings[samples[:, 2]].view(-1, 1, self.embedding_width, self.embedding_height)
+        # tail_embeddings = entity_embeddings[samples[:, 2]].view(-1, 1, self.embedding_width, self.embedding_height)
 
         stacked_inputs = torch.cat([head_embeddings, relation_embeddings], 2)
         stacked_inputs = self.batch_norm_1(stacked_inputs)
@@ -196,12 +197,14 @@ class ConvE(Model):
             :return: a 2-dimensional numpy array that, for each sample, contains a row for each passed sample
                      and a column for each possible tail
         """
+        entity_embeddings, relation_embeddings = self.get_embedding()
+
         # list of entity embeddings for the heads of the facts
-        head_embeddings = self.entity_embeddings[samples[:, 0]]
+        head_embeddings = entity_embeddings[samples[:, 0]]
         head_embeddings = head_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
 
         # list of relation embeddings for the relations of the heads
-        relation_embeddings = self.relation_embeddings[samples[:, 1]]
+        relation_embeddings = relation_embeddings[samples[:, 1]]
         relation_embeddings = relation_embeddings.view(-1, 1, self.embedding_width, self.embedding_height)
 
         # tail_embeddings = self.entity_embeddings[samples[:, 2]].view(-1, 1, self.embedding_width, self.embedding_height)
@@ -222,9 +225,9 @@ class ConvE(Model):
         x = torch.relu(x)
 
         if restrain:
-            tail_embeddings = self.entity_embeddings[self.get_tail_set(samples)]
+            tail_embeddings = entity_embeddings[self.get_tail_set(samples)]
         else:
-            tail_embeddings = self.entity_embeddings
+            tail_embeddings = entity_embeddings
 
         x = torch.mm(x, tail_embeddings.transpose(1, 0))
         #x += self.b.expand_as(x)
@@ -289,6 +292,11 @@ class ConvE(Model):
 
         return scores, ranks, predictions
 
+    def get_embedding(self):
+        if self.embedding_model:
+            return self.embedding_model(self.dataset.g)
+        return self.entity_embeddings, self.relation_embeddings
+
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
         """
             Returns filtered scores, ranks and predicted entities for each passed fact.
@@ -296,6 +304,7 @@ class ConvE(Model):
                           The triples can also be "inverse triples" with (tail, inverse_relation_id, head)
             :return:
         """
+        
 
         scores, ranks, pred_out = [], [], []
         # batch_size = 128
@@ -303,12 +312,12 @@ class ConvE(Model):
         #     batch = samples[i : min(i + batch_size, len(samples))]
         
         batch = samples
-
-        print("len samples:", len(batch), "len tails:", len(self.get_tail_set(batch)), end='\t')
+    
         # hack一下，使用完全预测方法，把非尾实体的置为0
-        other = list(set(range(self.entity_embeddings.shape[0])) - set(self.get_tail_set(batch)))
+        entity_embeddings, _ = self.get_embedding()
+        other = list(set(range(entity_embeddings.shape[0])) - set(self.get_tail_set(batch)))
         other.sort()
-        print("len others:", len(other))
+        # print("len samples:", len(batch), "len tails:", len(self.get_tail_set(batch)), "len others:", len(other), end='\t')
         
         with torch.no_grad():
             all_scores = self.all_scores(batch, restrain=False)

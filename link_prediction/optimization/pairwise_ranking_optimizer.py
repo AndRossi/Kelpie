@@ -17,7 +17,7 @@ class PairwiseRankingOptimizer(Optimizer):
                  model: Model,
                  hyperparameters: dict,
                  verbose: bool = True,
-                 tail_restrain: dict = None):
+                 args = None):
         """
             PairwiseRankingOptimizer initializer.
             :param model: the model to train
@@ -32,6 +32,7 @@ class PairwiseRankingOptimizer(Optimizer):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
+        self.args = args
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.learning_rate = hyperparameters[LEARNING_RATE]
         self.epochs = hyperparameters[EPOCHS]

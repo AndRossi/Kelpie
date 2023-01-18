@@ -28,11 +28,11 @@ class MultiClassNLLOptimizer(Optimizer):
                  model: Model,
                  hyperparameters: dict,
                  verbose: bool = True,
-                 tail_restrain: dict = None):
+                 args = None):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
-        self.tail_restrain = tail_restrain
+        self.args = args
         self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.epochs = hyperparameters[EPOCHS]
