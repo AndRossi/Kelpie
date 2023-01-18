@@ -107,6 +107,7 @@ class Evaluator:
         for i in range(len(detail_lines)):
             detail_lines[i] = html.unescape(detail_lines[i])
 
+        os.makedirs(folder, exist_ok=True)
         with open(os.path.join(folder, "filtered_ranks.csv"), "w") as output_file:
             output_file.writelines(result_lines)
         with open(os.path.join(folder, "filtered_details.csv"), "w") as output_file:

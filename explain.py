@@ -15,6 +15,7 @@ import click
 from link_prediction.models.transe import TransE
 from link_prediction.models.complex import ComplEx
 from link_prediction.models.conve import ConvE
+from link_prediction.models.gcn import CompGCN
 from link_prediction.models.model import *
 from link_prediction.optimization.bce_optimizer import BCEOptimizer
 from link_prediction.optimization.multiclass_nll_optimizer import MultiClassNLLOptimizer
@@ -104,9 +105,21 @@ parser.add_argument("--run",
                     type=str,
                     default='111',
                     help="whether train, test or explain")
-           
+
+parser.add_argument("--output_folder",
+                    type=str,
+                    default='.')
+
+parser.add_argument("--embedding_model",
+                    type=str,
+                    default=None,
+                    help="embedding model before LP model header")
+
 parser.add_argument('--ignore_inverse', dest='ignore_inverse', default=False, action='store_true',
                     help="whether ignore inverse relation when evaluate")
+
+parser.add_argument('--train_restrain', dest='train_restrain', default=False, action='store_true',
+                    help="whether apply tail restrain when training")
 
 parser.add_argument('--specify_relation', dest='specify_relation', default=False, action='store_true',
                     help="whether specify relation when evaluate")
@@ -134,8 +147,9 @@ try:
     tail_restrain = dataset.tail_restrain
 except:
     tail_restrain = None
+args.tail_restrain = tail_restrain
 
-ech("Initializing model...")
+ech("Initializing LP model...")
 if args.method == "ConvE":
     hyperparameters = {DIMENSION: cfg['D'],
                     INPUT_DROPOUT: cfg['Drop']['in'],
@@ -173,8 +187,24 @@ elif args.method == "TransE":
     TargetModel = TransE
     Optimizer = PairwiseRankingOptimizer
 
+if args.embedding_model and args.embedding_model != 'none':
+    cf = config[args.dataset][args.embedding_model]
+    print(cf)
+    args.embedding_model = CompGCN(
+        num_bases=cf['num_bases'],
+        num_rel=dataset.num_relations,
+        num_ent=dataset.num_entities,
+        in_dim=cf['in_dim'],
+        layer_size=cf['layer_size'],
+        comp_fn=cf['comp_fn'],
+        batchnorm=cf['batchnorm'],
+        dropout=cf['dropout']
+    )
+else:
+    args.embedding_model = None
+
 model = TargetModel(dataset=dataset, hyperparameters=hyperparameters, \
-                init_random=True, tail_restrain=tail_restrain, args=args)
+                init_random=True, args=args)
 model.to('cuda')
 if os.path.exists(args.model_path):
     ech(f'loading models from path: {args.model_path}')
@@ -186,7 +216,7 @@ else:
 if int(args.run[0]):
     ech("Training model...")
     t = time.time()
-    optimizer = Optimizer(model=model, hyperparameters=hyperparameters, tail_restrain=tail_restrain)
+    optimizer = Optimizer(model=model, hyperparameters=hyperparameters, args=args)
     optimizer.train(train_samples=dataset.train_samples, evaluate_every=10, #10 if args.method == "ConvE" else -1,
                     save_path=args.model_path,
                     valid_samples=dataset.valid_samples)
@@ -196,7 +226,14 @@ if int(args.run[0]):
 model.eval()
 if int(args.run[1]):
     ech("Evaluating model...")
-    Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=False)
+    Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=True, folder=args.output_folder)
+
+    ech("making facts to explain...")
+    for d in os.listdir(args.output_folder):
+        if os.path.isdir(d):
+            with open(os.path.join(args.output_folder, d, 'filtered_ranks.csv'), 'r') as f:
+                pass
+
 
 # ---------------------explain---------------------
 if not int(args.run[2]):

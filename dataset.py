@@ -6,6 +6,8 @@ from typing import Tuple
 import numpy
 
 from config import ROOT
+import torch as th
+import dgl
 
 DATA_PATH = os.path.join(ROOT, "data")
 FB15K = "FB15k"
@@ -21,6 +23,34 @@ ONE_TO_ONE="1-1"
 ONE_TO_MANY="1-N"
 MANY_TO_ONE="N-1"
 MANY_TO_MANY="N-N"
+
+# identify in/out edges, compute edge norm for each and store in edata
+def in_out_norm(graph):
+    src, dst, EID = graph.edges(form="all")
+    graph.edata["norm"] = th.ones(EID.shape[0]).to(graph.device)
+
+    in_edges_idx = th.nonzero(
+        graph.edata["in_edges_mask"], as_tuple=False
+    ).squeeze()
+    out_edges_idx = th.nonzero(
+        graph.edata["out_edges_mask"], as_tuple=False
+    ).squeeze()
+
+    for idx in [in_edges_idx, out_edges_idx]:
+        u, v = src[idx], dst[idx]
+        deg = th.zeros(graph.num_nodes()).to(graph.device)
+        n_idx, inverse_index, count = th.unique(
+            v, return_inverse=True, return_counts=True
+        )
+        deg[n_idx] = count.float()
+        deg_inv = deg.pow(-0.5)  # D^{-0.5}
+        deg_inv[deg_inv == float("inf")] = 0
+        norm = deg_inv[u] * deg_inv[v]
+        graph.edata["norm"][idx] = norm
+    graph.edata["norm"] = graph.edata["norm"].unsqueeze(1)
+
+    return graph
+
 
 class Dataset:
 
@@ -50,6 +80,30 @@ class Dataset:
 
         for k, v in self.tail_restrain.items():
             print(f'\t{k}({self.relation_id_2_name[k]}) tail restrain length: {len(v)}')
+
+    
+    def make_graph(self):
+        src = list(self.train_samples[:, 0])
+        dst = list(self.train_samples[:, 2])
+        rels = list(self.train_samples[:, 1])
+        # 添加INVERSE relation
+        for i in range(len(self.train_samples)):
+            src.append(dst[i])
+            dst.append(src[i])
+            rels.append(rels[i] + self.num_direct_relations)
+
+        self.g = dgl.graph((src, dst), num_nodes=self.num_entities)
+        self.g.edata["etype"] = th.Tensor(rels).long()
+
+        # identify in and out edges
+        in_edges_mask = [True] * (self.g.num_edges() // 2) + [False] * (self.g.num_edges() // 2)
+        out_edges_mask = [False] * (self.g.num_edges() // 2) + [True] * (self.g.num_edges() // 2)
+        self.g.edata["in_edges_mask"] = th.Tensor(in_edges_mask)
+        self.g.edata["out_edges_mask"] = th.Tensor(out_edges_mask)
+        self.g = self.g.to('cuda')
+        self.g = in_out_norm(self.g)
+        print(self.g)
+
 
     def __init__(self,
                  name: str,
@@ -171,6 +225,9 @@ class Dataset:
         
         if tail_restrain:
             self.make_tail_restrain(tail_restrain)
+
+        print('making graph...')
+        self.make_graph()
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """

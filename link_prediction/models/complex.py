@@ -27,7 +27,6 @@ class ComplEx(Model):
                  dataset: Dataset,
                  hyperparameters: dict,
                  init_random=True,
-                 tail_restrain: dict = None,
                  args = None):
         """
             Constructor for ComplEx model.
@@ -43,6 +42,7 @@ class ComplEx(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
+        self.args = args
         self.name = "ComplEx"
         self.dataset = dataset
         self.num_entities = dataset.num_entities  # number of entities in dataset

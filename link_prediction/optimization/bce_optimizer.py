@@ -28,7 +28,7 @@ class BCEOptimizer(Optimizer):
                  model: Model,
                  hyperparameters: dict,
                  verbose: bool = True,
-                 tail_restrain: dict = None):
+                 args = None):
         """
             BCEOptimizer initializer.
             :param model: the model to train
@@ -43,7 +43,9 @@ class BCEOptimizer(Optimizer):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
-        self.tail_restrain = tail_restrain
+        self.args = args
+        self.train_restrain = args.train_restrain
+        self.tail_restrain = args.tail_restrain
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.label_smoothing = hyperparameters[LABEL_SMOOTHING]
         self.learning_rate = hyperparameters[LEARNING_RATE]
@@ -139,9 +141,12 @@ class BCEOptimizer(Optimizer):
             self.model.batch_norm_3.eval()
 
         self.optimizer.zero_grad()
-        predictions = self.model.forward(batch, restrain=False)
-        # if self.tail_restrain:
-        #     targets = targets[:, self.model.get_tail_set(batch, '-')]
+        if self.train_restrain:
+            predictions = self.model.forward(batch)
+            if self.tail_restrain:
+                targets = targets[:, self.model.get_tail_set(batch, '-')]
+        else:
+            predictions = self.model.forward(batch, restrain=False)
         loss = self.loss(predictions, targets)
         # 发现tail_size为0，使得按照BCE公式分母为0 => loss=nan
         if np.isnan(loss.item()):
