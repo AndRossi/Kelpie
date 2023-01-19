@@ -7,6 +7,7 @@ from relevance_engines.post_training_engine import PostTrainingEngine
 from link_prediction.models.model import Model
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
 import numpy
+import os
 
 DEAFAULT_XSI_THRESHOLD = 5
 
@@ -38,6 +39,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                          sample_to_explain=sample_to_explain, perspective=perspective,
                          max_explanation_length=max_explanation_length)
 
+        self.args = dataset.args
         self.xsi = relevance_threshold if relevance_threshold is not None else DEAFAULT_XSI_THRESHOLD
         self.window_size = 10
         self.engine = PostTrainingEngine(model=model,
@@ -190,7 +192,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                    str(relevance) + ";" + \
                    str(execution_time)
 
-        with open("output_details_" + str(rule_length) + ".csv", "a") as output_file:
+        with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines([cur_line + "\n"])
 
         return relevance

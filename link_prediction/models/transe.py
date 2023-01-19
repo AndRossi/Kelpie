@@ -28,8 +28,7 @@ class TransE(Model):
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random = True,
-                 args = None):
+                 init_random = True):
         """
             Constructor for TransE model.
 
@@ -46,7 +45,7 @@ class TransE(Model):
         Model.__init__(self, dataset)
         nn.Module.__init__(self)
 
-        self.args=args
+        self.args=dataset.args
         self.name = "TransE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities     # number of entities in dataset

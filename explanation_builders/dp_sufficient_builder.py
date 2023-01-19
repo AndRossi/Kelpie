@@ -5,6 +5,7 @@ from relevance_engines.data_poisoning_engine import DataPoisoningEngine
 from link_prediction.models.model import Model, LEARNING_RATE
 from explanation_builders.explanation_builder import SufficientExplanationBuilder
 import numpy
+import os
 
 class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
 
@@ -31,7 +32,7 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
         """
 
         super().__init__(model, dataset, sample_to_explain, perspective, num_entities_to_convert, 1)
-
+        self.args = dataset.args
         self.engine = DataPoisoningEngine(model=model,
                                          dataset=dataset,
                                          hyperparameters=hyperparameters,
@@ -109,7 +110,7 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
         global_relevance = self._average(rule_2_individual_relevances[rule])
 
         complete_outlines = [x + ";" + str(global_relevance) + "\n" for x in outlines]
-        with open("output_details_" + str(rule_length) + ".csv", "a") as output_file:
+        with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines(complete_outlines)
 
         return global_relevance

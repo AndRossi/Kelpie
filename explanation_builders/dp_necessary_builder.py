@@ -3,6 +3,7 @@ from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
 from link_prediction.models.model import Model, LEARNING_RATE
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
+import os
 
 class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
@@ -25,7 +26,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         """
 
         super().__init__(model, dataset, sample_to_explain, perspective, 1)
-
+        self.args = dataset.args
         self.engine = DataPoisoningEngine(model=model,
                                           dataset=dataset,
                                           hyperparameters=hyperparameters,
@@ -57,7 +58,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                         str(perturbed_removed_sample_score) + ";" + \
                         str(relevance)
 
-            with open("output_details_1.csv", "a") as output_file:
+            with open(os.path.join(self.args.output_folder, "output_details_1.csv"), "a") as output_file:
                 output_file.writelines([cur_line + "\n"])
 
         return sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]

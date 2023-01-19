@@ -8,6 +8,7 @@ from relevance_engines.post_training_engine import PostTrainingEngine
 from link_prediction.models.model import Model
 from explanation_builders.explanation_builder import SufficientExplanationBuilder
 import numpy
+import os
 
 DEAFAULT_XSI_THRESHOLD = 0.9
 
@@ -43,6 +44,7 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                          num_entities_to_convert=num_entities_to_convert,
                          max_explanation_length=max_explanation_length)
 
+        self.args = dataset.args
         self.xsi = relevance_threshold if relevance_threshold is not None else DEAFAULT_XSI_THRESHOLD
         self.window_size = 10
         self.engine = PostTrainingEngine(model=model,
@@ -58,6 +60,8 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                                                                         perspective=perspective,
                                                                         k=num_entities_to_convert,
                                                                         degree_cap=200)
+
+        print('length of entities_to_convert', len(self.entities_to_convert))
 
     def build_explanations(self,
                            samples_to_add: list,
@@ -230,7 +234,7 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
         global_relevance = self._average(rule_2_individual_relevances[rule])
 
         complete_outlines = [x + ";" + str(global_relevance) + "\n" for x in outlines]
-        with open("output_details_" + str(rule_length) + ".csv", "a") as output_file:
+        with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines(complete_outlines)
 
         return global_relevance

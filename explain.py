@@ -11,6 +11,8 @@ from data_poisoning import DataPoisoning
 from criage import Criage
 import yaml
 import click
+import pandas as pd
+import math
 
 from link_prediction.models.transe import TransE
 from link_prediction.models.complex import ComplEx
@@ -129,7 +131,8 @@ parser.add_argument('--specify_relation', dest='specify_relation', default=False
 
 args = parser.parse_args()
 cfg = config[args.dataset][args.method]
-tail_restrain = config[args.dataset].get('tail_restrain', None)
+args.restrain_dic = config[args.dataset].get('tail_restrain', None)
+
 
 # deterministic!
 seed = 42
@@ -142,7 +145,7 @@ torch.backends.cudnn.deterministic = True
 
 # load the dataset and its training samples
 ech(f"Loading dataset {args.dataset}...")
-dataset = Dataset(name=args.dataset, separator="\t", load=True, tail_restrain=tail_restrain, args=args)
+dataset = Dataset(name=args.dataset, separator="\t", load=True, args=args)
 try:
     tail_restrain = dataset.tail_restrain
 except:
@@ -203,8 +206,7 @@ if args.embedding_model and args.embedding_model != 'none':
 else:
     args.embedding_model = None
 
-model = TargetModel(dataset=dataset, hyperparameters=hyperparameters, \
-                init_random=True, args=args)
+model = TargetModel(dataset=dataset, hyperparameters=hyperparameters, init_random=True)
 model.to('cuda')
 if os.path.exists(args.model_path):
     ech(f'loading models from path: {args.model_path}')
@@ -216,7 +218,7 @@ else:
 if int(args.run[0]):
     ech("Training model...")
     t = time.time()
-    optimizer = Optimizer(model=model, hyperparameters=hyperparameters, args=args)
+    optimizer = Optimizer(model=model, hyperparameters=hyperparameters)
     optimizer.train(train_samples=dataset.train_samples, evaluate_every=10, #10 if args.method == "ConvE" else -1,
                     save_path=args.model_path,
                     valid_samples=dataset.valid_samples)
@@ -229,11 +231,21 @@ if int(args.run[1]):
     Evaluator(model=model).evaluate(samples=dataset.test_samples, write_output=True, folder=args.output_folder)
 
     ech("making facts to explain...")
+    lis = []
     for d in os.listdir(args.output_folder):
-        if os.path.isdir(d):
-            with open(os.path.join(args.output_folder, d, 'filtered_ranks.csv'), 'r') as f:
-                pass
-
+        if os.path.isdir(os.path.join(args.output_folder, d)) and d in ['haslinker', 'hasmetal', 'hassolvent']:
+            df = pd.read_csv(os.path.join(args.output_folder, d, 'filtered_ranks.csv'), sep=';')
+            df.columns = ['h', 'r', 't', 'hr', 'tr']
+            size = len(dataset.rid2target[dataset.relation_name_2_id[d]])
+            print(d, size)
+            for i in range(len(df)):
+                # if df.loc[i, 'tr'] <= math.ceil(size*0.05):
+                if df.loc[i, 'tr'] == 1:
+                    lis.append('\t'.join([df.loc[i, 'h'], df.loc[i, 'r'], df.loc[i, 't']]))
+    with open(args.explain_path, 'w') as f:
+        f.write('\n'.join(lis))
+    # print(lis)
+            
 
 # ---------------------explain---------------------
 if not int(args.run[2]):
@@ -263,19 +275,6 @@ else:
     kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
                     relevance_threshold=relevance_threshold)
 
-testing_fact_2_entities_to_convert = None
-if args.mode == "sufficient" and args.entities_to_convert is not None:
-    print("Reading entities to convert...")
-    testing_fact_2_entities_to_convert = {}
-    with open(args.entities_to_convert, "r") as entities_to_convert_file:
-        entities_to_convert_lines = entities_to_convert_file.readlines()
-        i = 0
-        while i < len(entities_to_convert_lines):
-            cur_head, cur_rel, cur_name = entities_to_convert_lines[i].strip().split(";")
-            assert [cur_head, cur_rel, cur_name] in testing_facts
-            cur_entities_to_convert = entities_to_convert_lines[i + 1].strip().split(",")
-            testing_fact_2_entities_to_convert[(cur_head, cur_rel, cur_name)] = cur_entities_to_convert
-            i += 3
 
 output_lines = []
 for i, fact in enumerate(testing_facts):
@@ -288,15 +287,11 @@ for i, fact in enumerate(testing_facts):
     sample_to_explain = (head_id, relation_id, tail_id)
 
     if args.mode == "sufficient":
-        entities_to_convert_ids = None if testing_fact_2_entities_to_convert is None \
-            else [dataset.entity_name_2_id[x] for x in testing_fact_2_entities_to_convert[(head, relation, tail)]]
-
         rule_samples_with_relevance, \
         entities_to_convert_ids = kelpie.explain_sufficient(sample_to_explain=sample_to_explain,
                                                             perspective="head",
                                                             num_promising_samples=args.prefilter_threshold,
-                                                            num_entities_to_convert=args.coverage,
-                                                            entities_to_convert=entities_to_convert_ids)
+                                                            num_entities_to_convert=args.coverage)
 
         if entities_to_convert_ids is None or len(entities_to_convert_ids) == 0:
             continue
@@ -339,5 +334,5 @@ for i, fact in enumerate(testing_facts):
 
 end_time = time.time()
 print("Explain time: " + str(end_time - start_time) + " seconds")
-with open("output.txt", "w") as output:
+with open(os.path.join(args.output_folder, f"{args.mode}.txt"), "w") as output:
     output.writelines(output_lines)

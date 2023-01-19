@@ -49,7 +49,7 @@ MOF-3000:
     D: 200
     LR: 0.003
     B: 4096
-    Ep: 10    # 200 
+    Ep: 1    # 200 
     Decay: 0.995
     epsilon: 0.1
     Drop:

@@ -93,18 +93,18 @@ class ExplanationEngine:
         with torch.no_grad():
 
             head_to_explain, relation_to_explain, tail_to_explain = sample
-            entity_to_explain, target_entity = (relation_to_explain, tail_to_explain) if perspective == "head" else (tail_to_explain, head_to_explain)
-
+            inverse_relation = relation_to_explain + dataset.num_direct_relations
             overall_candidate_entities = []
 
             if perspective == "head":
 
                 step_1_candidate_entities = []
                 step_1_samples = []
-                for cur_entity in range(0, dataset.num_entities):
+                print(dataset.relation_id_2_name[inverse_relation], len(dataset.tail_restrain[inverse_relation]))
+                for cur_entity in dataset.tail_restrain[inverse_relation]:
 
                     # do not include the entity to explain, of course
-                    if cur_entity == entity_to_explain:
+                    if cur_entity == head_to_explain:
                         continue
 
                     # if the entity only appears in validation/testing (so its training degree is 0) skip it
