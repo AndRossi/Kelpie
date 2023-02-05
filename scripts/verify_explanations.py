@@ -219,7 +219,7 @@ if args.mode == "sufficient":
     # if any of the samples_to_add overlaps contradicts any pre-existing facts
     # (e.g. adding "<Obama, born_in, Paris>" when the dataset already contains "<Obama, born_in, Honolulu>")
     # we need to remove such pre-eisting facts before adding the new samples_to_add
-    print("Adding samples: ")
+    print("\tAdding samples: ")
     for (head, relation, tail) in samples_to_add:
         print("\t" + dataset.printable_sample((head, relation, tail)))
         if new_dataset.relation_2_type[relation] in [MANY_TO_ONE, ONE_TO_ONE]:

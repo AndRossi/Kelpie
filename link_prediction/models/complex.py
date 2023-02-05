@@ -26,8 +26,7 @@ class ComplEx(Model):
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random=True,
-                 args = None):
+                 init_random=True):
         """
             Constructor for ComplEx model.
 

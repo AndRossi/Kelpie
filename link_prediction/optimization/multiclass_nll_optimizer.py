@@ -27,12 +27,11 @@ class MultiClassNLLOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True,
-                 args = None):
+                 verbose: bool = True):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
-        self.args = args
+        self.args = model.args
         self.optimizer_name = hyperparameters[OPTIMIZER_NAME]
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.epochs = hyperparameters[EPOCHS]
@@ -82,14 +81,14 @@ class MultiClassNLLOptimizer(Optimizer):
                 self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 if save_path is not None:
-                    print("\t saving model...")
+                    print("saving model...")
                     torch.save(self.model.state_dict(), save_path)
-                print("\t done.")
+                print("done.")
 
         if save_path is not None:
-            print("\t saving model...")
+            print("saving model...")
             torch.save(self.model.state_dict(), save_path)
-            print("\t done.")
+            print("done.")
 
 
     def epoch(self,

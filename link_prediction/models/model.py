@@ -3,6 +3,7 @@ import numpy
 import torch
 from torch import nn
 from dataset import Dataset
+from collections import defaultdict
 
 # KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
 DIMENSION = "dimension"                         # embedding dimension, when both entity and relation embeddings have same dimension
@@ -34,6 +35,13 @@ REGULARIZER_WEIGHT = "regularizer_weight"       # weight for the regularization 
 LABEL_SMOOTHING = "label_smoothing"             # label smoothing value
 
 GAMMA = "gamma"
+RETRAIN_EPOCHS = "retrain_epoches"
+count_dic = defaultdict(list)
+
+def terminate_at(length, count):
+    '''记录长度为length的解释有多少个'''
+    count_dic[length].append(count)
+    print(f'\tnumber of rules with length {length}: {count}')
 
 class Model(nn.Module):
     """

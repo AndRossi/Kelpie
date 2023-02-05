@@ -131,37 +131,37 @@ class TopologyPreFilter(PreFilter):
             cur_step_incomplete_paths = next_step_incomplete_paths
             next_step_incomplete_paths = []
 
-            #print("\t\tIncomplete paths of length " + str(cur_path_length - 1) + " to analyze: " + str(len(cur_step_incomplete_paths)))
-            #print("\t\tExpanding them to length: " + str(cur_path_length))
+            #print("\tIncomplete paths of length " + str(cur_path_length - 1) + " to analyze: " + str(len(cur_step_incomplete_paths)))
+            #print("\tExpanding them to length: " + str(cur_path_length))
             for (incomplete_path, accretion_entity) in cur_step_incomplete_paths:
                 samples_featuring_accretion_entity = self.entity_id_2_train_samples[accretion_entity]
 
-                # print("\tCurrent path: " + str(incomplete_path))
+                # print("Current path: " + str(incomplete_path))
 
                 for (cur_head, cur_rel, cur_tail) in samples_featuring_accretion_entity:
 
                     cur_incomplete_path = copy.deepcopy(incomplete_path)
 
-                    # print("\t\tCurrent accretion path: " + self.dataset.printable_sample((cur_h, cur_r, cur_t)))
+                    # print("\tCurrent accretion path: " + self.dataset.printable_sample((cur_h, cur_r, cur_t)))
                     if (cur_head == accretion_entity and cur_tail == end_entity) or (cur_tail == accretion_entity and cur_head == end_entity):
                         cur_incomplete_path.append((cur_head, cur_rel, cur_tail))
                         return cur_path_length, cur_incomplete_path
 
                     # ignore self-loops
                     if cur_head == cur_tail:
-                        # print("\t\t\tMeh, it was just a self-loop!")
+                        # print("\t\tMeh, it was just a self-loop!")
                         continue
 
                     # ignore facts that would re-connect to an entity that is already in this path
                     next_step_accretion_entity = cur_tail if cur_head == accretion_entity else cur_head
                     if next_step_accretion_entity in entities_seen_so_far:
-                        # print("\t\t\tMeh, it led to a loop in this path!")
+                        # print("\t\tMeh, it led to a loop in this path!")
                         continue
 
                     cur_incomplete_path.append((cur_head, cur_rel, cur_tail))
                     next_step_incomplete_paths.append((cur_incomplete_path, next_step_accretion_entity))
                     entities_seen_so_far.add(next_step_accretion_entity)
-                    # print("\t\t\tThe search continues")
+                    # print("\t\tThe search continues")
 
             if terminate is not True:
                 if cur_path_length == self.max_path_length or len(next_step_incomplete_paths) == 0:

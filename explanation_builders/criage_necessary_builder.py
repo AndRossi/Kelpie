@@ -3,6 +3,7 @@ from dataset import Dataset
 from relevance_engines.criage_engine import CriageEngine
 from link_prediction.models.model import Model
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
+import os
 
 class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
@@ -25,6 +26,7 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
         super().__init__(model, dataset, sample_to_explain, perspective, 1)
 
+        self.args = dataset.args
         self.engine = CriageEngine(model=model,
                                    dataset=dataset,
                                    hyperparameters=hyperparameters)
@@ -38,9 +40,7 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         (head_to_explain, _, tail_to_explain) = self.sample_to_explain
 
         for i, sample_to_remove in enumerate(samples_to_remove):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(len(samples_to_remove)) + ": " +
-                  self.dataset.printable_sample(sample_to_remove))
-
+            print(f"\t{i+1}/{len(samples_to_remove)}: " + self.dataset.printable_sample(sample_to_remove), end='\t')
             tail_to_remove = sample_to_remove[2]
 
             if tail_to_remove == head_to_explain:
@@ -60,7 +60,8 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                         ";".join(self.dataset.sample_to_fact(sample_to_remove)) + ";" \
                        + str(relevance)
 
-            with open("output_details_1.csv", "a") as output_file:
+            
+            with open(os.path.join(self.args.output_folder, "output_details_1.csv"), "a") as output_file:
                 output_file.writelines([cur_line + "\n"])
 
         return sorted(rule_2_relevance.items(), key=lambda x: x[1])[:top_k]

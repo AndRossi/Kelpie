@@ -26,8 +26,8 @@ class KelpieDataset(Dataset):
 
         super(KelpieDataset, self).__init__(name=dataset.name,
                                             separator=dataset.separator,
-                                            load=False)
-
+                                            load=False,
+                                            args=dataset.args)
         if dataset.num_entities == -1:
             raise Exception("The Dataset passed to initialize a KelpieDataset must be already loaded")
 
@@ -44,6 +44,12 @@ class KelpieDataset(Dataset):
         self.entity_id_2_name = copy.deepcopy(dataset.entity_id_2_name)
         self.relation_name_2_id = copy.deepcopy(dataset.relation_name_2_id)
         self.relation_id_2_name = copy.deepcopy(dataset.relation_id_2_name)
+        self.rid2target = copy.deepcopy(dataset.rid2target)
+        if dataset.tail_restrain:
+            self.tail_restrain = copy.deepcopy(dataset.tail_restrain)
+        if dataset.g:
+            # https://stackoverflow.com/questions/60310123/why-is-graph-copy-slower-than-copy-deepcopygraph-in-networkx
+            self.g = copy.deepcopy(dataset.g)
 
         # add the kelpie entity
         self.original_entity_id = entity_id

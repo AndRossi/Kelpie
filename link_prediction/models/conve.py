@@ -25,8 +25,7 @@ class ConvE(Model):
     def __init__(self,
                  dataset: Dataset,
                  hyperparameters: dict,
-                 init_random = True,
-                 args = None):
+                 init_random = True):
         """
             Constructor for ConvE model.
 
@@ -41,14 +40,16 @@ class ConvE(Model):
         # initialize this object both as a Model and as a nn.Module
         Model.__init__(self, dataset)
 
-        self.args = args
-        self.embedding_model = args.embedding_model
-        self.tail_restrain = args.tail_restrain
+        self.args = dataset.args
+        self.embedding_model = self.args.embedding_model
+        self.kelpie_entity_embedding = None
+        self.tail_restrain = self.args.tail_restrain
         self.name = "ConvE"
         self.dataset = dataset
         self.num_entities = dataset.num_entities                                # number of entities in dataset
         self.num_relations = dataset.num_relations                              # number of relations in dataset
 
+        self.hyperparameters = hyperparameters
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.dimension = hyperparameters[DIMENSION]                             # embedding dimension
         self.input_dropout_rate = hyperparameters[INPUT_DROPOUT]               # rate of the dropout to apply to the input
@@ -93,7 +94,7 @@ class ConvE(Model):
         """
         return False
 
-    def forward(self, samples: np.array, restrain=True):
+    def forward(self, samples: np.array, restrain=False):
         """
             Perform forward propagation on the passed samples
             :param samples: a 2-dimensional numpy array containing the samples to use in forward propagation, one per row
@@ -294,7 +295,11 @@ class ConvE(Model):
 
     def get_embedding(self):
         if self.embedding_model:
-            return self.embedding_model(self.dataset.g)
+            entity_embeddings, relation_embeddings =  self.embedding_model(self.dataset.g)
+            if self.kelpie_entity_embedding is None:
+                return entity_embeddings, relation_embeddings    
+            return torch.cat([entity_embeddings, self.kelpie_entity_embedding], 0), relation_embeddings
+
         return self.entity_embeddings, self.relation_embeddings
 
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
@@ -364,11 +369,7 @@ class KelpieConvE(KelpieModel, ConvE):
 
         ConvE.__init__(self,
                         dataset=dataset,
-                        hyperparameters={DIMENSION: model.dimension,
-                                         INPUT_DROPOUT: model.input_dropout_rate,
-                                         FEATURE_MAP_DROPOUT: model.feature_map_dropout_rate,
-                                         HIDDEN_DROPOUT: model.hidden_dropout_rate,
-                                         HIDDEN_LAYER_SIZE: model.hidden_layer_size},
+                        hyperparameters=model.hyperparameters,
                        init_random=False)  # NOTE: this is important! if it is set to True,
                                             # self.entity_embeddings and self.relation_embeddings will be initialized as Parameters
                                             # and it will not be possible to overwrite them with mere Tensors
@@ -379,8 +380,11 @@ class KelpieConvE(KelpieModel, ConvE):
         self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings.
-        frozen_entity_embeddings = model.entity_embeddings.clone().detach()
-        frozen_relation_embeddings = model.relation_embeddings.clone().detach()
+        if model.embedding_model:
+            frozen_entity_embeddings, frozen_relation_embeddings = model.get_embedding()
+        else:
+            frozen_entity_embeddings = model.entity_embeddings.clone().detach()
+            frozen_relation_embeddings = model.relation_embeddings.clone().detach()
 
         # the tensor from which to initialize the kelpie_entity_embedding;
         # if it is None it is initialized randomly

@@ -3,6 +3,7 @@ from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
 from link_prediction.models.model import Model, LEARNING_RATE
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
+import os
 
 class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
@@ -25,7 +26,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         """
 
         super().__init__(model, dataset, sample_to_explain, perspective, 1)
-
+        self.args = dataset.args
         self.engine = DataPoisoningEngine(model=model,
                                           dataset=dataset,
                                           hyperparameters=hyperparameters,
@@ -37,15 +38,14 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         rule_2_relevance = {}
 
         for i, sample_to_remove in enumerate(samples_to_remove):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(
-                len(samples_to_remove)) + ": " + self.dataset.printable_sample(sample_to_remove))
+            print(f"\t{i+1}/{len(samples_to_remove)}: " + self.dataset.printable_sample(sample_to_remove))
 
             relevance, \
             original_target_entity_score, original_target_entity_rank, \
             original_removed_sample_score, perturbed_removed_sample_score \
                 = self.engine.removal_relevance(sample_to_explain=self.sample_to_explain,
-                                                            perspective=self.perspective,
-                                                            samples_to_remove=[sample_to_remove])
+                                                perspective=self.perspective,
+                                                samples_to_remove=[sample_to_remove])
 
             rule_2_relevance[tuple([sample_to_remove])] = relevance
 
@@ -57,7 +57,7 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                         str(perturbed_removed_sample_score) + ";" + \
                         str(relevance)
 
-            with open("output_details_1.csv", "a") as output_file:
+            with open(os.path.join(self.args.output_folder, "output_details_1.csv"), "a") as output_file:
                 output_file.writelines([cur_line + "\n"])
 
         return sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]

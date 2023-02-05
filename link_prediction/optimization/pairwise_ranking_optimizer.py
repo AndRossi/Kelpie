@@ -16,8 +16,7 @@ class PairwiseRankingOptimizer(Optimizer):
     def __init__(self,
                  model: Model,
                  hyperparameters: dict,
-                 verbose: bool = True,
-                 args = None):
+                 verbose: bool = True):
         """
             PairwiseRankingOptimizer initializer.
             :param model: the model to train
@@ -32,7 +31,7 @@ class PairwiseRankingOptimizer(Optimizer):
 
         Optimizer.__init__(self, model=model, hyperparameters=hyperparameters, verbose=verbose)
 
-        self.args = args
+        self.args = model.args
         self.batch_size = hyperparameters[BATCH_SIZE]
         self.learning_rate = hyperparameters[LEARNING_RATE]
         self.epochs = hyperparameters[EPOCHS]

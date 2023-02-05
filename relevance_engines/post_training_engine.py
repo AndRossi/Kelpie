@@ -14,7 +14,7 @@ from link_prediction.models.tucker import TuckER
 from link_prediction.optimization.bce_optimizer import KelpieBCEOptimizer
 from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiClassNLLOptimizer
 from link_prediction.optimization.pairwise_ranking_optimizer import KelpiePairwiseRankingOptimizer
-from link_prediction.models.model import Model, KelpieModel
+from link_prediction.models.model import *
 from collections import OrderedDict
 
 class PostTrainingEngine(ExplanationEngine):
@@ -61,6 +61,7 @@ class PostTrainingEngine(ExplanationEngine):
         # without need to re-build them from scratch every time.
         self._kelpie_dataset_cache_size = 20
         self._kelpie_dataset_cache = OrderedDict()
+        self.print_count = 0
 
     def addition_relevance(self,
                            sample_to_convert: Tuple[Any, Any, Any],
@@ -130,8 +131,8 @@ class PostTrainingEngine(ExplanationEngine):
         score_improvement = base_pt_target_entity_score - pt_target_entity_score if self.model.is_minimizer() else pt_target_entity_score - base_pt_target_entity_score
 
         relevance = float(rank_improvement + self.sigmoid(score_improvement)) / float(base_pt_target_entity_rank)
-
-        print("\t\tObtained individual relevance: " + str(relevance) + "\n")
+        relevance = round(relevance, 4)
+        print(relevance)
 
         end_time = time.time()
         execution_time = end_time - start_time
@@ -211,6 +212,7 @@ class PostTrainingEngine(ExplanationEngine):
 
         # note: the formulation is very different from the addition one
         relevance = float(rank_worsening + self.sigmoid(score_worsening))
+        relevance = round(relevance, 4)
 
         end_time = time.time()
         execution_time = end_time - start_time
@@ -275,7 +277,7 @@ class PostTrainingEngine(ExplanationEngine):
 
         if not original_sample_to_predict in self._base_pt_model_results:
             original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
-            print("\t\tRunning base post-training on entity " + original_entity_name + " with no additions")
+            # print("\tRunning base post-training on entity " + original_entity_name + " with no additions")
             base_pt_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
                                             kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
 
@@ -314,9 +316,9 @@ class PostTrainingEngine(ExplanationEngine):
         kelpie_dataset.add_training_samples(original_samples_to_add)
 
         original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
-        print("\t\tRunning post-training on entity " + original_entity_name + " adding samples: ")
+        print(f"\t\t\tAdding samples: ", end='')
         for x in original_samples_to_add:
-            print ("\t\t\t" + kelpie_dataset.printable_sample(x))
+            print (kelpie_dataset.printable_sample(x), end=',')
 
         # post-train the kelpie model on the dataset that has undergone the addition
         cur_kelpie_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
@@ -354,10 +356,10 @@ class PostTrainingEngine(ExplanationEngine):
         # the "remove_training_samples" method replaces the original entity with the kelpie entity by itself
         kelpie_dataset.remove_training_samples(original_samples_to_remove)
 
-        original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
-        print("\t\tRunning post-training on entity " + original_entity_name + " removing samples: ")
-        for x in original_samples_to_remove:
-            print ("\t\t\t" + kelpie_dataset.printable_sample(x))
+        # original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
+        # print("\tRunning post-training on entity " + original_entity_name + " removing samples: ")
+        # for x in original_samples_to_remove:
+        #     print ("\t\t\t" + kelpie_dataset.printable_sample(x))
 
         # post-train a kelpie model on the dataset that has undergone the removal
         cur_kelpie_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
@@ -392,10 +394,17 @@ class PostTrainingEngine(ExplanationEngine):
         # kelpie_model = kelpie_model_class(model=self.model, dataset=kelpie_dataset)
         kelpie_model_to_post_train.to('cuda')
 
+
         optimizer = self.kelpie_optimizer_class(model=kelpie_model_to_post_train,
                                                 hyperparameters=self.hyperparameters,
                                                 verbose=False)
+        optimizer.epochs = self.hyperparameters[RETRAIN_EPOCHS]
+        # print(optimizer.epochs)
+        t = time.time()
         optimizer.train(train_samples=kelpie_train_samples)
+        if self.print_count < 5:
+            self.print_count += 1
+            print(f'\t\t[post_train_time: {round(time.time() - t, 4)}]')
         return kelpie_model_to_post_train
 
 

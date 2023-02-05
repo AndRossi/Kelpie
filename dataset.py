@@ -109,7 +109,6 @@ class Dataset:
                  name: str,
                  separator: str = "\t",
                  load: bool = True,
-                 tail_restrain: dict = None,
                  args = None):
         """
             Dataset constructor.
@@ -216,18 +215,20 @@ class Dataset:
             # map each relation id to its type (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, or MANY_TO_MANY)
             self._compute_relation_2_type()
 
-        print('rid2target...')
-        for k, v in self.rid2target.items():
-            v = list(set(v))
-            v.sort()
-            self.rid2target[k] = v
-            print(f'\t{k}({self.relation_id_2_name[k]}) target length: {len(v)}')
-        
-        if tail_restrain:
-            self.make_tail_restrain(tail_restrain)
-
-        print('making graph...')
-        self.make_graph()
+            print('rid2target...')
+            for k, v in self.rid2target.items():
+                v = list(set(v))
+                v.sort()
+                self.rid2target[k] = v
+                print(f'\t{k}({self.relation_id_2_name[k]}) target length: {len(v)}')
+            
+            self.tail_restrain = None
+            if args.restrain_dic:
+                self.make_tail_restrain(args.restrain_dic)
+            self.g = None
+            if args.embedding_model and args.embedding_model != 'none':
+                print('making graph...')    
+                self.make_graph()
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """
