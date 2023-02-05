@@ -300,8 +300,12 @@ def print_facts(rule_samples_with_relevance):
         rule_facts_with_relevance.append(cur_rule_facts + ":" + str(cur_relevance))
         print_line('\t' + rule_facts_with_relevance[-1])
 
-for i, fact in enumerate(testing_facts[:10]):
+for i, fact in enumerate(testing_facts):
     head, relation, tail = fact
+    if tail == 'p1962':
+        continue
+    if i == 3:  # 只解释前3个 tail != H2O
+        break
     print("Explaining fact " + str(i) + " on " + str(
         len(testing_facts)) + ": " + triple2str(fact))
     head_id, relation_id, tail_id = dataset.get_id_for_entity_name(head), \
