@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
-from link_prediction.models.model import Model, LEARNING_RATE
+from link_prediction.models.model import *
 from explanation_builders.explanation_builder import SufficientExplanationBuilder
 import numpy
 import os
@@ -63,7 +63,8 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
             rule_2_global_relevance[rule] = global_relevance
             print("\tglobal relevance: " + str(global_relevance) + '\n')
 
-        return sorted(rule_2_global_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        # all_rules = sorted(rule_2_global_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        return prefilter_negative(rule_2_global_relevance, top_k)
 
 
     def _compute_relevance_for_rule(self, rule: Tuple):

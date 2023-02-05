@@ -72,12 +72,16 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
         # get relevance for rules with length 1 (that is, samples)
         sample_2_relevance = self.extract_rules_with_length_1(samples_to_add=samples_to_add)
 
-        samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        # samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        samples_with_relevance = prefilter_negative(sample_2_relevance)
         samples_number = len(samples_with_relevance)
+        print('\tvalid rules with length 1: ', samples_number)
+
         all_rules_with_relevance += [([x], y) for (x, y) in samples_with_relevance]
 
         best_rule, best_rule_relevance = all_rules_with_relevance[0]
         if best_rule_relevance > self.xsi:
+            print('\tEarly termination after length 1')
             return all_rules_with_relevance
 
         cur_rule_length = 2

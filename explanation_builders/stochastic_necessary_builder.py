@@ -47,15 +47,6 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                          dataset=dataset,
                                          hyperparameters=hyperparameters)
 
-
-    def prefilter_negative(self, all_rules, top_k):
-        for i in range(0, top_k):
-            if all_rules[i][1] < 0:
-                break
-        print(f'select top rules: {i}/{len(all_rules)+1}')
-        return all_rules[:i]
-
-
     def build_explanations(self,
                            samples_to_remove: list,
                            top_k: int = 10):
@@ -66,15 +57,21 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         # get relevance for rules with length 1 (that is, samples)
         sample_2_relevance = self.extract_rules_with_length_1(samples_to_remove=samples_to_remove)
         
-        samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        # samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        samples_with_relevance = prefilter_negative(sample_2_relevance)
+        samples_number = len(samples_with_relevance)
+        print('\tvalid rules with length 1: ', samples_number)
+        
         all_rules_with_relevance += [([x], y) for (x, y) in samples_with_relevance]
         
-        samples_number = len(samples_with_relevance)
+        if len(all_rules_with_relevance) == 0:
+            print('\tNo valid rules with length 1')
+            return []
 
         best_rule, best_rule_relevance = all_rules_with_relevance[0]
         if best_rule_relevance > self.xsi:
             print('\tEarly termination after length 1')
-            return self.prefilter_negative(all_rules_with_relevance, top_k)
+            return prefilter_negative(all_rules_with_relevance, top_k)
 
         cur_rule_length = 2
 
@@ -100,8 +97,8 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             cur_rule_length += 1
 
         # 只去 > 0 的前 k 个
-        all_rules = sorted(all_rules_with_relevance, key=lambda x: x[1], reverse=True)
-        return self.prefilter_negative(all_rules, top_k)
+        # all_rules = sorted(all_rules_with_relevance, key=lambda x: x[1], reverse=True)
+        return prefilter_negative(all_rules_with_relevance, top_k)
 
 
 
@@ -188,7 +185,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                 
                 if terminate:
                     print("Terminate!")
-                    self.terminate_at(length, i)
+                    terminate_at(length, i)
                 else:
                     print()
 

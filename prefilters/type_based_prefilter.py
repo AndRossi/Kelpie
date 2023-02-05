@@ -105,6 +105,7 @@ class TypeBasedPreFilter(PreFilter):
                                                                key=lambda x: x[1])
             sorted_promising_samples = [x[0] for x in samples_featuring_tail_with_promisingness]
 
+
         return sorted_promising_samples[:top_k]
 
 

@@ -43,6 +43,20 @@ def terminate_at(length, count):
     count_dic[length].append(count)
     print(f'\tnumber of rules with length {length}: {count}')
 
+
+def prefilter_negative(all_rules, top_k=None):
+        if type(all_rules) == dict:
+            all_rules = all_rules.items()
+        all_rules = sorted(all_rules, key=lambda x: x[1], reverse=True)
+        if top_k is None or top_k > len(all_rules):
+            top_k = len(all_rules)
+        for i in range(top_k):
+            if all_rules[i][1] < 0:
+                break
+        i += 1
+        print(f'\tpositive top {top_k} rules: {i}/{len(all_rules)}')
+        return all_rules[:i]
+
 class Model(nn.Module):
     """
         The Model class provides the interface that any LP model should implement.
