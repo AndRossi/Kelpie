@@ -81,14 +81,14 @@ class MultiClassNLLOptimizer(Optimizer):
                 self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 if save_path is not None:
-                    print("\t saving model...")
+                    print("saving model...")
                     torch.save(self.model.state_dict(), save_path)
-                print("\t done.")
+                print("done.")
 
         if save_path is not None:
-            print("\t saving model...")
+            print("saving model...")
             torch.save(self.model.state_dict(), save_path)
-            print("\t done.")
+            print("done.")
 
 
     def epoch(self,

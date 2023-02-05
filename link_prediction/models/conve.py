@@ -42,6 +42,7 @@ class ConvE(Model):
 
         self.args = dataset.args
         self.embedding_model = self.args.embedding_model
+        self.kelpie_entity_embedding = None
         self.tail_restrain = self.args.tail_restrain
         self.name = "ConvE"
         self.dataset = dataset
@@ -294,7 +295,11 @@ class ConvE(Model):
 
     def get_embedding(self):
         if self.embedding_model:
-            return self.embedding_model(self.dataset.g)
+            entity_embeddings, relation_embeddings =  self.embedding_model(self.dataset.g)
+            if self.kelpie_entity_embedding is None:
+                return entity_embeddings, relation_embeddings    
+            return torch.cat([entity_embeddings, self.kelpie_entity_embedding], 0), relation_embeddings
+
         return self.entity_embeddings, self.relation_embeddings
 
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:

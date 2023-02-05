@@ -5,7 +5,7 @@ from typing import Tuple, Any
 
 from dataset import Dataset
 from relevance_engines.post_training_engine import PostTrainingEngine
-from link_prediction.models.model import Model
+from link_prediction.models.model import *
 from explanation_builders.explanation_builder import SufficientExplanationBuilder
 import numpy
 import os
@@ -61,7 +61,7 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                                                                         k=num_entities_to_convert,
                                                                         degree_cap=200)
 
-        print('length of entities_to_convert', len(self.entities_to_convert))
+        print('\tlength of entities_to_convert', len(self.entities_to_convert))
 
     def build_explanations(self,
                            samples_to_add: list,
@@ -112,11 +112,10 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
 
         # this is an exception: all rules with length 1 are tested
         for i, sample_to_add in enumerate(samples_to_add):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(
-                len(samples_to_add)) + ": " + self.dataset.printable_sample(sample_to_add))
+            print(f"\t{i}/{len(samples_to_add)}: " + self.dataset.printable_sample(sample_to_add))
             global_relevance = self._compute_relevance_for_rule(tuple([sample_to_add]))
             rule_2_global_relevance[sample_to_add] = global_relevance
-            print("\tObtained global relevance: " + str(global_relevance))
+            print("\tglobal relevance: " + str(global_relevance) + '\n')
 
         return rule_2_global_relevance
 
@@ -147,7 +146,7 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
             print("\n\tComputing relevance for rule: " + self.dataset.printable_nple(current_rule))
             current_rule_relevance = self._compute_relevance_for_rule(current_rule)
             rule_2_relevance[current_rule] = current_rule_relevance
-            print("\n\tObtained global relevance: " + str(current_rule_relevance))
+            print("\tglobal relevance: " + str(current_rule_relevance))
 
             # put the obtained relevance in the window
             sliding_window[i % self.window_size] = current_rule_relevance
@@ -175,13 +174,23 @@ class StochasticSufficientExplanationBuilder(SufficientExplanationBuilder):
                 random_value = random.random()
                 terminate = random_value > terminate_threshold  # termination condition
 
-                print("\n\tCurrent relevance " + str(current_rule_relevance))
-                print("\tCurrent averaged window relevance " + str(cur_avg_window_relevance))
-                print("\tMax relevance seen so far " + str(best_relevance_so_far))
-                print("\tTerminate threshold:" + str(terminate_threshold))
-                print("\tRandom value:" + str(random_value))
-                print("\tTerminate:" + str(terminate))
-                i += 1
+                def print_relevance(dic):
+                    for k, v in dic.items():
+                        print(f"\t{k}: {round(v, 4)}", end=', ')
+
+                print('\t', end='')
+                print_relevance({
+                    "Current": current_rule_relevance,
+                    "Current window": cur_avg_window_relevance, 
+                    "Max": best_relevance_so_far,
+                    "Terminate threshhold": terminate_threshold
+                })
+                
+                if terminate:
+                    print("Terminate!")
+                    terminate_at(length, i)
+                else:
+                    print()
 
         return rule_2_relevance
 

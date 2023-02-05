@@ -57,11 +57,11 @@ class DataPoisoningSufficientExplanationBuilder(SufficientExplanationBuilder):
 
         # this is an exception: all rules with length 1 are tested
         for i, sample_to_add in enumerate(samples_to_add):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(len(samples_to_add)) + ": " + self.dataset.printable_sample(sample_to_add))
+            print(f"\t{i}/{len(samples_to_add)}: " + self.dataset.printable_sample(sample_to_add))
             rule = tuple([sample_to_add])
             global_relevance = self._compute_relevance_for_rule(rule)
             rule_2_global_relevance[rule] = global_relevance
-            print("\tObtained global relevance: " + str(global_relevance))
+            print("\tglobal relevance: " + str(global_relevance) + '\n')
 
         return sorted(rule_2_global_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
 

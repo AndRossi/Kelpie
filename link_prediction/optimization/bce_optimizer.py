@@ -76,14 +76,14 @@ class BCEOptimizer(Optimizer):
                 self.evaluator.evaluate(samples=valid_samples, write_output=False)
 
                 if save_path is not None:
-                    print("\t saving model...")
+                    print("saving model...")
                     torch.save(self.model.state_dict(), save_path)
-                print("\t done.")
+                print("done.")
 
         if save_path is not None:
-            print("\t saving model...")
+            print("saving model...")
             torch.save(self.model.state_dict(), save_path)
-            print("\t done.")
+            print("done.")
 
     def extract_er_vocab(self, samples):
         er_vocab = defaultdict(list)
@@ -220,6 +220,11 @@ class KelpieBCEOptimizer(BCEOptimizer):
 
         self.optimizer.zero_grad()
         predictions = self.model.forward(batch)
+
+        # print('[step]batch:', batch.shape)
+        # print('[step]predictions:', predictions.shape)
+        # print('[step]targets:', targets.shape)
+
         loss = self.loss(predictions, targets)
         loss.backward()
         self.optimizer.step()

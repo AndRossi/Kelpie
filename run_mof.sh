@@ -1,7 +1,7 @@
 
 
 dataset=MOF-3000
-device=0,1
+device=1
 # mode=necessary        sufficient
 # method=ConvE          TransE
 # embedding_model=CompGCN       ""
@@ -16,10 +16,16 @@ explain() {
         explain_path=$output_folder/explain.csv
         model_path=stored_models/"${method}${embedding_model}_${dataset}.pt"
 
+        echo $output_folder
+
         CUDA_VISIBLE_DEVICES=$device python explain.py --dataset $dataset --method=$method \
                 --model_path $model_path --explain_path $explain_path --mode $mode \
                 --output_folder $output_folder  --run $run --specify_relation --ignore_inverse \
-                --embedding_model "$embedding_model" --train_restrain > $output_folder/$mode.log
+                --embedding_model "$embedding_model" --train_restrain # > $output_folder/$mode.log
+                # > "results/${mode}_example.log" 
 }
 
-explain sufficient "" ConvE 011
+# explain necessary "" ConvE 011
+# explain sufficient "" ConvE 011
+# explain necessary CompGCN ConvE 011
+# explain sufficient CompGCN ConvE 011

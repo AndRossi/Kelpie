@@ -38,15 +38,14 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         rule_2_relevance = {}
 
         for i, sample_to_remove in enumerate(samples_to_remove):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(
-                len(samples_to_remove)) + ": " + self.dataset.printable_sample(sample_to_remove))
+            print(f"\t{i+1}/{len(samples_to_remove)}: " + self.dataset.printable_sample(sample_to_remove))
 
             relevance, \
             original_target_entity_score, original_target_entity_rank, \
             original_removed_sample_score, perturbed_removed_sample_score \
                 = self.engine.removal_relevance(sample_to_explain=self.sample_to_explain,
-                                                            perspective=self.perspective,
-                                                            samples_to_remove=[sample_to_remove])
+                                                perspective=self.perspective,
+                                                samples_to_remove=[sample_to_remove])
 
             rule_2_relevance[tuple([sample_to_remove])] = relevance
 

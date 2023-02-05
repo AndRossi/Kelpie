@@ -8,7 +8,7 @@ from relevance_engines.post_training_engine import PostTrainingEngine
 from link_prediction.models.model import Model
 from explanation_builders.stochastic_necessary_builder import StochasticNecessaryExplanationBuilder
 from explanation_builders.stochastic_sufficient_builder import StochasticSufficientExplanationBuilder
-
+import numpy as np
 
 class Kelpie:
     """
@@ -142,6 +142,6 @@ class Kelpie:
                                                                     perspective=perspective,
                                                                     relevance_threshold=self.relevance_threshold,
                                                                     max_explanation_length=self.max_explanation_length)
-
+        
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_remove=most_promising_samples)
         return explanations_with_relevance

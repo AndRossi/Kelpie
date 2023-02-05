@@ -66,12 +66,12 @@ class CriageSufficientExplanationBuilder(SufficientExplanationBuilder):
             else:
                 raise ValueError
 
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(len(samples_to_add)) + ": " + self.dataset.printable_sample(sample_to_add))
+            print(f"\t{i}/{len(samples_to_add)}: " + self.dataset.printable_sample(sample_to_add))
             rule = tuple([sample_to_add])
             global_relevance = self._compute_relevance_for_rule(rule=rule,
                                                                 perspective=perspective)
             rule_2_global_relevance[rule] = global_relevance
-            print("\tObtained global relevance: " + str(global_relevance))
+            print("\tglobal relevance: " + str(global_relevance) + '\n')
 
         # relevance is score increase after addition, so sort by highest to lowest relevance
         return sorted(rule_2_global_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]

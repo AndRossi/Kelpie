@@ -40,9 +40,7 @@ class CriageNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         (head_to_explain, _, tail_to_explain) = self.sample_to_explain
 
         for i, sample_to_remove in enumerate(samples_to_remove):
-            print("\n\tComputing relevance for sample " + str(i) + " on " + str(len(samples_to_remove)) + ": " +
-                  self.dataset.printable_sample(sample_to_remove))
-
+            print(f"\t{i+1}/{len(samples_to_remove)}: " + self.dataset.printable_sample(sample_to_remove), end='\t')
             tail_to_remove = sample_to_remove[2]
 
             if tail_to_remove == head_to_explain:
