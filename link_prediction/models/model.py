@@ -36,7 +36,30 @@ LABEL_SMOOTHING = "label_smoothing"             # label smoothing value
 
 GAMMA = "gamma"
 RETRAIN_EPOCHS = "retrain_epoches"
+kelpie_dataset_cache_size = 30
+
+# global variable!
 count_dic = defaultdict(list)
+global_dic = {}
+
+def strfy(entity_ids):
+    if hasattr(entity_ids, '__iter__'):
+        lis = [str(x) for x in entity_ids]
+        return ','.join(lis)
+    return entity_ids
+
+def get_entity_embeddings(entity_embeddings, kelpie_entity_embedding):
+    if kelpie_entity_embedding is None:
+        return entity_embeddings
+    
+    print(len(entity_embeddings), type(entity_embeddings))
+    print(len(kelpie_entity_embedding), type(kelpie_entity_embedding))
+    print(entity_embeddings.shape)
+
+    return torch.cat([entity_embeddings, kelpie_entity_embedding], 0)
+    # 
+    # print(kelpie_entity_embedding.shape, type(kelpie_entity_embedding))
+    # return torch.cat(entity_embeddings + [kelpie_entity_embedding], 0)
 
 def terminate_at(length, count):
     '''记录长度为length的解释有多少个'''
@@ -230,7 +253,8 @@ class KelpieModel(Model):
     # this is necessary
     def update_embeddings(self):
         with torch.no_grad():
-            self.entity_embeddings[self.kelpie_entity_id] = self.kelpie_entity_embedding
+            for ix, kelpie_id in enumerate(self.dataset.kelpie_ids):
+                self.entity_embeddings[kelpie_id] = self.kelpie_entity_embedding[ix]
 
     #override
     def train(self, mode=True):

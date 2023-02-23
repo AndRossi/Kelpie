@@ -195,7 +195,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         rule_length = len(nple_to_remove)
 
         # convert the nple to remove into a list
-        assert (len(nple_to_remove[0]) == 3)
+        # assert (len(nple_to_remove[0]) == 3)
 
         relevance, \
         original_best_entity_score, original_target_entity_score, original_target_entity_rank, \

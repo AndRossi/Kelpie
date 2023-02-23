@@ -296,10 +296,7 @@ class ConvE(Model):
     def get_embedding(self):
         if self.embedding_model:
             entity_embeddings, relation_embeddings =  self.embedding_model(self.dataset.g)
-            if self.kelpie_entity_embedding is None:
-                return entity_embeddings, relation_embeddings    
-            return torch.cat([entity_embeddings, self.kelpie_entity_embedding], 0), relation_embeddings
-
+            return get_entity_embeddings(entity_embeddings, self.kelpie_entity_embedding), relation_embeddings
         return self.entity_embeddings, self.relation_embeddings
 
     def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
@@ -376,8 +373,8 @@ class KelpieConvE(KelpieModel, ConvE):
                                             # such as the one resulting from torch.cat(...) and as frozen_relation_embeddings
 
         # self.model = model
-        self.original_entity_id = dataset.original_entity_id
-        self.kelpie_entity_id = dataset.kelpie_entity_id
+        # self.original_entity_id = dataset.original_entity_id
+        # self.kelpie_entity_id = dataset.kelpie_entity_id
 
         # extract the values of the trained embeddings.
         if model.embedding_model:
@@ -388,8 +385,9 @@ class KelpieConvE(KelpieModel, ConvE):
 
         # the tensor from which to initialize the kelpie_entity_embedding;
         # if it is None it is initialized randomly
+        self.dataset = dataset
         if init_tensor is None:
-            init_tensor = torch.rand(1, self.dimension)
+            init_tensor = torch.rand(self.dataset.l, self.dimension)
 
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
@@ -401,8 +399,11 @@ class KelpieConvE(KelpieModel, ConvE):
 
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
-        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
-        self.entity_embeddings = torch.cat([frozen_entity_embeddings, self.kelpie_entity_embedding], 0)
+        print('\tKelpieConvE init_tensor shape:', init_tensor.shape)
+        self.kelpie_entity_embedding = torch.stack([Parameter(init_tensor[i].cuda(), requires_grad=True) for i in range(dataset.l)], 0)
+        print('\tKelpieConvE kelpie_entity_embedding shape:', init_tensor.shape)
+        self.entity_embeddings = get_entity_embeddings(frozen_entity_embeddings, self.kelpie_entity_embedding)
+        # torch.cat([frozen_entity_embeddings] + self.kelpie_entity_embedding, 0)
         self.relation_embeddings = frozen_relation_embeddings
 
 
@@ -450,8 +451,10 @@ class KelpieConvE(KelpieModel, ConvE):
 
         # if we are in original_mode, make sure that the kelpie entity is not featured in the samples to predict
         # otherwise, make sure that the original entity is not featured in the samples to predict
-        forbidden_entity_id = self.kelpie_entity_id if original_mode else self.original_entity_id
-        assert np.isin(forbidden_entity_id, direct_samples[:][0, 2]) == False
+
+        forbidden_entity_ids = self.dataset.kelpie_ids if original_mode else self.dataset.entity_ids
+        for t in forbidden_entity_ids:
+            assert np.isin(t, direct_samples[:][0, 2]) == False
 
         # use the ConvE implementation method to obtain scores, ranks and prediction results.
         # these WILL feature the forbidden entity, so we now need to filter them

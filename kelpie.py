@@ -5,7 +5,7 @@ from prefilters.prefilter import TYPE_PREFILTER, TOPOLOGY_PREFILTER, NO_PREFILTE
 from prefilters.type_based_prefilter import TypeBasedPreFilter
 from prefilters.topology_prefilter import TopologyPreFilter
 from relevance_engines.post_training_engine import PostTrainingEngine
-from link_prediction.models.model import Model
+from link_prediction.models.model import Model, global_dic
 from explanation_builders.stochastic_necessary_builder import StochasticNecessaryExplanationBuilder
 from explanation_builders.stochastic_sufficient_builder import StochasticSufficientExplanationBuilder
 import numpy as np
@@ -24,7 +24,6 @@ class Kelpie:
                  dataset: Dataset,
                  hyperparameters: dict,
                  prefilter_type: str,
-                 relevance_threshold: float = None,
                  max_explanation_length: int = DEFAULT_MAX_LENGTH):
         """
         Kelpie object constructor.
@@ -39,9 +38,10 @@ class Kelpie:
         self.model = model
         self.dataset = dataset
         self.hyperparameters = hyperparameters
-        self.relevance_threshold = relevance_threshold
+        self.relevance_threshold = global_dic['args'].relevance_threshold
         self.max_explanation_length = max_explanation_length
 
+        print('prefilter type:', prefilter_type)
         if prefilter_type == TOPOLOGY_PREFILTER:
             self.prefilter = TopologyPreFilter(model=model, dataset=dataset)
         elif prefilter_type == TYPE_PREFILTER:

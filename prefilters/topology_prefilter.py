@@ -2,9 +2,10 @@ import copy
 from multiprocessing.pool import ThreadPool as Pool
 from typing import Tuple, Any
 from dataset import Dataset
-from link_prediction.models.model import Model
+from link_prediction.models.model import Model, global_dic
 from prefilters.prefilter import PreFilter
 
+from collections import defaultdict
 from config import MAX_PROCESSES
 import threading
 
@@ -25,23 +26,50 @@ class TopologyPreFilter(PreFilter):
         super().__init__(model, dataset)
 
         self.max_path_length = 5
-        self.entity_id_2_train_samples = {}
+        self.entity_id_2_train_samples = defaultdict(list)
         self.threadLock = threading.Lock()
         self.counter = 0
         self.thread_pool = Pool(processes=MAX_PROCESSES)
 
         for (h, r, t) in dataset.train_samples:
+            self.entity_id_2_train_samples[h].append((h, r, t))
+            self.entity_id_2_train_samples[t].append((h, r, t))
 
-            if h in self.entity_id_2_train_samples:
-                self.entity_id_2_train_samples[h].append((h, r, t))
-            else:
-                self.entity_id_2_train_samples[h] = [(h, r, t)]
-
-            if t in self.entity_id_2_train_samples:
-                self.entity_id_2_train_samples[t].append((h, r, t))
-            else:
-                self.entity_id_2_train_samples[t] = [(h, r, t)]
-
+    def get_entity_set(self, entity, length):
+        '''获取entity（集合）长度为length的邻居'''
+        if hasattr(entity, '__iter__') and type(entity) != str:
+            neighbors = {x: [] for x in entity}
+        else:
+            neighbors = {entity: []}
+        
+        for i in range(length):
+            tmp = {}
+            for t in neighbors:
+                samples = self.entity_id_2_train_samples[t]
+                for sample in samples:
+                    if sample[0] == t:
+                        target = sample[2]
+                        new_sample = sample
+                    else:
+                        target = sample[0]
+                        new_sample = self.reverse_triple(sample)
+                    if target not in set([x[0] for x in neighbors[t]]):
+                        # 只有简单路径！
+                        tmp[target] = neighbors[t] + [new_sample]
+            neighbors = tmp
+        return neighbors
+    
+    def reverse_triple(self, t):
+        if t[1] < self.dataset.num_direct_relations:
+            reverse_rel = t[1] + self.dataset.num_direct_relations
+        else:
+            reverse_rel = t[1] - self.dataset.num_direct_relations
+        return (t[2], reverse_rel, t[0])
+    
+    def reverse(self, lis):
+        lis.reverse()
+        return [self.reverse_triple(t) for t in lis]
+    
 
     def top_promising_samples_for(self,
                                   sample_to_explain:Tuple[Any, Any, Any],
@@ -68,6 +96,24 @@ class TopologyPreFilter(PreFilter):
             print("Extracting promising facts for" + self.dataset.printable_sample(sample_to_explain))
 
         start_entity, end_entity = (head, tail) if perspective == "head" else (tail, head)
+
+        # print('relation_path', global_dic['args'].relation_path)
+        if global_dic['args'].relation_path:
+            print('head:', head, '; tail:', tail, '; rel count:', self.dataset.num_direct_relations)
+            # relation_path = list(self.dataset.all_simple_paths(head, tail))
+            relation_path = []
+            for length in range(1, 4):
+                half = length // 2
+                head_map = self.get_entity_set(head, half)
+                tail_map = self.get_entity_set(tail, length - half)
+                keys = head_map.keys() & tail_map.keys()
+
+                for key in keys:
+                    # print(key, head_map[key], tail_map[key])
+                    relation_path.append(head_map[key] + self.reverse(tail_map[key]))
+
+            print('relation path:', relation_path)
+            return relation_path
 
         samples_featuring_start_entity = self.entity_id_2_train_samples[start_entity]
 

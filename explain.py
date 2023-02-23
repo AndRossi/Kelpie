@@ -127,10 +127,19 @@ parser.add_argument('--train_restrain', dest='train_restrain', default=False, ac
 parser.add_argument('--specify_relation', dest='specify_relation', default=False, action='store_true',
                     help="whether specify relation when evaluate")
 
+parser.add_argument('--relation_path', default=False, action='store_true',
+                    help="whether generate relation path instead of triples")
+
 # parser.add_argument('--sort', dest='sort', default=False, action='store_true',
 #                     help="whether sort the dataset")
 
 args = parser.parse_args()
+print('relation_path', args.relation_path)
+global_dic['args'] = args
+# for t in dic._get_kwargs():
+#     args[t[0]] = t[1]
+# print('args:', args)
+
 cfg = config[args.dataset][args.method]
 args.restrain_dic = config[args.dataset].get('tail_restrain', None)
 
@@ -267,18 +276,15 @@ prefilter = args.prefilter
 relevance_threshold = args.relevance_threshold
 
 if args.baseline is None:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
-                    relevance_threshold=relevance_threshold)
+    kelpie = Kelpie(model, dataset, hyperparameters, prefilter)
 elif args.baseline == "data_poisoning":
-    kelpie = DataPoisoning(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter)
+    kelpie = DataPoisoning(model, dataset, hyperparameters, prefilter)
 elif args.baseline == "criage":
-    kelpie = Criage(model=model, dataset=dataset, hyperparameters=hyperparameters)
+    kelpie = Criage(model, dataset, hyperparameters)
 elif args.baseline == "k1":
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
-                    relevance_threshold=relevance_threshold, max_explanation_length=1)
+    kelpie = Kelpie(model, dataset, hyperparameters, prefilter, max_explanation_length=1)
 else:
-    kelpie = Kelpie(model=model, dataset=dataset, hyperparameters=hyperparameters, prefilter_type=prefilter,
-                    relevance_threshold=relevance_threshold)
+    kelpie = Kelpie(model, dataset, hyperparameters, prefilter)
 
 
 output_lines = []
@@ -305,7 +311,7 @@ for i, fact in enumerate(testing_facts):
     head, relation, tail = fact
     if tail == 'p1962':
         continue
-    if n_samples > 5:  # 只解释前5个 tail != H2O
+    if n_samples > 1:  # 只解释前5个 tail != H2O
         break
     print("Explaining fact " + str(i) + " on " + str(
         len(testing_facts)) + ": " + triple2str(fact))

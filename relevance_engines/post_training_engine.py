@@ -59,7 +59,7 @@ class PostTrainingEngine(ExplanationEngine):
 
         # The kelpie_cache is a simple LRU cache that allows reuse of KelpieDatasets and of base post-training results
         # without need to re-build them from scratch every time.
-        self._kelpie_dataset_cache_size = 20
+        self._kelpie_dataset_cache_size = kelpie_dataset_cache_size
         self._kelpie_dataset_cache = OrderedDict()
         self.print_count = 0
 
@@ -95,12 +95,12 @@ class PostTrainingEngine(ExplanationEngine):
 
         # get from the cache a Kelpie Dataset focused on the original id of the entity to explain,
         # (or create it from scratch if it is not in cache)
-        kelpie_dataset = self._get_kelpie_dataset_for(original_entity_id=original_entity_to_convert)
+        kelpie_dataset = self._get_kelpie_dataset_for(entity_ids=[head_id, tail_id])
 
         kelpie_model_class = self.model.kelpie_model_class()
 
         kelpie_init_tensor_size = self.model.dimension if not isinstance(self.model, TuckER) else self.model.entity_dimension
-        kelpie_init_tensor = torch.rand(1, kelpie_init_tensor_size)
+        kelpie_init_tensor = torch.rand(kelpie_dataset.l, kelpie_init_tensor_size)
 
         # run base post-training to obtain a "clone" of the perspective entity and see how it performs in the sample to convert
         base_kelpie_model = kelpie_model_class(model=self.model,
@@ -173,12 +173,12 @@ class PostTrainingEngine(ExplanationEngine):
 
         # get from the cache a Kelpie Dataset focused on the original id of the entity to explain,
         # (or create it from scratch if it is not in cache)
-        kelpie_dataset = self._get_kelpie_dataset_for(original_entity_id=original_entity_to_convert)
+        kelpie_dataset = self._get_kelpie_dataset_for(entity_ids=[head_id, tail_id])
 
         kelpie_model_class = self.model.kelpie_model_class()
 
         kelpie_init_tensor_size = self.model.dimension if not isinstance(self.model, TuckER) else self.model.entity_dimension
-        kelpie_init_tensor = torch.rand(1, kelpie_init_tensor_size)
+        kelpie_init_tensor = torch.rand(kelpie_dataset.l, kelpie_init_tensor_size)
 
         # run base post-training to obtain a "clone" of the perspective entity and see how it performs in the sample to convert
         base_kelpie_model = kelpie_model_class(model=self.model,
@@ -226,7 +226,7 @@ class PostTrainingEngine(ExplanationEngine):
 
     # private methods that know how to access cache structures
 
-    def _get_kelpie_dataset_for(self, original_entity_id: int) -> KelpieDataset:
+    def _get_kelpie_dataset_for(self, entity_ids) -> KelpieDataset:
         """
         Return the value of the queried key in O(1).
         Additionally, move the key to the end to show that it was recently used.
@@ -235,16 +235,17 @@ class PostTrainingEngine(ExplanationEngine):
         :return:
         """
 
-        if original_entity_id not in self._kelpie_dataset_cache:
+        name = strfy(entity_ids)
+        if name not in self._kelpie_dataset_cache:
 
-            kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_id=original_entity_id)
-            self._kelpie_dataset_cache[original_entity_id] = kelpie_dataset
-            self._kelpie_dataset_cache.move_to_end(original_entity_id)
+            kelpie_dataset = KelpieDataset(dataset=self.dataset, entity_ids=entity_ids)
+            self._kelpie_dataset_cache[name] = kelpie_dataset
+            self._kelpie_dataset_cache.move_to_end(name)
 
             if len(self._kelpie_dataset_cache) > self._kelpie_dataset_cache_size:
                 self._kelpie_dataset_cache.popitem(last=False)
 
-        return self._kelpie_dataset_cache[original_entity_id]
+        return self._kelpie_dataset_cache[name]
 
     def original_results_for(self, original_sample_to_predict: numpy.array) :
 
@@ -276,7 +277,7 @@ class PostTrainingEngine(ExplanationEngine):
 
 
         if not original_sample_to_predict in self._base_pt_model_results:
-            original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
+            # original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
             # print("\tRunning base post-training on entity " + original_entity_name + " with no additions")
             base_pt_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
                                             kelpie_train_samples=kelpie_dataset.kelpie_train_samples) # type: KelpieModel
@@ -315,7 +316,7 @@ class PostTrainingEngine(ExplanationEngine):
         # the "add_training_samples" method replaces the original entity with the kelpie entity by itself
         kelpie_dataset.add_training_samples(original_samples_to_add)
 
-        original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
+        # original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
         print(f"\t\t\tAdding samples: ", end='')
         for x in original_samples_to_add:
             print (kelpie_dataset.printable_sample(x), end=',')
@@ -348,6 +349,7 @@ class PostTrainingEngine(ExplanationEngine):
         :param original_samples_to_remove:
         :return:
         """
+        print('removing samples:', original_samples_to_remove)
 
         original_sample_to_predict = (original_sample_to_predict[0], original_sample_to_predict[1], original_sample_to_predict[2])
         kelpie_sample_to_predict = kelpie_dataset.as_kelpie_sample(original_sample=original_sample_to_predict)

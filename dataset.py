@@ -4,10 +4,12 @@ from collections import defaultdict
 from typing import Tuple
 
 import numpy
+import time
 
 from config import ROOT
 import torch as th
 import dgl
+import networkx as nx
 
 DATA_PATH = os.path.join(ROOT, "data")
 FB15K = "FB15k"
@@ -103,7 +105,11 @@ class Dataset:
         self.g = self.g.to('cuda')
         self.g = in_out_norm(self.g)
         print(self.g)
-
+    
+    def all_simple_paths(self, source, target, cutoff=4):
+        paths = nx.all_simple_paths(self.nx_graph, source, target, cutoff)
+        dic = {str(p): p for p in paths}
+        return list(dic.values())
 
     def __init__(self,
                  name: str,
@@ -227,8 +233,20 @@ class Dataset:
                 self.make_tail_restrain(args.restrain_dic)
             self.g = None
             if args.embedding_model and args.embedding_model != 'none':
-                print('making graph...')    
+                print('embedding_model specified, making graph...')    
                 self.make_graph()
+
+            # if args.relation_path:
+            #     print('relation_path specified, making nx graph...') 
+            #     # 正向和反向关系都需要添加
+            #     self.nx_graph = nx.DiGraph(self.train_samples[:, [0, 2]].tolist() + self.train_samples[:, [2, 0]].tolist())
+            #     print(self.nx_graph.number_of_nodes(), self.nx_graph.number_of_edges())
+            #     # print(self.nx_graph.nodes)
+
+            #     for t in [[6115, 6729]] + self.train_samples[:, [0, 2]].tolist()[:10]:
+            #         st = time.time()
+            #         print(len(list(self.all_simple_paths(t[0], t[1]))))
+            #         print(time.time() - st)
 
     def _read_triples(self, triples_path: str, separator="\t"):
         """
