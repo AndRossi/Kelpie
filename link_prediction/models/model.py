@@ -42,6 +42,24 @@ kelpie_dataset_cache_size = 30
 count_dic = defaultdict(list)
 global_dic = {}
 
+
+def rd(x):
+    return round(x, 6)
+
+def path2str(dataset, path):
+    if not global_dic['args'].relation_path:
+        return ",".join(dataset.sample_to_fact(path))
+    s = ''
+    for t in path:
+        f = dataset.sample_to_fact(t)
+        s += f'{f[0]}-{f[1]}->'
+    return s + f[2]
+
+
+def paths2str(dataset, paths):
+    return "/".join([path2str(dataset, x) for x in paths])
+
+
 def strfy(entity_ids):
     if hasattr(entity_ids, '__iter__'):
         lis = [str(x) for x in entity_ids]
@@ -52,9 +70,7 @@ def get_entity_embeddings(entity_embeddings, kelpie_entity_embedding):
     if kelpie_entity_embedding is None:
         return entity_embeddings
     
-    print(len(entity_embeddings), type(entity_embeddings))
-    print(len(kelpie_entity_embedding), type(kelpie_entity_embedding))
-    print(entity_embeddings.shape)
+    # print(len(entity_embeddings), len(kelpie_entity_embedding), entity_embeddings.shape)
 
     return torch.cat([entity_embeddings, kelpie_entity_embedding], 0)
     # 
@@ -79,6 +95,21 @@ def prefilter_negative(all_rules, top_k=None):
         i += 1
         print(f'\tpositive top {top_k} rules: {i}/{len(all_rules)}')
         return all_rules[:i]
+
+
+def reverse_sample(t: Tuple[Any, Any, Any], num_direct_relations: int):
+    if t[1] < num_direct_relations:
+        reverse_rel = t[1] + num_direct_relations
+    else:
+        reverse_rel = t[1] - num_direct_relations
+    return (t[2], reverse_rel, t[0])
+
+
+def get_forward_sample(t: Tuple[Any, Any, Any], num_direct_relations: int):
+    if t[1] < num_direct_relations:
+        return t
+    return (t[2], t[1] - num_direct_relations, t[0])
+    
 
 class Model(nn.Module):
     """

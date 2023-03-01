@@ -392,6 +392,7 @@ class Dataset:
 
     def sample_to_fact(self, sample_to_convert: Tuple):
         head_id, rel_id, tail_id = sample_to_convert
+        # print('sample to fact', head_id, rel_id, tail_id)
         return self.entity_id_2_name[head_id], self.relation_id_2_name[rel_id], self.entity_id_2_name[tail_id]
 
     def fact_to_sample(self, fact_to_convert: Tuple):

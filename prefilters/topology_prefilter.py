@@ -36,30 +36,36 @@ class TopologyPreFilter(PreFilter):
             self.entity_id_2_train_samples[t].append((h, r, t))
 
     def get_entity_set(self, entity, length):
-        '''获取entity（集合）长度为length的邻居'''
+        '''
+        获取 entity 长度为 length 的邻居target
+        返回entity到target路径的列表
+        '''
         if hasattr(entity, '__iter__') and type(entity) != str:
-            neighbors = {x: [] for x in entity}
-        else:
-            neighbors = {entity: []}
+            raise Exception('list of entities not allowed!')    
+        paths = defaultdict(list)
+        paths[entity] = [[]]    # 1 empty path
         
         for i in range(length):
-            tmp = {}
-            for t in neighbors:
-                samples = self.entity_id_2_train_samples[t]
-                for sample in samples:
-                    if sample[0] == t:
-                        target = sample[2]
-                        new_sample = sample
-                    else:
-                        target = sample[0]
-                        new_sample = self.reverse_triple(sample)
-                    if target not in set([x[0] for x in neighbors[t]]):
-                        # 只有简单路径！
-                        tmp[target] = neighbors[t] + [new_sample]
-            neighbors = tmp
-        return neighbors
+            new_paths = defaultdict(list)
+            for ent in paths:
+                for s in self.get_head_samples(ent):
+                    for p in paths[ent]:
+                        if s[2] not in set([x[0] for x in p]):  # avoid complicated path
+                            new_paths[s[2]].append(p + [s])
+            paths = new_paths
+        return paths
     
-    def reverse_triple(self, t):
+    def get_head_samples(self, ent):
+        head_samples = []
+        samples = self.entity_id_2_train_samples[ent]
+        for s in samples:
+            if s[0] == ent:
+                head_samples.append(s)
+            else:
+                head_samples.append(self.reverse_sample(s))
+        return head_samples
+
+    def reverse_sample(self, t):
         if t[1] < self.dataset.num_direct_relations:
             reverse_rel = t[1] + self.dataset.num_direct_relations
         else:
@@ -68,7 +74,7 @@ class TopologyPreFilter(PreFilter):
     
     def reverse(self, lis):
         lis.reverse()
-        return [self.reverse_triple(t) for t in lis]
+        return [self.reverse_sample(t) for t in lis]
     
 
     def top_promising_samples_for(self,
@@ -99,10 +105,11 @@ class TopologyPreFilter(PreFilter):
 
         # print('relation_path', global_dic['args'].relation_path)
         if global_dic['args'].relation_path:
-            print('head:', head, '; tail:', tail, '; rel count:', self.dataset.num_direct_relations)
+            print('\thead:', head, '; tail:', tail, '; rel count:', self.dataset.num_direct_relations)
             # relation_path = list(self.dataset.all_simple_paths(head, tail))
             relation_path = []
             for length in range(1, 4):
+                cnt = len(relation_path)
                 half = length // 2
                 head_map = self.get_entity_set(head, half)
                 tail_map = self.get_entity_set(tail, length - half)
@@ -110,10 +117,14 @@ class TopologyPreFilter(PreFilter):
 
                 for key in keys:
                     # print(key, head_map[key], tail_map[key])
-                    relation_path.append(head_map[key] + self.reverse(tail_map[key]))
+                    for p1 in head_map[key]:
+                        for p2 in tail_map[key]:
+                            relation_path.append(p1 + self.reverse(p2))
+                print(f'\tpath of length {length}: {len(relation_path) - cnt}')
 
-            print('relation path:', relation_path)
-            return relation_path
+            # TODO: pre-filter top relevance 
+            # print('relation path:', relation_path)
+            return relation_path[:top_k]
 
         samples_featuring_start_entity = self.entity_id_2_train_samples[start_entity]
 

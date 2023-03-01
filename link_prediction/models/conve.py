@@ -191,7 +191,7 @@ class ConvE(Model):
         return output_scores
 
 
-    def all_scores(self, samples: np.array, restrain=False) -> np.array:
+    def all_scores(self, samples: np.array, restrain=False, sigmoid=True) -> np.array:
         """
             For each of the passed samples, compute scores for all possible tail entities.
             :param samples: a 2-dimensional numpy array containing the samples to score, one per row
@@ -199,6 +199,14 @@ class ConvE(Model):
                      and a column for each possible tail
         """
         entity_embeddings, relation_embeddings = self.get_embedding()
+
+        
+        # if 'summary' in dir(self):
+        #     print('restrain:', restrain)
+        #     print('mean embeddings', torch.mean(entity_embeddings, dim=1).shape, torch.mean(entity_embeddings, dim=1)[:-10])
+        #     print('entity', entity_embeddings.shape)
+        #     print('relation', relation_embeddings.shape)
+        #     self.summary('train')
 
         # list of entity embeddings for the heads of the facts
         head_embeddings = entity_embeddings[samples[:, 0]]
@@ -230,12 +238,23 @@ class ConvE(Model):
         else:
             tail_embeddings = entity_embeddings
 
+        # print('last few', tail_embeddings[-4:, :])
+        # if self.kelpie_entity_embedding is not None:
+        #     print('last', torch.mm(x, self.kelpie_entity_embedding.transpose(1,0)))
+
         x = torch.mm(x, tail_embeddings.transpose(1, 0))
         #x += self.b.expand_as(x)
 
-        pred = torch.sigmoid(x)
+        # if self.kelpie_entity_embedding is not None:
+        #     print(x)
+        #     print(torch.max(x, dim=1).values.shape, torch.max(x, dim=1).values)
+        #     import os
+        #     os._exit(1)
 
-        return pred
+        if sigmoid:
+            x = torch.sigmoid(x)
+
+        return x
     
     def get_tail_set(self, samples, split=' '):
         relations = set(samples[:, 1].tolist())
@@ -271,7 +290,7 @@ class ConvE(Model):
         # assert all samples are direct
         assert (samples[:, 1] < self.dataset.num_direct_relations).all()
 
-        direct_scores, tail_ranks, tail_predictions = self.predict_tails(direct_samples)
+        direct_scores, tail_ranks, tail_predictions, _ = self.predict_tails(direct_samples)
 
         # invert samples to perform head predictions
         if self.args.ignore_inverse:
@@ -279,7 +298,7 @@ class ConvE(Model):
         else:
             print('evalating inverse relation')
             inverse_samples = self.dataset.invert_samples(direct_samples)
-            inverse_scores, head_ranks, head_predictions = self.predict_tails(inverse_samples)
+            inverse_scores, head_ranks, head_predictions, _ = self.predict_tails(inverse_samples)
             
         for i in range(direct_samples.shape[0]):
             # add to the scores list a couple containing the scores of the direct and of the inverse sample
@@ -298,8 +317,9 @@ class ConvE(Model):
             entity_embeddings, relation_embeddings =  self.embedding_model(self.dataset.g)
             return get_entity_embeddings(entity_embeddings, self.kelpie_entity_embedding), relation_embeddings
         return self.entity_embeddings, self.relation_embeddings
+    
 
-    def predict_tails(self, samples: np.array) -> Tuple[Any, Any, Any]:
+    def predict_tails(self, samples: np.array, ignore_ids: np.array=[]) -> Tuple[Any, Any, Any]:
         """
             Returns filtered scores, ranks and predicted entities for each passed fact.
             :param samples: a torch.LongTensor of triples (head, relation, tail).
@@ -308,7 +328,7 @@ class ConvE(Model):
         """
         
 
-        scores, ranks, pred_out = [], [], []
+        scores, ranks, pred_out, best_scores = [], [], [], []
         # batch_size = 128
         # for i in range(0, samples.shape[0], batch_size):
         #     batch = samples[i : min(i + batch_size, len(samples))]
@@ -318,6 +338,7 @@ class ConvE(Model):
         # hack一下，使用完全预测方法，把非尾实体的置为0
         entity_embeddings, _ = self.get_embedding()
         other = list(set(range(entity_embeddings.shape[0])) - set(self.get_tail_set(batch)))
+        other += ignore_ids
         other.sort()
         # print("len samples:", len(batch), "len tails:", len(self.get_tail_set(batch)), "len others:", len(other), end='\t')
         
@@ -333,6 +354,7 @@ class ConvE(Model):
                 # score obtained by the correct tail of the sample
                 target_tail_score = all_scores[sample_number, tail_id].item()
                 scores.append(target_tail_score)
+                best_scores.append(torch.max(all_scores[sample_number, :]).item())
 
                 # set to 0.0 all the predicted values for all the correct tails for that Head-Rel couple
                 all_scores[sample_number, tails_to_filter] = 0.0
@@ -352,7 +374,13 @@ class ConvE(Model):
                 rank = np.where(sorted_indexes[row] == tail_indexes[row].item())[0][0]
                 ranks.append(rank + 1)
 
-        return scores, ranks, pred_out
+        return scores, ranks, pred_out, best_scores
+    
+    def predict_tail(self, sample: np.array):
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions, best_scores = self.predict_tails(np.array([sample]))
+        return rd(scores[0]), ranks[0], rd(best_scores[0])
 
     def kelpie_model_class(self):
         return KelpieConvE
@@ -387,7 +415,13 @@ class KelpieConvE(KelpieModel, ConvE):
         # if it is None it is initialized randomly
         self.dataset = dataset
         if init_tensor is None:
-            init_tensor = torch.rand(self.dataset.l, self.dimension)
+            # init_tensor = torch.rand(self.dataset.l, self.dimension)
+            # 使用原始嵌入 + 扰动的形式
+            init_tensor = frozen_entity_embeddings[dataset.entity_ids,:].clone().cpu()
+            # print('mean tensor', torch.mean(init_tensor))
+            # init_tensor += torch.rand(self.dataset.l, self.dimension) * torch.mean(init_tensor)
+
+
 
         # It is *extremely* important that kelpie_entity_embedding is both a Parameter and an instance variable
         # because the whole approach of the project is to obtain the parameters model params with parameters() method
@@ -400,8 +434,11 @@ class KelpieConvE(KelpieModel, ConvE):
         # Therefore kelpie_entity_embedding would not be a Parameter anymore.
 
         print('\tKelpieConvE init_tensor shape:', init_tensor.shape)
-        self.kelpie_entity_embedding = torch.stack([Parameter(init_tensor[i].cuda(), requires_grad=True) for i in range(dataset.l)], 0)
-        print('\tKelpieConvE kelpie_entity_embedding shape:', init_tensor.shape)
+
+        # very important! If using torch.stack, the tensor cannot be updated!!!
+        # self.kelpie_entity_embedding = torch.stack([Parameter(init_tensor[i].cuda(), requires_grad=True) for i in range(dataset.l)], 0)
+        self.kelpie_entity_embedding = Parameter(init_tensor.cuda(), requires_grad=True)
+        print('\tKelpieConvE kelpie_entity_embedding shape:', self.kelpie_entity_embedding.shape)
         self.entity_embeddings = get_entity_embeddings(frozen_entity_embeddings, self.kelpie_entity_embedding)
         # torch.cat([frozen_entity_embeddings] + self.kelpie_entity_embedding, 0)
         self.relation_embeddings = frozen_relation_embeddings
@@ -430,6 +467,12 @@ class KelpieConvE(KelpieModel, ConvE):
         self.batch_norm_3.weight.requires_grad = False
         self.batch_norm_3.bias.requires_grad = False
         self.batch_norm_3.eval()
+
+    def summary(self, s='summary'):
+        print(f'**********{s}**********')
+        # print('entities shape', self.entity_embeddings.shape)
+        # print('relations shape', self.relation_embeddings.shape)
+        print('kelpie embeddings:', self.kelpie_entity_embedding[0, :8])
 
     # Override
     def predict_samples(self,
@@ -505,3 +548,9 @@ class KelpieConvE(KelpieModel, ConvE):
 
         scores, ranks, predictions = self.predict_samples(np.array([sample]), original_mode)
         return scores[0], ranks[0], predictions[0]
+    
+    def predict_tail(self, sample: np.array):
+        assert sample[1] < self.dataset.num_direct_relations
+
+        scores, ranks, predictions, best_scores = self.predict_tails(np.array([sample]), self.dataset.entity_ids)
+        return rd(scores[0]), ranks[0], rd(best_scores[0])

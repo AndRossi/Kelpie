@@ -296,6 +296,10 @@ def print_line(line):
     output_lines.append(line)
 
 def print_facts(rule_samples_with_relevance):
+    for k, v in rule_samples_with_relevance:
+        print(k, v)
+    return
+
     # print(rule_samples_with_relevance)
     rule_facts_with_relevance = []
     for cur_rule_with_relevance in rule_samples_with_relevance:

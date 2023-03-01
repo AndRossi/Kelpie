@@ -109,8 +109,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         # this is an exception: all samples (= rules with length 1) are tested
         for i, sample_to_remove in enumerate(samples_to_remove):
             relevance = self._compute_relevance_for_rule(([sample_to_remove]))
-            sample_2_relevance[sample_to_remove] = relevance
-            print(f"\t{i+1}/{len(samples_to_remove)}: {self.dataset.printable_sample(sample_to_remove)} {relevance}")
+            s = path2str(self.dataset, sample_to_remove)
+            sample_2_relevance[s] = relevance
+            print(f"\t{i+1}/{len(samples_to_remove)}: [{s}] {relevance}")
         return sample_2_relevance
 
     def extract_rules_with_length(self,
@@ -139,8 +140,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             current_rule, current_preliminary_score = all_possible_rules_with_preliminary_scores[i]
 
             current_rule_relevance = self._compute_relevance_for_rule(current_rule)
-            rule_2_relevance[current_rule] = current_rule_relevance
-            print(f"\trule: {self.dataset.printable_nple(current_rule)} {current_rule_relevance}")
+            s = paths2str(self.dataset, current_rule)
+            rule_2_relevance[s] = current_rule_relevance
+            print(f"\trule: [{s}] {current_rule_relevance}")
 
             # put the obtained relevance in the window
             sliding_window[i % self.window_size] = current_rule_relevance
@@ -205,19 +207,16 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                           perspective=self.perspective,
                                           samples_to_remove=nple_to_remove)
 
-        cur_line = ";".join(self.triple_to_explain) + ";" + \
-                   ";".join([";".join(self.dataset.sample_to_fact(x)) for x in nple_to_remove]) + ";" + \
-                    str(original_best_entity_score) + ";" + \
-                    str(original_target_entity_score) + ";" + \
-                    str(original_target_entity_rank) + ";" + \
-                    str(base_pt_best_entity_score) + ";" + \
-                    str(base_pt_target_entity_score) + ";" + \
-                    str(base_pt_target_entity_rank) + ";" + \
-                    str(pt_best_entity_score) + ";" + \
-                    str(pt_target_entity_score) + ";" + \
-                    str(pt_target_entity_rank) + ";" + \
+        print('-----------------------------------------', nple_to_remove)
+        cur_line = ",".join(self.triple_to_explain) + ";" + \
+                   paths2str(self.dataset, nple_to_remove) + ";" + \
+                    f'{original_best_entity_score}/{original_target_entity_score}/{original_target_entity_rank}' + ";" + \
+                    f'{base_pt_best_entity_score}/{base_pt_target_entity_score}/{base_pt_target_entity_rank}' + ";" + \
+                    f'{pt_best_entity_score}/{pt_target_entity_score}/{pt_target_entity_rank}' + ";" + \
                     str(relevance) + ";" + \
                     str(execution_time)
+        
+        print(cur_line)
 
         with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines([cur_line + "\n"])
@@ -225,7 +224,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         return relevance
 
     def _preliminary_rule_score(self, rule, sample_2_relevance):
-        return numpy.sum([sample_2_relevance[x] for x in rule])
+        return numpy.sum([sample_2_relevance[path2str(self.dataset, x)] for x in rule])
 
     def _average(self, l: list):
         result = 0.0

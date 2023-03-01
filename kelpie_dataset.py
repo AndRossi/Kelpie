@@ -22,7 +22,8 @@ class KelpieDataset(Dataset):
 
     def __init__(self,
                  dataset: Dataset,
-                 entity_ids):  # 一般不指定tail，除非需要寻找relation_path
+                 entity_ids): 
+        # 所有与entity_ids相关的训练样本（包括反向关系）
 
         super(KelpieDataset, self).__init__(name=dataset.name,
                                             separator=dataset.separator,
@@ -80,6 +81,9 @@ class KelpieDataset(Dataset):
             self.original_train_samples.append(self._extract_samples_with_entity(dataset.train_samples, entity_id))
             self.original_valid_samples.append(self._extract_samples_with_entity(dataset.valid_samples, entity_id))
             self.original_test_samples.append(self._extract_samples_with_entity(dataset.test_samples, entity_id))
+
+        # print('origin samples:', self.original_train_samples)   # 里面没有反向关系！
+
         self.original_train_samples = numpy.concatenate(self.original_train_samples, axis=0)
         self.original_valid_samples = numpy.concatenate(self.original_valid_samples, axis=0)
         self.original_test_samples = numpy.concatenate(self.original_test_samples, axis=0)
@@ -94,6 +98,8 @@ class KelpieDataset(Dataset):
             self.kelpie_test_samples = Dataset.replace_entity_in_samples(self.kelpie_test_samples, entity_id, kelpie_id)
 
         print(f'\tkelpie dataset created: train {len(self.kelpie_train_samples)}, valid {len(self.kelpie_valid_samples)}, test {len(self.kelpie_test_samples)}')
+        # print(self.kelpie_train_samples)
+
         # update to_filter and train_to_filter data structures
         samples_to_stack = [self.kelpie_train_samples]
         if len(self.kelpie_valid_samples) > 0:
@@ -102,14 +108,11 @@ class KelpieDataset(Dataset):
             samples_to_stack.append(self.kelpie_test_samples)
         all_kelpie_samples = numpy.vstack(samples_to_stack)
         for i in range(all_kelpie_samples.shape[0]):
-            (head_id, relation_id, tail_id) = all_kelpie_samples[i]
-            self.to_filter[(head_id, relation_id)].append(tail_id)
-            self.to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
+            self.append_sample(self.to_filter, all_kelpie_samples[i])
             # if the sample was a training sample, also do the same for the train_to_filter data structure;
             # Also fill the entity_2_degree and relation_2_degree dicts.
             if i < len(self.kelpie_train_samples):
-                self.train_to_filter[(head_id, relation_id)].append(tail_id)
-                self.train_to_filter[(tail_id, relation_id + self.num_direct_relations)].append(head_id)
+                self.append_sample(self.train_to_filter, all_kelpie_samples[i])
 
         # create a map that associates each kelpie train_sample to its index in self.kelpie_train_samples
         # this will be necessary to allow efficient removals and undoing removals
@@ -132,6 +135,9 @@ class KelpieDataset(Dataset):
         self.last_filter_removals = defaultdict(lambda:[])
         self.last_removed_kelpie_samples = []
 
+
+    def __len__(self):
+        return len(self.kelpie_train_samples)
 
     # override
     def add_training_samples(self, samples_to_add: numpy.array):
@@ -163,14 +169,10 @@ class KelpieDataset(Dataset):
                                                                     new_entity=kelpie_id)
 
         for (cur_head, cur_rel, cur_tail) in kelpie_samples_to_add:
-            self.to_filter[(cur_head, cur_rel)].append(cur_tail)
-            self.to_filter[(cur_tail, cur_rel + self.num_direct_relations)].append(cur_head)
-            self.train_to_filter[(cur_head, cur_rel)].append(cur_tail)
-            self.train_to_filter[(cur_tail, cur_rel + self.num_direct_relations)].append(cur_head)
-
-            self.last_added_kelpie_samples.append((cur_head, cur_rel, cur_tail))
-            self.last_filter_additions[(cur_head, cur_rel)].append(cur_tail)
-            self.last_filter_additions[(cur_tail, cur_rel + self.num_direct_relations)].append(cur_head)
+            self.append_sample(self.to_filter, sample)
+            self.append_sample(self.train_to_filter, sample)
+            self.last_added_kelpie_samples.append(sample)
+            self.append_sample(self.last_filter_additions, sample)
 
         self.kelpie_train_samples = numpy.vstack((self.kelpie_train_samples, numpy.array(kelpie_samples_to_add)))
 
@@ -238,22 +240,38 @@ class KelpieDataset(Dataset):
                                                                            new_entity=kelpie_id,
                                                                            as_numpy=False)
 
+        # print('removing kelpie smaples:', kelpie_train_samples_to_remove)
         # update to_filter and train_to_filter
-        for (cur_head, cur_rel, cur_tail) in kelpie_train_samples_to_remove:
-            self.to_filter[(cur_head, cur_rel)].remove(cur_tail)
-            self.to_filter[(cur_tail, cur_rel + self.num_direct_relations)].remove(cur_head)
-            self.train_to_filter[(cur_head, cur_rel)].remove(cur_tail)
-            self.train_to_filter[(cur_tail, cur_rel + self.num_direct_relations)].remove(cur_head)
-
-            # and also update the data structures required for undoing the removal
-            self.last_removed_kelpie_samples.append((cur_head, cur_rel, cur_tail))
-            self.last_filter_removals[(cur_head, cur_rel)].append(cur_tail)
-            self.last_filter_removals[(cur_tail, cur_rel + self.num_direct_relations)].append(cur_head)
+        for sample in kelpie_train_samples_to_remove:
+            self.remove_sample(self.to_filter, sample)
+            self.remove_sample(self.train_to_filter, sample)
+            self.last_removed_kelpie_samples.append(sample)
+            self.append_sample(self.last_filter_removals, sample)
 
         # get the indices of the samples to remove in the kelpie_train_samples structure
         # and use them to perform the actual removal
         kelpie_train_indices_to_remove = [self.kelpie_train_sample_2_index[x] for x in kelpie_train_samples_to_remove]
         self.kelpie_train_samples = numpy.delete(self.kelpie_train_samples, kelpie_train_indices_to_remove, axis=0)
+
+    
+    def remove_sample(self, data, kelpie_sample):
+        # 从data中去除kelpie_sample（及其逆关系）
+        h, r, t = kelpie_sample
+        assert r < self.num_direct_relations
+        data[(h, r)].remove(t)
+        data[(t, r + self.num_direct_relations)].remove(h)
+
+        # if r < self.num_direct_relations:
+        #     data[(t, r + self.num_direct_relations)].remove(h)
+        # else:
+        #     data[(t, r - self.num_direct_relations)].remove(h)
+
+    def append_sample(self, data, kelpie_sample):
+        # 从data中去除kelpie_sample（及其逆关系）
+        h, r, t = kelpie_sample
+        assert r < self.num_direct_relations
+        data[(h, r)].append(t)
+        data[(t, r + self.num_direct_relations)].append(h)
 
 
     def undo_last_training_samples_removal(self):
