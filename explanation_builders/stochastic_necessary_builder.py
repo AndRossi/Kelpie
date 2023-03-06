@@ -47,15 +47,6 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                          dataset=dataset,
                                          hyperparameters=hyperparameters)
 
-
-    def prefilter_negative(self, all_rules, top_k):
-        for i in range(0, top_k):
-            if all_rules[i][1] < 0:
-                break
-        print(f'select top rules: {i}/{len(all_rules)+1}')
-        return all_rules[:i]
-
-
     def build_explanations(self,
                            samples_to_remove: list,
                            top_k: int = 10):
@@ -66,15 +57,21 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         # get relevance for rules with length 1 (that is, samples)
         sample_2_relevance = self.extract_rules_with_length_1(samples_to_remove=samples_to_remove)
         
-        samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        # samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
+        samples_with_relevance = prefilter_negative(sample_2_relevance)
+        samples_number = len(samples_with_relevance)
+        print('\tvalid rules with length 1: ', samples_number)
+        
         all_rules_with_relevance += [([x], y) for (x, y) in samples_with_relevance]
         
-        samples_number = len(samples_with_relevance)
+        if len(all_rules_with_relevance) == 0:
+            print('\tNo valid rules with length 1')
+            return []
 
         best_rule, best_rule_relevance = all_rules_with_relevance[0]
         if best_rule_relevance > self.xsi:
             print('\tEarly termination after length 1')
-            return self.prefilter_negative(all_rules_with_relevance, top_k)
+            return prefilter_negative(all_rules_with_relevance, top_k)
 
         cur_rule_length = 2
 
@@ -100,8 +97,8 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             cur_rule_length += 1
 
         # 只去 > 0 的前 k 个
-        all_rules = sorted(all_rules_with_relevance, key=lambda x: x[1], reverse=True)
-        return self.prefilter_negative(all_rules, top_k)
+        # all_rules = sorted(all_rules_with_relevance, key=lambda x: x[1], reverse=True)
+        return prefilter_negative(all_rules_with_relevance, top_k)
 
 
 
@@ -112,8 +109,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         # this is an exception: all samples (= rules with length 1) are tested
         for i, sample_to_remove in enumerate(samples_to_remove):
             relevance = self._compute_relevance_for_rule(([sample_to_remove]))
-            sample_2_relevance[sample_to_remove] = relevance
-            print(f"\t{i+1}/{len(samples_to_remove)}: {self.dataset.printable_sample(sample_to_remove)} {relevance}")
+            s = path2str(self.dataset, sample_to_remove)
+            sample_2_relevance[s] = relevance
+            print(f"\t{i+1}/{len(samples_to_remove)}: [{s}] {relevance}")
         return sample_2_relevance
 
     def extract_rules_with_length(self,
@@ -142,8 +140,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             current_rule, current_preliminary_score = all_possible_rules_with_preliminary_scores[i]
 
             current_rule_relevance = self._compute_relevance_for_rule(current_rule)
-            rule_2_relevance[current_rule] = current_rule_relevance
-            print(f"\trule: {self.dataset.printable_nple(current_rule)} {current_rule_relevance}")
+            s = paths2str(self.dataset, current_rule)
+            rule_2_relevance[s] = current_rule_relevance
+            print(f"\trule: [{s}] {current_rule_relevance}")
 
             # put the obtained relevance in the window
             sliding_window[i % self.window_size] = current_rule_relevance
@@ -188,7 +187,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                 
                 if terminate:
                     print("Terminate!")
-                    self.terminate_at(length, i)
+                    terminate_at(length, i)
                 else:
                     print()
 
@@ -198,7 +197,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         rule_length = len(nple_to_remove)
 
         # convert the nple to remove into a list
-        assert (len(nple_to_remove[0]) == 3)
+        # assert (len(nple_to_remove[0]) == 3)
 
         relevance, \
         original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
@@ -208,19 +207,16 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                           perspective=self.perspective,
                                           samples_to_remove=nple_to_remove)
 
-        cur_line = ";".join(self.triple_to_explain) + ";" + \
-                   ";".join([";".join(self.dataset.sample_to_fact(x)) for x in nple_to_remove]) + ";" + \
-                    str(original_best_entity_score) + ";" + \
-                    str(original_target_entity_score) + ";" + \
-                    str(original_target_entity_rank) + ";" + \
-                    str(base_pt_best_entity_score) + ";" + \
-                    str(base_pt_target_entity_score) + ";" + \
-                    str(base_pt_target_entity_rank) + ";" + \
-                    str(pt_best_entity_score) + ";" + \
-                    str(pt_target_entity_score) + ";" + \
-                    str(pt_target_entity_rank) + ";" + \
+        print('-----------------------------------------', nple_to_remove)
+        cur_line = ",".join(self.triple_to_explain) + ";" + \
+                   paths2str(self.dataset, nple_to_remove) + ";" + \
+                    f'{original_best_entity_score}/{original_target_entity_score}/{original_target_entity_rank}' + ";" + \
+                    f'{base_pt_best_entity_score}/{base_pt_target_entity_score}/{base_pt_target_entity_rank}' + ";" + \
+                    f'{pt_best_entity_score}/{pt_target_entity_score}/{pt_target_entity_rank}' + ";" + \
                     str(relevance) + ";" + \
                     str(execution_time)
+        
+        print(cur_line)
 
         with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines([cur_line + "\n"])
@@ -228,7 +224,7 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         return relevance
 
     def _preliminary_rule_score(self, rule, sample_2_relevance):
-        return numpy.sum([sample_2_relevance[x] for x in rule])
+        return numpy.sum([sample_2_relevance[path2str(self.dataset, x)] for x in rule])
 
     def _average(self, l: list):
         result = 0.0

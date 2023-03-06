@@ -1,7 +1,7 @@
 from typing import Tuple, Any
 from dataset import Dataset
 from relevance_engines.data_poisoning_engine import DataPoisoningEngine
-from link_prediction.models.model import Model, LEARNING_RATE
+from link_prediction.models.model import *
 from explanation_builders.explanation_builder import NecessaryExplanationBuilder
 import os
 
@@ -60,4 +60,5 @@ class DataPoisoningNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             with open(os.path.join(self.args.output_folder, "output_details_1.csv"), "a") as output_file:
                 output_file.writelines([cur_line + "\n"])
 
-        return sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        # all_rules = sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        return prefilter_negative(rule_2_relevance, top_k)

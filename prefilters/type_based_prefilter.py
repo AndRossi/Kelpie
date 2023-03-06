@@ -1,7 +1,7 @@
 from multiprocessing.pool import ThreadPool as Pool
 from typing import Tuple, Any
 from dataset import Dataset
-from link_prediction.models.model import Model
+from link_prediction.models.model import Model, global_dic
 from prefilters.prefilter import PreFilter
 import numpy as np
 from config import MAX_PROCESSES
@@ -104,6 +104,7 @@ class TypeBasedPreFilter(PreFilter):
                                                                reverse=True,
                                                                key=lambda x: x[1])
             sorted_promising_samples = [x[0] for x in samples_featuring_tail_with_promisingness]
+
 
         return sorted_promising_samples[:top_k]
 

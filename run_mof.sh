@@ -21,11 +21,14 @@ explain() {
         CUDA_VISIBLE_DEVICES=$device python explain.py --dataset $dataset --method=$method \
                 --model_path $model_path --explain_path $explain_path --mode $mode \
                 --output_folder $output_folder  --run $run --specify_relation --ignore_inverse \
-                --embedding_model "$embedding_model" --train_restrain # > $output_folder/$mode.log
+                --embedding_model "$embedding_model" --train_restrain --relation_path \
+                --prefilter_threshold 50
+                # > $output_folder/$mode.log
+                # --relation_path
                 # > "results/${mode}_example.log" 
 }
 
-# explain necessary "" ConvE 011
+explain necessary "" ConvE 011
 # explain sufficient "" ConvE 011
 # explain necessary CompGCN ConvE 011
 # explain sufficient CompGCN ConvE 011

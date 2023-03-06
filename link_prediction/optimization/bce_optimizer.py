@@ -6,7 +6,7 @@ from collections import defaultdict
 import os
 
 from link_prediction.models.conve import ConvE
-from link_prediction.models.model import Model, BATCH_SIZE, LABEL_SMOOTHING, LEARNING_RATE, DECAY, EPOCHS
+from link_prediction.models.model import *
 from link_prediction.optimization.optimizer import Optimizer
 
 class BCEOptimizer(Optimizer):
@@ -69,6 +69,7 @@ class BCEOptimizer(Optimizer):
         self.model.cuda()
 
         for e in range(1, self.epochs+1):
+            # print('epoch', e)
             self.epoch(er_vocab=er_vocab, er_vocab_pairs=er_vocab_pairs, batch_size=self.batch_size)
 
             if evaluate_every > 0 and valid_samples is not None and e % evaluate_every == 0:
@@ -79,7 +80,7 @@ class BCEOptimizer(Optimizer):
                     print("saving model...")
                     torch.save(self.model.state_dict(), save_path)
                 print("done.")
-
+        
         if save_path is not None:
             print("saving model...")
             torch.save(self.model.state_dict(), save_path)
@@ -131,14 +132,24 @@ class BCEOptimizer(Optimizer):
 
 
     def step_on_batch(self, batch, targets):
-
         # if the batch has length 1 ( = this is the last batch) and the model has batch_norm layers,
         # do not try to update the batch_norm layers, because they would not work.
         if len(batch) == 1 and isinstance(self.model, ConvE):
             self.model.batch_norm_1.eval()
             self.model.batch_norm_2.eval()
             self.model.batch_norm_3.eval()
+        
+        loss = self.step(batch, targets)
 
+        # if the layers had been set to mode "eval", put them back to mode "train"
+        if len(batch) == 1 and isinstance(self.model, ConvE):
+            self.model.batch_norm_1.train()
+            self.model.batch_norm_2.train()
+            self.model.batch_norm_3.train()
+        return loss
+    
+
+    def step(self, batch, targets):
         self.optimizer.zero_grad()
         if self.train_restrain:
             predictions = self.model.forward(batch, restrain=True)
@@ -154,63 +165,28 @@ class BCEOptimizer(Optimizer):
             os.abort()
         loss.backward()
         self.optimizer.step()
-
-        # if the layers had been set to mode "eval", put them back to mode "train"
-        if len(batch) == 1 and isinstance(self.model, ConvE):
-            self.model.batch_norm_1.train()
-            self.model.batch_norm_2.train()
-            self.model.batch_norm_3.train()
-
         return loss
+
 
 class KelpieBCEOptimizer(BCEOptimizer):
     def __init__(self,
                  model:Model,
                  hyperparameters: dict,
                  verbose: bool = True):
-
+        
+        # hyperparameters = hyperparameters.copy()
+        # hyperparameters[LEARNING_RATE] *= 5
         super(KelpieBCEOptimizer, self).__init__(model=model,
                                                  hyperparameters=hyperparameters,
                                                  verbose=verbose)
 
         self.optimizer = optim.Adam(params=self.model.parameters())
 
-    # Override
-    def epoch(self,
-              er_vocab,
-              er_vocab_pairs,
-              batch_size: int):
-
-        # np.random.shuffle(er_vocab_pairs)
-        self.model.train()
-
-        with tqdm.tqdm(total=len(er_vocab_pairs), unit='ex', disable=not self.verbose) as bar:
-            bar.set_description('train loss')
-
-            batch_start = 0
-            while batch_start < len(er_vocab_pairs):
-                batch, targets = self.extract_batch(er_vocab=er_vocab,
-                                                    er_vocab_pairs=er_vocab_pairs,
-                                                    batch_start=batch_start,
-                                                    batch_size=batch_size)
-                l = self.step_on_batch(batch, targets)
-
-                # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
-                # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
-                # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
-                self.model.update_embeddings()
-
-                batch_start+=batch_size
-                bar.update(batch_size)
-                bar.set_postfix(loss=str(round(l.item(), 6)))
-
-            if self.decay:
-                self.scheduler.step()
-
 
     def step_on_batch(self, batch, targets):
-
         # just making sure that these layers are still in eval() mode
+        # 网络参数不会被训练
+        # self.model.summary()
         if isinstance(self.model, ConvE):
             self.model.batch_norm_1.eval()
             self.model.batch_norm_2.eval()
@@ -218,15 +194,11 @@ class KelpieBCEOptimizer(BCEOptimizer):
             self.model.convolutional_layer.eval()
             self.model.hidden_layer.eval()
 
-        self.optimizer.zero_grad()
-        predictions = self.model.forward(batch)
+        loss = self.step(batch, targets)
 
-        # print('[step]batch:', batch.shape)
-        # print('[step]predictions:', predictions.shape)
-        # print('[step]targets:', targets.shape)
-
-        loss = self.loss(predictions, targets)
-        loss.backward()
-        self.optimizer.step()
+        # THIS IS THE ONE DIFFERENCE FROM THE ORIGINAL OPTIMIZER.
+        # THIS IS EXTREMELY IMPORTANT BECAUSE THIS WILL PROPAGATE THE UPDATES IN THE KELPIE ENTITY EMBEDDING
+        # TO THE MATRIX CONTAINING ALL THE EMBEDDINGS
+        self.model.update_embeddings()
 
         return loss

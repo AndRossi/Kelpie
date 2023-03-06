@@ -47,7 +47,7 @@ MOF-3000:
     Reg: 0.05
   ConvE:
     D: 200
-    LR: 0.003
+    LR: 0.0003
     B: 4096
     Ep: 200
     REp: 5 # kelpie retrain epoched
