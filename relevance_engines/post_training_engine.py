@@ -16,6 +16,7 @@ from link_prediction.optimization.multiclass_nll_optimizer import KelpieMultiCla
 from link_prediction.optimization.pairwise_ranking_optimizer import KelpiePairwiseRankingOptimizer
 from link_prediction.models.model import *
 from collections import OrderedDict
+import numpy as np
 
 class PostTrainingEngine(ExplanationEngine):
 
@@ -56,6 +57,7 @@ class PostTrainingEngine(ExplanationEngine):
         #   - the rank obtained by the target tail (in "head" perspective) or head (in "tail" perspective) score)
         self._original_model_results = {}  # map original samples to scores and ranks from the original model
         self._base_pt_model_results = {}   # map original samples to scores and ranks from the base post-trained model
+        self._base_cache_embeddings = {} # map embeddings of base node to its embedding 
 
         # The kelpie_cache is a simple LRU cache that allows reuse of KelpieDatasets and of base post-training results
         # without need to re-build them from scratch every time.
@@ -64,62 +66,6 @@ class PostTrainingEngine(ExplanationEngine):
         self.print_count = 0
         self.original_sample = None
         self.kelpie_dataset = None
-
-    def addition_relevance(self,
-                           sample_to_convert: Tuple[Any, Any, Any],
-                           perspective: str,
-                           samples_to_add: list):
-        """
-            Given a "sample to convert" (that is, a sample that the model currently does not predict as true,
-            and that we want to be predicted as true);
-            given the perspective from which to analyze it;
-            and given and a list of samples containing the entity to convert and that were not seen in training;
-            compute the relevance of the samples to add, that is, an estimate of the effect they would have
-            if added (all together) to the perspective entity to improve the prediction of the sample to convert.
-
-            :param sample_to_convert: the sample that we would like the model to predict as "true",
-                                      in the form of a tuple (head, relation, tail)
-            :param perspective: the perspective from which to explain the fact: it can be either "head" or "tail"
-            :param samples_to_add: the list of samples containing the perspective entity
-                                   that we want to analyze the effect of, if added to the perspective entity
-
-            :return:
-        """
-        start_time = time.time()
-
-        self.original_sample = sample_to_convert
-        # check how the original model performs on the original sample to convert
-        original_target_entity_score, \
-        original_best_entity_score, \
-        original_target_entity_rank = self.original_results_for(original_sample_to_predict=sample_to_convert)
-
-        kelpie_dataset = self.get_kelpie_dataset(sample_to_convert, perspective)
-
-        # run base post-training to obtain a "clone" of the perspective entity and see how it performs in the sample to convert
-        base_pt_target_entity_score, \
-        base_pt_best_entity_score, \
-        base_pt_target_entity_rank = self.base_post_training_results_for(kelpie_dataset=kelpie_dataset,
-                                                                         original_sample_to_predict=sample_to_convert)
-
-        # run actual post-training by adding the passed samples to the perspective entity and see how it performs in the sample to convert
-        pt_target_entity_score, \
-        pt_best_entity_score, \
-        pt_target_entity_rank = self.addition_post_training_results_for(kelpie_dataset=kelpie_dataset,
-                                                                        original_sample_to_predict=sample_to_convert,
-                                                                        original_samples_to_add=samples_to_add)
-
-        # we want to give higher priority to the facts that, when added, make the score the better (= smaller).
-        rank_improvement = base_pt_target_entity_rank - pt_target_entity_rank
-        score_improvement = base_pt_target_entity_score - pt_target_entity_score if self.model.is_minimizer() else pt_target_entity_score - base_pt_target_entity_score
-
-        relevance = float(rank_improvement + self.sigmoid(score_improvement)) / float(base_pt_target_entity_rank)
-        relevance = rd(relevance)
-
-        return relevance, \
-               original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
-               base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank,\
-               pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank, \
-               rd(time.time() - start_time)
     
     def get_kelpie_dataset(self, sample_to_explain: Tuple[Any, Any, Any], perspective: str):
         # get from the cache a Kelpie Dataset focused on the original id of the entity to explain,
@@ -130,6 +76,13 @@ class PostTrainingEngine(ExplanationEngine):
         
         original_entity_to_convert = head_id if perspective == "head" else tail_id
         return self._get_kelpie_dataset_for(entity_ids=[original_entity_to_convert])
+    
+    def get_relevance(self, metrics, pt='pt_origin', base='base_origin'):
+        # we want to give higher priority to the facts that, when added, make the score worse (= higher).
+        rank_worsening = metrics[f'{pt}_rank'] - metrics[f'{base}_rank']
+        score_worsening = metrics[f'{pt}_score'] - metrics[f'{base}_score'] if self.model.is_minimizer() else metrics[f'{base}_score'] - metrics[f'{pt}_score']
+        # note: the formulation is very different from the addition one
+        return rd(float(rank_worsening + np.tanh(score_worsening)))
 
 
     def removal_relevance(self,
@@ -156,37 +109,18 @@ class PostTrainingEngine(ExplanationEngine):
         self.original_sample = sample_to_explain
         self.kelpie_dataset = self.get_kelpie_dataset(sample_to_explain, perspective)
 
+        metrics = {}
         # check how the original model performs on the original sample to convert (no need)
-        original_target_entity_score, \
-        original_target_entity_rank, \
-        original_best_entity_score = self.original_results_for()
-
-        # get from the cache a Kelpie Dataset focused on the original id of the entity to explain,
-        # (or create it from scratch if it is not in cache)
-
-        base_pt_target_entity_score, \
-        base_pt_target_entity_rank, \
-        base_pt_best_entity_score= self.base_post_training_results_for()
-
+        # metrics.update(self.original_results())
+        # get from the cache a Kelpie Dataset focused on the original id of the entity to explain
+        metrics.update(self.base_post_training_results())
         # run actual post-training by adding the passed samples to the perspective entity and see how it performs in the sample to convert
-        pt_target_entity_score, \
-        pt_target_entity_rank, \
-        pt_best_entity_score,= self.removal_post_training_results_for(original_samples_to_remove=samples_to_remove)
+        metrics.update(self.removal_post_training_results(original_samples_to_remove=samples_to_remove))
 
-        # we want to give higher priority to the facts that, when added, make the score worse (= higher).
-        rank_worsening = pt_target_entity_rank - base_pt_target_entity_rank
-        score_worsening = pt_target_entity_score - base_pt_target_entity_score if self.model.is_minimizer() else base_pt_target_entity_score - pt_target_entity_score
-
-        # note: the formulation is very different from the addition one
-        relevance = rd(float(rank_worsening + self.sigmoid(score_worsening)))
-
-        return relevance, \
-               original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
-               base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank,\
-               pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank, \
-               rd(time.time() - start_time)
-
-
+        return {**metrics,
+                'relevance': self.get_relevance(metrics), 
+                'time': rd(time.time() - start_time)
+            }
 
     # private methods that know how to access cache structures
 
@@ -211,15 +145,15 @@ class PostTrainingEngine(ExplanationEngine):
 
         return self._kelpie_dataset_cache[name]
 
-    def original_results_for(self) :
+    def original_results(self) :
         sample = self.original_sample
         if not sample in self._original_model_results:
-            self._original_model_results[sample] = self.extract_detailed_performances_on_sample(self.model, sample)
+            self._original_model_results[sample] = self.extract_detailed_performances_on_sample(self.model, sample, 'origin')
 
         return self._original_model_results[sample]
 
 
-    def base_post_training_results_for(self):
+    def base_post_training_results(self):
 
         """
         :param kelpie_dataset:
@@ -241,9 +175,15 @@ class PostTrainingEngine(ExplanationEngine):
                                         kelpie_train_samples=self.kelpie_dataset.kelpie_train_samples) # type: KelpieModel
         kelpie_model.summary('after post_train')
 
+        # record the base embeddings of head and tail
+        # h, t = self.original_sample[0], self.original_sample[2]
+        # kelpie_entity_embedding = base_pt_model.kelpie_entity_embedding.clone().cpu()
+        # self._base_cache_embeddings[h] = kelpie_entity_embedding[0]
+        # self._base_cache_embeddings[t] = kelpie_entity_embedding[1]
+
         # then check how the base post-trained model performs on the kelpie sample to explain.
         # This means checking how the "clone entity" (with no additional samples) performs
-        self._base_pt_model_results[self.original_sample] = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_predict)
+        self._base_pt_model_results[self.original_sample] = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_predict, 'base')
 
         return self._base_pt_model_results[self.original_sample]
 
@@ -283,7 +223,7 @@ class PostTrainingEngine(ExplanationEngine):
         return self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict)
 
 
-    def removal_post_training_results_for(self, original_samples_to_remove: numpy.array):
+    def removal_post_training_results(self, original_samples_to_remove: numpy.array):
         """
         :param kelpie_dataset:
         :param original_sample_to_predict:
@@ -322,7 +262,7 @@ class PostTrainingEngine(ExplanationEngine):
         self.kelpie_dataset.undo_last_training_samples_removal()
 
         # checking how the "kelpie entity" (without the removed samples) performs, rather than the original entity
-        return self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict)
+        return self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict, 'pt')
 
 
     # private methods to do stuff
@@ -350,10 +290,10 @@ class PostTrainingEngine(ExplanationEngine):
             print(f'\t\t[post_train_time: {rd(time.time() - t)}]')
         return kelpie_model_to_post_train
 
-
     def extract_detailed_performances_on_sample(self,
                                                 model: Model,
-                                                sample: numpy.array):
+                                                sample: numpy.array,
+                                                name: str = ''):
         
         # return model.predict_tail(sample)
         
@@ -367,7 +307,7 @@ class PostTrainingEngine(ExplanationEngine):
         print('original target score:', all_scores[[self.original_sample[0], self.original_sample[2]]])
 
         print('all score:', all_scores)
-        target_entity_score = all_scores[tail_id] # todo: this only works in "head" perspective
+        target_score = all_scores[tail_id] # todo: this only works in "head" perspective
         filter_out = model.dataset.to_filter[(head_id, relation_id)] if (head_id, relation_id) in model.dataset.to_filter else []
 
         if model.is_minimizer():
@@ -375,21 +315,25 @@ class PostTrainingEngine(ExplanationEngine):
             # if the target score had been filtered out, put it back
             # (this may happen in necessary mode, where we may run this method on the actual test sample;
             # not in sufficient mode, where we run this method on the unseen "samples to convert")
-            all_scores[tail_id] = target_entity_score
-            best_entity_score = numpy.min(all_scores)
-            target_entity_rank = numpy.sum(all_scores <= target_entity_score)  # we use min policy here
+            all_scores[tail_id] = target_score
+            best_score = numpy.min(all_scores)
+            target_rank = numpy.sum(all_scores <= target_score)  # we use min policy here
 
         else:
             all_scores[filter_out] = -1e6
             # if the target score had been filtered out, put it back
             # (this may happen in necessary mode, where we may run this method on the actual test sample;
             # not in sufficient mode, where we run this method on the unseen "samples to convert")
-            all_scores[tail_id] = target_entity_score
-            best_entity_score = numpy.max(all_scores)
-            target_entity_rank = numpy.sum(all_scores >= target_entity_score)  # we use min policy here
+            all_scores[tail_id] = target_score
+            best_score = numpy.max(all_scores)
+            target_rank = numpy.sum(all_scores >= target_score)  # we use min policy here
 
-        print('target_entity_score', rd(target_entity_score))
-        print('best_entity_score', rd(best_entity_score))
-        print('target_entity_rank', target_entity_rank)
+        # print('target_entity_score', rd(target_score))
+        # print('best_entity_score', rd(best_score))
+        # print('target_entity_rank', target_rank)
 
-        return rd(target_entity_score), target_entity_rank, rd(best_entity_score)
+        return {
+            f'{name}_origin_score': rd(target_score), 
+            f'{name}_origin_rank': target_rank, 
+            f'{name}_best_score': rd(best_score)
+        }

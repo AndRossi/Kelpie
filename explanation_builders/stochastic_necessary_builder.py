@@ -199,29 +199,22 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         # convert the nple to remove into a list
         # assert (len(nple_to_remove[0]) == 3)
 
-        relevance, \
-        original_best_entity_score, original_target_entity_score, original_target_entity_rank, \
-        base_pt_best_entity_score, base_pt_target_entity_score, base_pt_target_entity_rank, \
-        pt_best_entity_score, pt_target_entity_score, pt_target_entity_rank, execution_time = \
-            self.engine.removal_relevance(sample_to_explain=self.sample_to_explain,
+        dic = self.engine.removal_relevance(sample_to_explain=self.sample_to_explain,
                                           perspective=self.perspective,
                                           samples_to_remove=nple_to_remove)
 
         print('-----------------------------------------', nple_to_remove)
         cur_line = ",".join(self.triple_to_explain) + ";" + \
-                   paths2str(self.dataset, nple_to_remove) + ";" + \
-                    f'{original_best_entity_score}/{original_target_entity_score}/{original_target_entity_rank}' + ";" + \
-                    f'{base_pt_best_entity_score}/{base_pt_target_entity_score}/{base_pt_target_entity_rank}' + ";" + \
-                    f'{pt_best_entity_score}/{pt_target_entity_score}/{pt_target_entity_rank}' + ";" + \
-                    str(relevance) + ";" + \
-                    str(execution_time)
+                   paths2str(self.dataset, nple_to_remove) + ";" \
+                    + ';'.join([str(x) for x in dic.values()])
         
+        print(dic.keys())
         print(cur_line)
 
         with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines([cur_line + "\n"])
 
-        return relevance
+        return dic['relevance']
 
     def _preliminary_rule_score(self, rule, sample_2_relevance):
         return numpy.sum([sample_2_relevance[path2str(self.dataset, x)] for x in rule])
