@@ -109,7 +109,7 @@ class Kelpie:
     def explain_necessary(self,
                           sample_to_explain: Tuple[Any, Any, Any],
                           perspective: str,
-                          num_promising_samples: int = 50):
+                          num_promising_samples: int = 0):
         """
         This method extracts necessary explanations for a specific sample,
         from the perspective of either its head or its tail.

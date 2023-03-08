@@ -117,8 +117,12 @@ class PostTrainingEngine(ExplanationEngine):
         # run actual post-training by adding the passed samples to the perspective entity and see how it performs in the sample to convert
         metrics.update(self.removal_post_training_results(original_samples_to_remove=samples_to_remove))
 
+        print(metrics)
+
         return {**metrics,
-                'relevance': self.get_relevance(metrics), 
+                'relevance': self.get_relevance(metrics, pt='pt_pt', base='base_base'),
+                'head_relevance': self.get_relevance(metrics, pt='pt_origin', base='base_origin'),
+                'tail_relevance': self.get_relevance(metrics, pt='origin_pt', base='origin_base'),
                 'time': rd(time.time() - start_time)
             }
 
@@ -169,6 +173,8 @@ class PostTrainingEngine(ExplanationEngine):
 
         kelpie_sample_to_predict = self.kelpie_dataset.as_kelpie_sample(original_sample=self.original_sample)
 
+        # print(self.original_sample, kelpie_sample_to_predict)
+
         kelpie_model.summary('before post_train')
         # base_pt_model = kelpie_model
         base_pt_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
@@ -183,44 +189,13 @@ class PostTrainingEngine(ExplanationEngine):
 
         # then check how the base post-trained model performs on the kelpie sample to explain.
         # This means checking how the "clone entity" (with no additional samples) performs
-        self._base_pt_model_results[self.original_sample] = self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_predict, 'base')
-
+        self._base_pt_model_results[self.original_sample] = {
+            **self.extract_detailed_performances_on_sample(base_pt_model, kelpie_sample_to_predict, 'base_base'),
+            **self.extract_detailed_performances_on_sample(base_pt_model, [list(self.original_sample)[0]] + list(kelpie_sample_to_predict)[1:], 'origin_base'),
+            **self.extract_detailed_performances_on_sample(base_pt_model, [list(kelpie_sample_to_predict)[0]] + list(self.original_sample)[1:], 'base_origin'),
+        }
+        
         return self._base_pt_model_results[self.original_sample]
-
-
-    def addition_post_training_results_for(self,
-                                           kelpie_model: KelpieModel,
-                                           kelpie_dataset: KelpieDataset,
-                                           original_sample_to_predict: numpy.array,
-                                           original_samples_to_add: numpy.array):
-
-        """
-
-        :param kelpie_model: an UNTRAINED kelpie model that has just been initialized
-        :param kelpie_dataset:
-        :param original_sample_to_predict:
-        :param original_samples_to_add:
-        :return:
-        """
-        kelpie_sample_to_predict = kelpie_dataset.as_kelpie_sample(original_sample=original_sample_to_predict)
-        # these are original samples, and not "kelpie" samples.
-        # the "add_training_samples" method replaces the original entity with the kelpie entity by itself
-        kelpie_dataset.add_training_samples(original_samples_to_add)
-
-        # original_entity_name = kelpie_dataset.entity_id_2_name[kelpie_dataset.original_entity_id]
-        print(f"\t\t\tAdding samples: ", end='')
-        for x in original_samples_to_add:
-            print (kelpie_dataset.printable_sample(x), end=',')
-
-        # post-train the kelpie model on the dataset that has undergone the addition
-        cur_kelpie_model = self.post_train(kelpie_model_to_post_train=kelpie_model,
-                                           kelpie_train_samples=kelpie_dataset.kelpie_train_samples)  # type: KelpieModel
-
-        kelpie_dataset.undo_last_training_samples_addition()
-
-        # then check how the post-trained model performs on the kelpie sample to explain.
-        # This means checking how the "kelpie entity" (with the added sample) performs, rather than the original entity
-        return self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict)
 
 
     def removal_post_training_results(self, original_samples_to_remove: numpy.array):
@@ -262,7 +237,11 @@ class PostTrainingEngine(ExplanationEngine):
         self.kelpie_dataset.undo_last_training_samples_removal()
 
         # checking how the "kelpie entity" (without the removed samples) performs, rather than the original entity
-        return self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict, 'pt')
+        return {
+            **self.extract_detailed_performances_on_sample(cur_kelpie_model, kelpie_sample_to_predict, 'pt_pt'),
+            **self.extract_detailed_performances_on_sample(cur_kelpie_model, [list(self.original_sample)[0]] + list(kelpie_sample_to_predict)[1:], 'origin_pt'),
+            **self.extract_detailed_performances_on_sample(cur_kelpie_model, [list(kelpie_sample_to_predict)[0]] + list(self.original_sample)[1:], 'pt_origin'),
+        }
 
 
     # private methods to do stuff
@@ -293,7 +272,7 @@ class PostTrainingEngine(ExplanationEngine):
     def extract_detailed_performances_on_sample(self,
                                                 model: Model,
                                                 sample: numpy.array,
-                                                name: str = ''):
+                                                name: str = 'base_origin'):
         
         # return model.predict_tail(sample)
         
@@ -333,7 +312,7 @@ class PostTrainingEngine(ExplanationEngine):
         # print('target_entity_rank', target_rank)
 
         return {
-            f'{name}_origin_score': rd(target_score), 
-            f'{name}_origin_rank': target_rank, 
+            f'{name}_score': rd(target_score), 
+            f'{name}_rank': target_rank, 
             f'{name}_best_score': rd(best_score)
         }

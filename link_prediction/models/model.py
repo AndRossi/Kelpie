@@ -3,6 +3,7 @@ import numpy
 import torch
 from torch import nn
 from dataset import Dataset
+import os
 from collections import defaultdict
 
 # KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
@@ -109,6 +110,40 @@ def get_forward_sample(t: Tuple[Any, Any, Any], num_direct_relations: int):
     if t[1] < num_direct_relations:
         return t
     return (t[2], t[1] - num_direct_relations, t[0])
+
+
+def plot_dic(dic, path='data/statistic.png', size=(15, 6), label=True, rotation=30, limit=10, hspace=0.4):
+    '''
+    limit 代表 此值以下不绘制
+    '''
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(len(dic), figsize=(size[0], size[1] * len(dic)))
+    plt.xticks(rotation=270)
+    fig.subplots_adjust(hspace=hspace, wspace=0.2)
+    
+    for ix, t in enumerate(list(dic.keys())):
+        d = {k: v for k, v in dic[t].items() if v >= limit}
+
+        axis = ax if len(dic) == 1 else ax[ix]
+        axis.title.set_text(f'{t}: {len(d)}/{len(dic[t])} (limit:{limit})')
+        rects = axis.bar([str(x) for x in d.keys()], list(d.values()))
+        
+        if label:
+            for rect in rects:  #rects 是柱子的集合
+                height = rect.get_height()
+                plt.text(rect.get_x() + rect.get_width() / 2, height, str(height), size=10, ha='center', va='bottom')
+
+        for tick in axis.get_xticklabels():
+            tick.set_rotation(rotation)
+    
+    plt.savefig(path)
+
+
+def plot_dics(dics, folder):
+    os.makedirs(folder, exist_ok=True)
+    for k, dic in dics.items():
+        plot_dic({k: dic}, os.path.join(folder, k + '.png'), limit=0, size=(8, 8), hspace=0, rotation=0)
+
     
 
 class Model(nn.Module):

@@ -2,7 +2,7 @@ import copy
 from multiprocessing.pool import ThreadPool as Pool
 from typing import Tuple, Any
 from dataset import Dataset
-from link_prediction.models.model import Model, global_dic
+from link_prediction.models.model import Model, global_dic, plot_dics
 from prefilters.prefilter import PreFilter
 
 from collections import defaultdict
@@ -80,7 +80,7 @@ class TopologyPreFilter(PreFilter):
     def top_promising_samples_for(self,
                                   sample_to_explain:Tuple[Any, Any, Any],
                                   perspective:str,
-                                  top_k=50,
+                                  top_k: int,
                                   verbose=True):
 
         """
@@ -105,7 +105,8 @@ class TopologyPreFilter(PreFilter):
 
         # print('relation_path', global_dic['args'].relation_path)
         if global_dic['args'].relation_path:
-            print('\thead:', head, '; tail:', tail, '; rel count:', self.dataset.num_direct_relations)
+            rel_count = self.dataset.num_direct_relations
+            print('\thead:', head, '; tail:', tail, '; rel count:', rel_count)
             # relation_path = list(self.dataset.all_simple_paths(head, tail))
             relation_path = []
             for length in range(1, 4):
@@ -122,8 +123,45 @@ class TopologyPreFilter(PreFilter):
                             relation_path.append(p1 + self.reverse(p2))
                 print(f'\tpath of length {length}: {len(relation_path) - cnt}')
 
-            # TODO: pre-filter top relevance 
-            # print('relation path:', relation_path)
+            node_count = defaultdict(int)
+            rel_path_count = defaultdict(int)
+            inverse_count = defaultdict(int)
+
+            def get_inverse(path):
+                for i in range(len(path)-1):
+                    if abs(path[i][1] - path[i+1][1]) == rel_count:
+                        return min(path[i][1], path[i+1][1])
+                return -1
+            
+            def sort_dic(x):
+                return dict(sorted(x.items(), key=lambda item: item[1], reverse=True))
+            
+            for path in relation_path:
+                node_count[path[0][2]] += 1
+                node_count[path[-1][0]] += 1
+                rel_path_count[tuple([x[1] for x in path])] += 1
+                inverse_count[get_inverse(path)] += 1
+            
+            rel_path_count = sort_dic(rel_path_count)
+            node_count = sort_dic(node_count)
+            inverse_count = sort_dic(inverse_count)
+            plot_dics({
+                'rel_path_count': rel_path_count,
+                'node_count': node_count,
+                'inverse_count': inverse_count
+            }, 'results/plot')
+            print('rel path', rel_path_count)
+            print('node', node_count)
+            print('inverse', inverse_count)
+
+            # pre-filter top relevance 
+            # relation_path.sort(key=lambda path: has_inverse_path(path), reverse=True)
+            relation_path.sort(key=lambda path: rel_path_count[tuple([x[1] for x in path])] * (node_count[path[0][2]] + node_count[path[-1][0]]))
+            relation_path.sort(key=lambda path: len(path))           
+            
+            print('relation path:', relation_path)
+            if top_k == 0:  # donot filter
+                return relation_path
             return relation_path[:top_k]
 
         samples_featuring_start_entity = self.entity_id_2_train_samples[start_entity]
