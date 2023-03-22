@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from dataset import Dataset
 import os
+import pandas as pd
 from collections import defaultdict
 
 # KEYS FOR SUPPORTED HYPERPARAMETERS (to use in hyperparameter dicts)
@@ -42,6 +43,9 @@ kelpie_dataset_cache_size = 30
 # global variable!
 count_dic = defaultdict(list)
 global_dic = {}
+relevance_df = pd.DataFrame(columns=['triple', 'explanation', 'relevance', 'head_relevance', 'tail_relevance'])
+addition_df = pd.DataFrame(columns=['triple', 'origin', 'addition', 'relevance', 'origin_relevance', 'addition_relevance'])
+prelimentary_df = pd.DataFrame(columns=['explanation', 'prelimentary', 'true', 'type_ix'])
 
 
 def rd(x):
@@ -84,14 +88,19 @@ def terminate_at(length, count):
     print(f'\tnumber of rules with length {length}: {count}')
 
 
+def get_first(x):
+    if hasattr(x, "__iter__"):
+        return x[0]
+    return x
+
 def prefilter_negative(all_rules, top_k=None):
         if type(all_rules) == dict:
             all_rules = all_rules.items()
-        all_rules = sorted(all_rules, key=lambda x: x[1], reverse=True)
+        all_rules = sorted(all_rules, key=lambda x: get_first(x[1]), reverse=True)
         if top_k is None or top_k > len(all_rules):
             top_k = len(all_rules)
         for i in range(top_k):
-            if all_rules[i][1] < 0:
+            if get_first(all_rules[i][1]) < 0:
                 break
         i += 1
         print(f'\tpositive top {top_k} rules: {i}/{len(all_rules)}')

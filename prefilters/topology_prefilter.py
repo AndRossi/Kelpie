@@ -159,7 +159,7 @@ class TopologyPreFilter(PreFilter):
             relation_path.sort(key=lambda path: rel_path_count[tuple([x[1] for x in path])] * (node_count[path[0][2]] + node_count[path[-1][0]]))
             relation_path.sort(key=lambda path: len(path))           
             
-            print('relation path:', relation_path)
+            # print('relation path:', relation_path)
             if top_k == 0:  # donot filter
                 return relation_path
             return relation_path[:top_k]

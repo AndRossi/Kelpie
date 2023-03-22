@@ -5,7 +5,7 @@ from prefilters.prefilter import TYPE_PREFILTER, TOPOLOGY_PREFILTER, NO_PREFILTE
 from prefilters.type_based_prefilter import TypeBasedPreFilter
 from prefilters.topology_prefilter import TopologyPreFilter
 from relevance_engines.post_training_engine import PostTrainingEngine
-from link_prediction.models.model import Model, global_dic
+from link_prediction.models.model import Model, global_dic, relevance_df
 from explanation_builders.stochastic_necessary_builder import StochasticNecessaryExplanationBuilder
 from explanation_builders.stochastic_sufficient_builder import StochasticSufficientExplanationBuilder
 import numpy as np
@@ -144,4 +144,14 @@ class Kelpie:
                                                                     max_explanation_length=self.max_explanation_length)
         
         explanations_with_relevance = explanation_builder.build_explanations(samples_to_remove=most_promising_samples)
+        
+        for rule, relevance in explanations_with_relevance:
+            relevance_df.loc[len(relevance_df)] = {
+                'triple': sample_to_explain,
+                'explanation': rule,
+                'relevance': relevance[0],
+                'head_relevance': relevance[1],
+                'tail_relevance': relevance[2],
+            }
+
         return explanations_with_relevance

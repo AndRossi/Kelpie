@@ -315,7 +315,7 @@ for i, fact in enumerate(testing_facts):
     head, relation, tail = fact
     if tail == 'p1962':
         continue
-    if n_samples > 1:  # 只解释前5个 tail != H2O
+    if n_samples > 10:  # 只解释前5个 tail != H2O
         break
     print("Explaining fact " + str(i) + " on " + str(
         len(testing_facts)) + ": " + triple2str(fact))
@@ -355,3 +355,5 @@ with open(os.path.join(args.output_folder, f"{args.mode}.txt"), "w") as output:
 
 print('count_dic', count_dic)
 print('count_dic_mean', {k: np.mean(v) for k, v in count_dic.items()})
+relevance_df.to_csv('relevance.csv')
+prelimentary_df.to_csv('prelimentary.csv')

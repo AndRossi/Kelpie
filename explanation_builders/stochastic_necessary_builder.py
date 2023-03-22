@@ -49,13 +49,15 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
     def build_explanations(self,
                            samples_to_remove: list,
-                           top_k: int = 10):
+                           top_k: int = 100):
 
         all_rules_with_relevance = []
 
         print(f'all possible rules with length 1:', len(samples_to_remove))
         # get relevance for rules with length 1 (that is, samples)
         sample_2_relevance = self.extract_rules_with_length_1(samples_to_remove=samples_to_remove)
+
+        # print('!!!!!!!!!!!!!!', sample_2_relevance)
         
         # samples_with_relevance = sorted(sample_2_relevance.items(), key=lambda x: x[1], reverse=True)
         samples_with_relevance = prefilter_negative(sample_2_relevance)
@@ -68,10 +70,13 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             print('\tNo valid rules with length 1')
             return []
 
-        best_rule, best_rule_relevance = all_rules_with_relevance[0]
+        best_rule_relevance = get_first(all_rules_with_relevance[0][1])
+        # print(all_rules_with_relevance)
+        # print(best_rule_relevance)
+
         if best_rule_relevance > self.xsi:
             print('\tEarly termination after length 1')
-            return prefilter_negative(all_rules_with_relevance, top_k)
+            return all_rules_with_relevance
 
         cur_rule_length = 2
 
@@ -81,13 +86,12 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             rule_2_relevance = self.extract_rules_with_length(samples_to_remove=samples_to_remove,
                                                               length=cur_rule_length,
                                                               sample_2_relevance=sample_2_relevance)
-            current_rules_with_relevance = sorted(rule_2_relevance.items(), key=lambda x: x[1], reverse=True)
-
+            current_rules_with_relevance = prefilter_negative(rule_2_relevance)
             all_rules_with_relevance += current_rules_with_relevance
-            current_best_rule, current_best_rule_relevance = current_rules_with_relevance[0]
 
+            current_best_rule_relevance = get_first(current_rules_with_relevance[0][1])
             if current_best_rule_relevance > best_rule_relevance:
-                best_rule, best_rule_relevance = current_best_rule, current_best_rule_relevance
+                best_rule_relevance = current_best_rule_relevance
             # else:
             #   break       if searching for additional rules does not seem promising, you should exit now
 
@@ -120,10 +124,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
                                   sample_2_relevance: dict):
 
         all_possible_rules = itertools.combinations(samples_to_remove, length)
-        all_possible_rules_with_preliminary_scores = [(x, self._preliminary_rule_score(x, sample_2_relevance)) for x in
-                                                      all_possible_rules]
-        all_possible_rules_with_preliminary_scores = sorted(all_possible_rules_with_preliminary_scores,
-                                                            key=lambda x: x[1], reverse=True)
+        all_possible_rules_with_preliminary_scores = prefilter_negative([(x, 
+                                                    self._preliminary_rule_score(x, sample_2_relevance)) for x in
+                                                    all_possible_rules])
 
         rule_2_relevance = {}
 
@@ -144,19 +147,36 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
             rule_2_relevance[s] = current_rule_relevance
             print(f"\trule: [{s}] {current_rule_relevance}")
 
+            first_relevance = get_first(current_rule_relevance)
             # put the obtained relevance in the window
-            sliding_window[i % self.window_size] = current_rule_relevance
+            sliding_window[i % self.window_size] = first_relevance
+
+
+            # for t in range(3):
+            #     prelimentary_df.loc[len(prelimentary_df)] = {
+            #         'explanation': current_rule,
+            #         'prelimentary': current_preliminary_score[t],
+            #         'true': current_rule_relevance[t],
+            #         'type_ix': t
+            #     }
+
+            prelimentary_df.loc[len(prelimentary_df)] = {
+                    'explanation': current_rule,
+                    'prelimentary': current_preliminary_score,
+                    'true': current_rule_relevance[0],
+                    'type_ix': 0
+                }
 
             # early termination
-            if current_rule_relevance > self.xsi:
+            if first_relevance > self.xsi:
                 i += 1
-                print(f"\tEarly Terminate: {current_rule_relevance} > {self.xsi}")
+                print(f"\tEarly Terminate: {first_relevance} > {self.xsi}")
                 terminate_at(length, i)
                 return rule_2_relevance
 
             # else, if the current relevance value is an improvement over the best relevance value seen so far, continue
-            elif current_rule_relevance >= best_relevance_so_far:
-                best_relevance_so_far = current_rule_relevance
+            elif first_relevance >= best_relevance_so_far:
+                best_relevance_so_far = first_relevance
                 i += 1
                 continue
 
@@ -167,10 +187,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
             # else, use the average of the relevances in the window to assess the termination condition
             else:
-                cur_avg_window_relevance = self._average(sliding_window)
-                terminate_threshold = cur_avg_window_relevance / best_relevance_so_far
-                random_value = random.random()
-                terminate = random_value > terminate_threshold  # termination condition
+                cur_avg_window_relevance = numpy.mean(sliding_window)
+                terminate = random.random() > cur_avg_window_relevance / best_relevance_so_far  
+                # termination condition
                 i += 1
 
                 def print_relevance(dic):
@@ -179,10 +198,10 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
                 print('\t\t', end='')
                 print_relevance({
-                    "Current": current_rule_relevance,
+                    "Current": first_relevance,
                     "Current window": cur_avg_window_relevance, 
                     "Max": best_relevance_so_far,
-                    "Terminate threshhold": terminate_threshold
+                    "Terminate threshhold": cur_avg_window_relevance / best_relevance_so_far
                 })
                 
                 if terminate:
@@ -214,13 +233,8 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
         with open(os.path.join(self.args.output_folder, "output_details_" + str(rule_length) + ".csv"), "a") as output_file:
             output_file.writelines([cur_line + "\n"])
 
-        return dic['relevance']
+        return [dic['relevance'], dic['head_relevance'], dic['tail_relevance']]
 
     def _preliminary_rule_score(self, rule, sample_2_relevance):
-        return numpy.sum([sample_2_relevance[path2str(self.dataset, x)] for x in rule])
-
-    def _average(self, l: list):
-        result = 0.0
-        for item in l:
-            result += float(item)
-        return result / float(len(l))
+        
+        return numpy.sum([get_first(sample_2_relevance[path2str(self.dataset, x)]) for x in rule])
