@@ -157,17 +157,24 @@ if args.mode == "sufficient":
         rules_with_relevance = []
 
         rule_relevance_inputs = rules_line.strip().split(",")
-        best_rule, best_rule_relevance_str = rule_relevance_inputs[0].split(":")
+
+        if len(rule_relevance_inputs[0].split(":")) == 2:
+            best_rule, best_rule_relevance_str = rule_relevance_inputs[0].split(":")
+        else:
+            best_rule = ""
+            best_rule_relevance_str = 0
         best_rule_bits = best_rule.split(";")
+        
 
         best_rule_facts = []
         j = 0
         while j < len(best_rule_bits):
-            cur_head_name = best_rule_bits[j]
-            cur_rel_name = best_rule_bits[j+1]
-            cur_tail_name = best_rule_bits[j+2]
+            if(len(best_rule_bits) >= 3):
+                cur_head_name = best_rule_bits[j]
+                cur_rel_name = best_rule_bits[j+1]
+                cur_tail_name = best_rule_bits[j+2]
 
-            best_rule_facts.append((cur_head_name, cur_rel_name, cur_tail_name))
+                best_rule_facts.append((cur_head_name, cur_rel_name, cur_tail_name))
             j+=3
 
         best_rule_samples = [dataset.fact_to_sample(x) for x in best_rule_facts]

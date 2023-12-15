@@ -22,7 +22,7 @@ COLOR_4 = "#f44336"
 
 def read_necessary_output_end_to_end(filepath):
     fact_to_explain_2_explanation_length = {}
-    with open(filepath, "r") as input_file:
+    with open(filepath, "r",encoding="latin-1") as input_file:  # Specify the encoding
         input_lines = input_file.readlines()
         for line in input_lines:
             bits = line.strip().split(";")
@@ -108,7 +108,8 @@ END_TO_END_EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__fi
 def aggregate_lengths(lengths):
     output = {1:0, 2:0, 3:0, 4:0}
     for length in lengths:
-        output[length] += 1
+        if length in output:
+            output[length] += 1
     return output
 
 
@@ -132,9 +133,12 @@ parser.add_argument("--save",
                     default=False,
                     help="Whether to just show the plot or save it in Kelpie/reproducibility_images")
 
-models = ["TransE", "ComplEx", "ConvE"]
+# models = ["TransE", "ComplEx", "ConvE"]
+# modes = ["necessary", "sufficient"]
+# datasets = ["FB15k", "WN18", "FB15k-237", "WN18RR", "YAGO3-10"]
+models = ["ConvE"]
 modes = ["necessary", "sufficient"]
-datasets = ["FB15k", "WN18", "FB15k-237", "WN18RR", "YAGO3-10"]
+datasets = ["antique"]
 
 counts = {}
 for _model in models:
@@ -160,7 +164,8 @@ save = args.save
 
 counts_to_show = counts[model][mode]
 
-labels = ALL_DATASET_NAMES
+# labels = ALL_DATASET_NAMES
+labels = ["antique"]
 counts_to_show_1 = [counts_to_show[dataset_name][1] for dataset_name in labels]
 counts_to_show_2 = [counts_to_show[dataset_name][2] for dataset_name in labels]
 counts_to_show_3 = [counts_to_show[dataset_name][3] for dataset_name in labels]

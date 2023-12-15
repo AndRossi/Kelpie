@@ -15,8 +15,8 @@ COMPLEX = "ComplEx"
 CONVE = "ConvE"
 TRANSE = "TransE"
 
-labels = [COMPLEX, CONVE, TRANSE]
-
+# labels = [COMPLEX, CONVE, TRANSE]
+labels = [CONVE]
 parser = argparse.ArgumentParser(description="Model-agnostic tool for explaining link predictions")
 
 parser.add_argument("--mode",

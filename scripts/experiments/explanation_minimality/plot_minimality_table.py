@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 def read_necessary_output_end_to_end(filepath):
     fact_to_explain_2_details = {}
-    with open(filepath, "r") as input_file:
+    with open(filepath, "r", encoding="latin-1") as input_file:  # Specify the encoding
         input_lines = input_file.readlines()
         for line in input_lines:
             bits = line.strip().split(";")
@@ -58,7 +58,7 @@ def read_necessary_output_end_to_end(filepath):
 def read_sufficient_output_end_to_end(filepath):
     fact_to_convert_2_details = {}
     fact_to_convert_2_original_fact_to_explain = {}
-    with open(filepath, "r") as input_file:
+    with open(filepath, "r", encoding="latin-1") as input_file:  # Specify the encoding
         input_lines = input_file.readlines()
         for line in input_lines:
             bits = line.strip().split(";")
@@ -118,8 +118,10 @@ def mr(ranks):
 KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
 END_TO_END_EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, "end_to_end"))
 
-models = ["TransE", "ComplEx", "ConvE"]
-datasets = ["FB15k", "WN18", "FB15k237", "WN18RR", "YAGO3-10"]
+# models = ["TransE", "ComplEx", "ConvE"]
+# datasets = ["FB15k", "WN18", "FB15k237", "WN18RR", "YAGO3-10"]
+models = ["ConvE"]
+datasets = ["antique"]
 mode = args.mode
 save = args.save
 
@@ -201,11 +203,13 @@ for model in models:
 
     output_data.append(new_data_row)
 
-column_labels = ["Fb15k\nH@1", "FB15k\nMRR",
-                 "WN18\nH@1", "WN18\nMRR",
-                 "Fb15k237\nH@1", "FB15k237\nMRR",
-                 "WN18RR\nH@1", "WN18RR\nMRR",
-                 "YAGO3-10\nH@1", "YAGO3-10\nMRR"]
+# column_labels = ["Fb15k\nH@1", "FB15k\nMRR",
+#                  "WN18\nH@1", "WN18\nMRR",
+#                  "Fb15k237\nH@1", "FB15k237\nMRR",
+#                  "WN18RR\nH@1", "WN18RR\nMRR",
+#                  "YAGO3-10\nH@1", "YAGO3-10\nMRR"]
+
+column_labels = ["antique\nH@1", "antique\nMRR"]
 
 fig = plt.figure(figsize=(9, 1.5))
 ax = fig.gca()

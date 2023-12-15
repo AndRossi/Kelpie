@@ -13,8 +13,9 @@ FB15K_237 = "FB15k-237"
 WN18 = "WN18"
 WN18RR = "WN18RR"
 YAGO3_10 = "YAGO3-10"
+ANTIQUE = "antique"
 
-ALL_DATASET_NAMES = [FB15K, FB15K_237, WN18, WN18RR, YAGO3_10]
+ALL_DATASET_NAMES = [FB15K, FB15K_237, WN18, WN18RR, YAGO3_10, ANTIQUE]
 
 # relation types
 ONE_TO_ONE="1-1"
@@ -285,7 +286,7 @@ class Dataset:
                  was actually included in the training set, so it was possible to remove it; False otherwise.
         """
 
-        indices_to_remove = []
+        indices_to_remove = numpy.array([], dtype=int)
         removed_samples = []
         output = []
         for sample_to_remove in samples_to_remove:
@@ -293,8 +294,7 @@ class Dataset:
 
             if (head, rel, tail) in self.train_samples_set:
                 index = numpy.where(numpy.all(self.train_samples == sample_to_remove, axis=1))
-                indices_to_remove.append(index[0])
-                removed_samples.append(self.train_samples[index[0]])
+                indices_to_remove = numpy.concatenate((indices_to_remove, index[0]))
 
                 self.to_filter[(head, rel)].remove(tail)
                 self.to_filter[(tail, rel + self.num_direct_relations)].remove(head)
@@ -303,7 +303,10 @@ class Dataset:
             else:
                 output.append(False)
 
-        self.train_samples = numpy.delete(self.train_samples, indices_to_remove, axis=0)
+        # Ensure indices are unique before deleting
+        unique_indices_to_remove = numpy.unique(indices_to_remove)
+
+        self.train_samples = numpy.delete(self.train_samples, unique_indices_to_remove, axis=0)
         return output
 
     def remove_training_sample(self, sample_to_remove: numpy.array):

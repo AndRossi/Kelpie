@@ -69,6 +69,12 @@ class TopologyPreFilter(PreFilter):
 
         start_entity, end_entity = (head, tail) if perspective == "head" else (tail, head)
 
+        if not start_entity in self.entity_id_2_train_samples:
+            # Handle the case where the start entity is not found
+            # For example, you could return an empty list or log a warning
+            print(f"Warning: Entity ID {start_entity} not found in training samples.")
+            return []
+
         samples_featuring_start_entity = self.entity_id_2_train_samples[start_entity]
 
         sample_to_analyze_2_min_path_length = {}

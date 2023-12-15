@@ -1,0 +1,195 @@
+<jonathan_and_cari_markell, bought_from, robert_olson>
+        Direct score: from 0.9906754493713379 to 0.038600072264671326
+        Tail rank: from 1 to 3
+
+<gianfranco_becchina, owned, antike_kunst_palladion>
+        Direct score: from 0.9892767667770386 to 0.000790424644947052
+        Tail rank: from 1 to 1744
+
+<abraham_trust, partnered, geoffrey_jenkinson>
+        Direct score: from 0.98939448595047 to 0.0009866236941888928
+        Tail rank: from 1 to 1364
+
+<local_businesswoman, worked_with, police>
+        Direct score: from 0.04305073991417885 to 0.007557391654700041
+        Tail rank: from 1 to 1
+
+<miho_museum, bought_from, noriyoshi_horiuchi>
+        Direct score: from 0.9886916875839233 to 6.875389226479456e-05
+        Tail rank: from 1 to 2740
+
+<vaman_ghiya, owned, artistic_imports_corporation>
+        Direct score: from 0.994551956653595 to 0.2932380437850952
+        Tail rank: from 1 to 2
+
+<metropolitan_museum_of_art, bought_from, alan_c_lapiner>
+        Direct score: from 0.9944922924041748 to 0.28203633427619934
+        Tail rank: from 1 to 1
+
+<giacomo_medici, owned, antiquaria_romana>
+        Direct score: from 0.9924873113632202 to 0.0007657310925424099
+        Tail rank: from 1 to 1304
+
+<metropolitan_museum_of_art, bought_from, leon_j_buki>
+        Direct score: from 0.9944708347320557 to 0.2782553732395172
+        Tail rank: from 1 to 1
+
+<metropolitan_museum_of_art, bought_from, gianfranco_becchina>
+        Direct score: from 0.995322048664093 to 0.620367705821991
+        Tail rank: from 1 to 1
+
+<fairlight_art_ventures, bought_from, giuliano_ruffini>
+        Direct score: from 0.7959855794906616 to 0.010053540579974651
+        Tail rank: from 1 to 7
+
+<j_paul_getty_museum, bought_from, dietrich_von_bothmer>
+        Direct score: from 0.9963207244873047 to 0.0011709220707416534
+        Tail rank: from 1 to 2086
+
+<leon_levy, donated_to, boston_museum_of_fine_arts>
+        Direct score: from 0.9883338212966919 to 0.000788940757047385
+        Tail rank: from 1 to 690
+
+<edward_merrin, owned, merrin_gallery>
+        Direct score: from 0.9922424554824829 to 0.0007598193478770554
+        Tail rank: from 1 to 965
+
+<art_consultancy, bought_from, mansur_mokhtarzade>
+        Direct score: from 0.9930338859558105 to 0.0234393160790205
+        Tail rank: from 1 to 1
+
+<art_consultancy, bought_from, halim_korban>
+        Direct score: from 0.9927321076393127 to 0.027864553034305573
+        Tail rank: from 1 to 1
+
+<fairlight_art_ventures, worked_with, giuliano_ruffini>
+        Direct score: from 0.14460159838199615 to 0.0013197421794757247
+        Tail rank: from 1 to 204
+
+<toledo_museum_of_art, bought_from, gianfranco_becchina>
+        Direct score: from 0.995062530040741 to 0.002646289998665452
+        Tail rank: from 1 to 87
+
+<giacomo_medici, owned, tecafin_fiduciaire>
+        Direct score: from 0.9950407147407532 to 0.6726910471916199
+        Tail rank: from 1 to 1
+
+<museum_of_primitive_art, bought_from, alan_c_lapiner>
+        Direct score: from 0.9938068985939026 to 0.7511629462242126
+        Tail rank: from 1 to 1
+
+<j_paul_getty_museum, bought_from, giacomo_medici>
+        Direct score: from 0.9986225366592407 to 0.19466495513916016
+        Tail rank: from 1 to 1
+
+<boston_museum_of_fine_arts, bought_from, robert_hecht>
+        Direct score: from 0.9948429465293884 to 0.005625056568533182
+        Tail rank: from 1 to 28
+
+<shelby_white, donated_to, museum_of_fine_arts>
+        Direct score: from 0.9882209300994873 to 0.002560518914833665
+        Tail rank: from 1 to 118
+
+<museum_of_primitive_art, bought_from, leon_j_buki>
+        Direct score: from 0.9937350153923035 to 0.7425728440284729
+        Tail rank: from 1 to 1
+
+<j_paul_getty_museum, bought_from, robin_symes>
+        Direct score: from 0.997547447681427 to 0.019154641777276993
+        Tail rank: from 1 to 17
+
+<michael_rockefeller, donated_to, museum_of_primitive_art>
+        Direct score: from 0.9890515208244324 to 0.0008813126478344202
+        Tail rank: from 1 to 488
+
+<j_paul_getty_museum, bought_from, frederick_schultz>
+        Direct score: from 0.9957362413406372 to 0.3931324779987335
+        Tail rank: from 1 to 1
+
+<metropolitan_museum_of_art, bought_from, giacomo_medici>
+        Direct score: from 0.9908835291862488 to 0.013614707626402378
+        Tail rank: from 1 to 13
+
+<michael_ward, owned, michael_ward_gallery>
+        Direct score: from 0.9938809871673584 to 0.00209889467805624
+        Tail rank: from 1 to 76
+
+<butterfields, bought_from, ong_soo_hin>
+        Direct score: from 0.9947287440299988 to 0.05802382901310921
+        Tail rank: from 1 to 11
+
+<thomas_bruce_7th_earl_of_elgin, sold_to, british_government>
+        Direct score: from 0.9849193096160889 to 0.0006449911743402481
+        Tail rank: from 1 to 600
+
+<j_paul_getty_museum, bought_from, frieda_tchacos>
+        Direct score: from 0.9979137778282166 to 0.030636005103588104
+        Tail rank: from 1 to 13
+
+<giacomo_medici, owned, arts_franc>
+        Direct score: from 0.9951514005661011 to 0.7002706527709961
+        Tail rank: from 1 to 1
+
+<metropolitan_museum_of_art, bought_from, juan_luis_pereira>
+        Direct score: from 0.9945693612098694 to 0.2704489529132843
+        Tail rank: from 1 to 1
+
+<marquess_of_northampton, bought_from, korban_and_tkalec>
+        Direct score: from 0.9434358477592468 to 0.0006997628370299935
+        Tail rank: from 1 to 1292
+
+<giacomo_medici, owned, geneva-based_editions_services>
+        Direct score: from 0.9951097369194031 to 0.7113814353942871
+        Tail rank: from 1 to 1
+
+<j_paul_getty_museum, bought_from, barbara_fleischman>
+        Direct score: from 0.996807336807251 to 0.5497835278511047
+        Tail rank: from 1 to 1
+
+<christian_boursaud, owned, hydra_gallery>
+        Direct score: from 0.9949333071708679 to 0.023687226697802544
+        Tail rank: from 1 to 14
+
+<j_paul_getty_museum, bought_from, maurice_tempelsman>
+        Direct score: from 0.9960898160934448 to 0.032138410955667496
+        Tail rank: from 1 to 12
+
+<nelson_rockefeller, donated_to, museum_of_primitive_art>
+        Direct score: from 0.9885796904563904 to 0.0025692214258015156
+        Tail rank: from 1 to 71
+
+<british_museum, bought_from, alistair_mcalpine>
+        Direct score: from 0.9934184551239014 to 0.00037192879244685173
+        Tail rank: from 1 to 2655
+
+<hunt_brothers, bought_from, giacomo_medici>
+        Direct score: from 0.9923641681671143 to 0.005211130250245333
+        Tail rank: from 1 to 4
+
+<museum_of_primitive_art, bought_from, juan_luis_pereira>
+        Direct score: from 0.993467390537262 to 0.738873302936554
+        Tail rank: from 1 to 1
+
+<berry_&_stark_associates, bought_from, edward_merrin>
+        Direct score: from 0.990096926689148 to 0.019420288503170013
+        Tail rank: from 1 to 10
+
+<merrin_gallery, bought_from, gianfranco_becchina>
+        Direct score: from 0.994726836681366 to 0.009844062849879265
+        Tail rank: from 1 to 2
+
+<giacomo_medici, owned, mat_securitas>
+        Direct score: from 0.9951364398002625 to 0.6884918808937073
+        Tail rank: from 1 to 1
+
+<gardener, worked_with, police>
+        Direct score: from 0.04305059090256691 to 0.007557551842182875
+        Tail rank: from 1 to 1
+
+<j_paul_getty_museum, bought_from, samuel_schweitzer>
+        Direct score: from 0.9968615770339966 to 0.4590195119380951
+        Tail rank: from 1 to 1
+
+<dr_pradip_meshram, worked_with, police>
+        Direct score: from 0.04305104911327362 to 0.007557823788374662
+        Tail rank: from 1 to 1
