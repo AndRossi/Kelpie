@@ -14,6 +14,12 @@ if os.path.exists(file_path):
     # Load CSV file
     df = pd.read_csv(file_path)
 
+    # Replace spaces with underscores in column names
+    df.columns = df.columns.str.replace(' ', '_')
+
+    # Replace spaces with underscores in each entry
+    df = df.apply(lambda col: col.str.replace(' ', '_') if col.name != 'Split' else col)
+
     # Split ratios
     train_ratio = 0.7
     validation_ratio = 0.15

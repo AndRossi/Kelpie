@@ -117,9 +117,13 @@ def mr(ranks):
 KELPIE_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
 END_TO_END_EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__file__), os.pardir))
 
-systems = ["K1", "Kelpie", "DP", "Criage"]
-models = ["TransE", "ComplEx", "ConvE"]
-datasets = ["FB15k", "WN18", "FB15k237", "WN18RR", "YAGO3-10"]
+# systems = ["K1", "Kelpie", "DP", "Criage"]
+# models = ["TransE", "ComplEx", "ConvE"]
+# datasets = ["FB15k", "WN18", "FB15k237", "WN18RR", "YAGO3-10"]
+
+systems = ["Kelpie", "Criage"]
+models = ["ConvE"]
+datasets = ["antique"]
 mode = args.mode
 save = args.save
 
@@ -174,11 +178,13 @@ for model in models:
             new_data_row.append(mrr_difference_str)
         output_data.append(new_data_row)
 
-column_labels = ["Fb15k\nH@1", "FB15k\nMRR",
-                 "WN18\nH@1", "WN18\nMRR",
-                 "Fb15k237\nH@1", "FB15k237\nMRR",
-                 "WN18RR\nH@1", "WN18RR\nMRR",
-                 "YAGO3-10\nH@1", "YAGO3-10\nMRR"]
+# column_labels = ["antique\nH@1", "antique\nMRR",
+#                  "WN18\nH@1", "WN18\nMRR",
+#                  "Fb15k237\nH@1", "FB15k237\nMRR",
+#                  "WN18RR\nH@1", "WN18RR\nMRR",
+#                  "YAGO3-10\nH@1", "YAGO3-10\nMRR"]
+column_labels = ["antique\nH@1", "antique\nMRR",]
+
 
 fig = plt.figure(figsize=(9, 3))
 ax = fig.gca()
