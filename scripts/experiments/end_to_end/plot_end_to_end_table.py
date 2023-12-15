@@ -121,7 +121,7 @@ END_TO_END_EXPERIMENT_ROOT = os.path.realpath(os.path.join(os.path.realpath(__fi
 # models = ["TransE", "ComplEx", "ConvE"]
 # datasets = ["FB15k", "WN18", "FB15k237", "WN18RR", "YAGO3-10"]
 
-systems = ["Kelpie", "Criage"]
+systems = ["Kelpie"]
 models = ["ConvE"]
 datasets = ["antique"]
 mode = args.mode

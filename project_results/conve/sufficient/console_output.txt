@@ -1,0 +1,1023 @@
+<sindika_dokolo, bought_from, leon_j_buki>
+        Direct score: from 0.0020129717886447906 to 0.9969801306724548
+        Tail rank: from 129 to 1
+
+<charles_chislet, bought_from, leon_j_buki>
+        Direct score: from 0.00972723588347435 to 0.9949215054512024
+        Tail rank: from 15 to 1
+
+<sebastian_kruger, bought_from, leon_j_buki>
+        Direct score: from 0.0021184193901717663 to 0.9967947602272034
+        Tail rank: from 60 to 1
+
+<bill_verick, bought_from, leon_j_buki>
+        Direct score: from 0.000409604370361194 to 0.9963914752006531
+        Tail rank: from 2215 to 1
+
+<david_bernstein, bought_from, leon_j_buki>
+        Direct score: from 0.007901742123067379 to 0.9954091906547546
+        Tail rank: from 22 to 1
+
+<mehdi_meftah, bought_from, leon_j_buki>
+        Direct score: from 0.0016783790197223425 to 0.9977735877037048
+        Tail rank: from 116 to 1
+
+<charles_craig, bought_from, robin_symes>
+        Direct score: from 0.0006645175744779408 to 0.9910921454429626
+        Tail rank: from 2023 to 1
+
+<university_of_athens, bought_from, robin_symes>
+        Direct score: from 0.0020309481769800186 to 0.9916132688522339
+        Tail rank: from 43 to 1
+
+<jacqueline, bought_from, robin_symes>
+        Direct score: from 0.004529111087322235 to 0.9921818971633911
+        Tail rank: from 24 to 1
+
+<20_cultural_organizations, bought_from, robin_symes>
+        Direct score: from 0.0007067968253977597 to 0.9947943091392517
+        Tail rank: from 455 to 1
+
+<pereda, bought_from, robin_symes>
+        Direct score: from 0.0007053547888062894 to 0.9896397590637207
+        Tail rank: from 1991 to 1
+
+<gbenga_richards, bought_from, robin_symes>
+        Direct score: from 0.0037466986104846 to 0.9896106719970703
+        Tail rank: from 22 to 1
+
+<old_master_dealer, bought_from, robin_symes>
+        Direct score: from 0.021221110597252846 to 0.9834482669830322
+        Tail rank: from 4 to 1
+
+<bobbyo, bought_from, robin_symes>
+        Direct score: from 0.0011847324203699827 to 0.9937881827354431
+        Tail rank: from 354 to 1
+
+<elton_allaraj, bought_from, robin_symes>
+        Direct score: from 0.04391049966216087 to 0.9947130084037781
+        Tail rank: from 4 to 1
+
+<theft, bought_from, robin_symes>
+        Direct score: from 0.00729205971583724 to 0.9950792789459229
+        Tail rank: from 22 to 1
+
+<172_galleries_auction_houses_and_museums, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0005406697746366262 to 0.9944688081741333
+        Tail rank: from 437 to 1
+
+<e_pfuhl, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00035504711559042335 to 0.9907650947570801
+        Tail rank: from 2062 to 1
+
+<ong_soo_hin, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00020461496023926884 to 0.99272620677948
+        Tail rank: from 2860 to 1
+
+<bible_lands_museum, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00013758245040662587 to 0.9948520064353943
+        Tail rank: from 2867 to 1
+
+<heritage_management, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00015351582260336727 to 0.9904965162277222
+        Tail rank: from 2566 to 1
+
+<arquatec, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0003778197569772601 to 0.9943637847900391
+        Tail rank: from 716 to 1
+
+<pangkor_gallery, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00041737902211025357 to 0.9916771650314331
+        Tail rank: from 662 to 1
+
+<michael_ratner, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0015274181496351957 to 0.9952408075332642
+        Tail rank: from 118 to 1
+
+<templos_catâˆšâ‰¥licos, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00016992002201732248 to 0.9928010702133179
+        Tail rank: from 2632 to 1
+
+<dealers_in_thailand, donated_to, museum_of_primitive_art>
+        Direct score: from 0.002702669007703662 to 0.9941065311431885
+        Tail rank: from 54 to 1
+
+<pat_trivigno, bought_from, frederick_schultz>
+        Direct score: from 0.0017404957907274365 to 0.9917207956314087
+        Tail rank: from 59 to 1
+
+<julio_ullilâˆšâ©n, bought_from, frederick_schultz>
+        Direct score: from 0.004830881487578154 to 0.9944854378700256
+        Tail rank: from 52 to 1
+
+<galleri_nobel, bought_from, frederick_schultz>
+        Direct score: from 0.0016572853783145547 to 0.9945425987243652
+        Tail rank: from 94 to 1
+
+<warren_adelson, bought_from, frederick_schultz>
+        Direct score: from 0.001116276253014803 to 0.9935275912284851
+        Tail rank: from 102 to 1
+
+<five_tribes_in_the_coalition_, bought_from, frederick_schultz>
+        Direct score: from 0.0008099847473204136 to 0.9885313510894775
+        Tail rank: from 97 to 1
+
+<a_vase, bought_from, frederick_schultz>
+        Direct score: from 0.0025344083551317453 to 0.9938063621520996
+        Tail rank: from 68 to 1
+
+<athens, bought_from, frederick_schultz>
+        Direct score: from 0.0009157995227724314 to 0.9905371069908142
+        Tail rank: from 279 to 1
+
+<german_protestant_institute_of_archaeology, bought_from, frederick_schultz>
+        Direct score: from 0.002124651800841093 to 0.9953566193580627
+        Tail rank: from 36 to 1
+
+<holborn_cid, bought_from, frederick_schultz>
+        Direct score: from 0.001741326879709959 to 0.9883298873901367
+        Tail rank: from 61 to 1
+
+<policâˆšâ‰ a, bought_from, frederick_schultz>
+        Direct score: from 0.0007586852298118174 to 0.9960958361625671
+        Tail rank: from 386 to 1
+
+<a_santa_barbara_musem, bought_from, giacomo_medici>
+        Direct score: from 0.0035300154704600573 to 0.9947732090950012
+        Tail rank: from 6 to 1
+
+<musâˆšâ©e_dorsay, bought_from, giacomo_medici>
+        Direct score: from 0.028908967971801758 to 0.9966810345649719
+        Tail rank: from 2 to 1
+
+<private_sales_, bought_from, giacomo_medici>
+        Direct score: from 0.013262656517326832 to 0.9951424598693848
+        Tail rank: from 4 to 1
+
+<el_manatâˆšâ‰ _style_busts, bought_from, giacomo_medici>
+        Direct score: from 0.007583464961498976 to 0.9938064813613892
+        Tail rank: from 6 to 1
+
+<sezai_portakalci, bought_from, giacomo_medici>
+        Direct score: from 0.03506152331829071 to 0.9962353110313416
+        Tail rank: from 5 to 1
+
+<cadw_, bought_from, giacomo_medici>
+        Direct score: from 0.044933781027793884 to 0.9944760203361511
+        Tail rank: from 2 to 1
+
+<william_toye, bought_from, giacomo_medici>
+        Direct score: from 0.10296943038702011 to 0.9964284300804138
+        Tail rank: from 3 to 1
+
+<guatemala, bought_from, giacomo_medici>
+        Direct score: from 0.00030649485415779054 to 0.9961684346199036
+        Tail rank: from 2680 to 1
+
+<emma_bunker, bought_from, giacomo_medici>
+        Direct score: from 0.0043146018870174885 to 0.9959027171134949
+        Tail rank: from 12 to 1
+
+<brienne_the_dog, bought_from, giacomo_medici>
+        Direct score: from 0.020339548587799072 to 0.9969381093978882
+        Tail rank: from 4 to 1
+
+<african_governments, owned, michael_ward_gallery>
+        Direct score: from 0.0027327972929924726 to 0.9922961592674255
+        Tail rank: from 28 to 1
+
+<crystal_caves_museum, owned, michael_ward_gallery>
+        Direct score: from 0.007722785696387291 to 0.9924607872962952
+        Tail rank: from 23 to 1
+
+<her_husband, owned, michael_ward_gallery>
+        Direct score: from 0.004544202238321304 to 0.99324631690979
+        Tail rank: from 24 to 1
+
+<131_out_of_195_member_states, owned, michael_ward_gallery>
+        Direct score: from 0.011435247026383877 to 0.9885647892951965
+        Tail rank: from 17 to 1
+
+<mariane_yaldiz, owned, michael_ward_gallery>
+        Direct score: from 0.03313598781824112 to 0.9919553399085999
+        Tail rank: from 7 to 1
+
+<temple_in_kawardha, owned, michael_ward_gallery>
+        Direct score: from 0.007661258801817894 to 0.9891393780708313
+        Tail rank: from 23 to 1
+
+<ministerio_pâˆšâˆ«blico, owned, michael_ward_gallery>
+        Direct score: from 0.0056571634486317635 to 0.9898228645324707
+        Tail rank: from 23 to 1
+
+<tom_mashberg, owned, michael_ward_gallery>
+        Direct score: from 0.0014872574247419834 to 0.9932191967964172
+        Tail rank: from 48 to 1
+
+<maheshwar_singh, owned, michael_ward_gallery>
+        Direct score: from 0.00941096618771553 to 0.9950835704803467
+        Tail rank: from 18 to 1
+
+<milwaukee, owned, michael_ward_gallery>
+        Direct score: from 0.002948421286419034 to 0.992932915687561
+        Tail rank: from 37 to 1
+
+<duke_university, bought_from, ong_soo_hin>
+        Direct score: from 0.010648159310221672 to 0.990570068359375
+        Tail rank: from 7 to 1
+
+<royal_government_of_cambodia, bought_from, ong_soo_hin>
+        Direct score: from 0.013253075070679188 to 0.9935218691825867
+        Tail rank: from 3 to 1
+
+<chinese_embassy, bought_from, ong_soo_hin>
+        Direct score: from 0.0023182816803455353 to 0.9945236444473267
+        Tail rank: from 105 to 1
+
+<terrorist_organizations, bought_from, ong_soo_hin>
+        Direct score: from 0.002155592432245612 to 0.9923374056816101
+        Tail rank: from 108 to 1
+
+<four-member_gang, bought_from, ong_soo_hin>
+        Direct score: from 0.0011987562756985426 to 0.9957334399223328
+        Tail rank: from 370 to 1
+
+<la_iglesia_catâˆšâ‰¥lica, bought_from, ong_soo_hin>
+        Direct score: from 0.00022928797989152372 to 0.992956280708313
+        Tail rank: from 2556 to 1
+
+<rosa_manuel_pascual, bought_from, ong_soo_hin>
+        Direct score: from 0.0023587101604789495 to 0.9949303269386292
+        Tail rank: from 54 to 1
+
+<glenn_rittenour, bought_from, ong_soo_hin>
+        Direct score: from 0.002123200334608555 to 0.9909049868583679
+        Tail rank: from 85 to 1
+
+<blockchain_technology, bought_from, ong_soo_hin>
+        Direct score: from 0.0015436618123203516 to 0.9912137389183044
+        Tail rank: from 81 to 1
+
+<khaled_el-enani, bought_from, ong_soo_hin>
+        Direct score: from 0.0003688801662065089 to 0.9954392313957214
+        Tail rank: from 596 to 1
+
+<morley_museum, sold_to, british_government>
+        Direct score: from 0.004072991199791431 to 0.9939395189285278
+        Tail rank: from 59 to 1
+
+<royal_athena_galleries, sold_to, british_government>
+        Direct score: from 0.0015603135107085109 to 0.9903892874717712
+        Tail rank: from 83 to 1
+
+<gang_of_burglars, sold_to, british_government>
+        Direct score: from 0.0022040463518351316 to 0.9937132000923157
+        Tail rank: from 76 to 1
+
+<district_administration, sold_to, british_government>
+        Direct score: from 0.0009387056925334036 to 0.9917619228363037
+        Tail rank: from 211 to 1
+
+<los_angeles_city_planning_department, sold_to, british_government>
+        Direct score: from 0.0038810204714536667 to 0.9933481812477112
+        Tail rank: from 36 to 1
+
+<flanders_heritage_agency, sold_to, british_government>
+        Direct score: from 0.007993444800376892 to 0.9939382076263428
+        Tail rank: from 11 to 1
+
+<web-based_resources, sold_to, british_government>
+        Direct score: from 0.0007297627162188292 to 0.989458441734314
+        Tail rank: from 241 to 1
+
+<three_men, sold_to, british_government>
+        Direct score: from 0.002247151918709278 to 0.9967240691184998
+        Tail rank: from 195 to 1
+
+<hsi_headquarters_cultural_property_arts_and_antiquities_(cpaa)_division, sold_to, british_government>
+        Direct score: from 0.0007467241957783699 to 0.9932835102081299
+        Tail rank: from 338 to 1
+
+<hama_national_museum, sold_to, british_government>
+        Direct score: from 0.00024396467779297382 to 0.9957565665245056
+        Tail rank: from 2328 to 1
+
+<fred_jones_jr._museum_of_art, bought_from, frieda_tchacos>
+        Direct score: from 0.00045157442218624055 to 0.9930316209793091
+        Tail rank: from 623 to 1
+
+<timothy_sammons, bought_from, frieda_tchacos>
+        Direct score: from 0.0016432185657322407 to 0.9956628680229187
+        Tail rank: from 254 to 1
+
+<artistic_imports_corporation, bought_from, frieda_tchacos>
+        Direct score: from 0.0005782634252682328 to 0.9955119490623474
+        Tail rank: from 652 to 1
+
+<norton_museum_of_art, bought_from, frieda_tchacos>
+        Direct score: from 0.0005926071899011731 to 0.9946428537368774
+        Tail rank: from 630 to 1
+
+<mensun_bound, bought_from, frieda_tchacos>
+        Direct score: from 0.00026264743064530194 to 0.9911847710609436
+        Tail rank: from 2320 to 1
+
+<fbi_art_crimes_team, bought_from, frieda_tchacos>
+        Direct score: from 0.000795219384599477 to 0.9909595251083374
+        Tail rank: from 145 to 1
+
+<a_seattle_museum, bought_from, frieda_tchacos>
+        Direct score: from 0.0002222209150204435 to 0.9916906356811523
+        Tail rank: from 2877 to 1
+
+<state_museums, bought_from, frieda_tchacos>
+        Direct score: from 0.0012015736429020762 to 0.9932302236557007
+        Tail rank: from 88 to 1
+
+<max_beckmann, bought_from, frieda_tchacos>
+        Direct score: from 0.0009816908277571201 to 0.9927372336387634
+        Tail rank: from 130 to 1
+
+<giuseppe_mascara, bought_from, frieda_tchacos>
+        Direct score: from 0.0026054258923977613 to 0.9903088212013245
+        Tail rank: from 45 to 1
+
+<kanagaraj, owned, arts_franc>
+        Direct score: from 0.0010219543473795056 to 0.9956503510475159
+        Tail rank: from 246 to 1
+
+<la_policâˆšâ‰ a_municipal, owned, arts_franc>
+        Direct score: from 0.022192085161805153 to 0.9930048584938049
+        Tail rank: from 8 to 1
+
+<yakama_nation, owned, arts_franc>
+        Direct score: from 0.01017458364367485 to 0.9881876111030579
+        Tail rank: from 18 to 1
+
+<turkish_academics, owned, arts_franc>
+        Direct score: from 0.0034240835811942816 to 0.994640588760376
+        Tail rank: from 40 to 1
+
+<geldart_pub, owned, arts_franc>
+        Direct score: from 0.006342682987451553 to 0.9943968057632446
+        Tail rank: from 17 to 1
+
+<david_schor, owned, arts_franc>
+        Direct score: from 0.016084201633930206 to 0.9905390739440918
+        Tail rank: from 13 to 1
+
+<equipo_de_conservaciâˆšâ‰¥n, owned, arts_franc>
+        Direct score: from 0.011401374824345112 to 0.9920544624328613
+        Tail rank: from 18 to 1
+
+<idol_wing_police, owned, arts_franc>
+        Direct score: from 0.015488837845623493 to 0.9929704070091248
+        Tail rank: from 10 to 1
+
+<rajesh, owned, arts_franc>
+        Direct score: from 0.0055167172104120255 to 0.9922493696212769
+        Tail rank: from 17 to 1
+
+<henry_moore_foundation, owned, arts_franc>
+        Direct score: from 0.0030741069931536913 to 0.9951851963996887
+        Tail rank: from 28 to 1
+
+<louvre, bought_from, juan_luis_pereira>
+        Direct score: from 0.0054613640531897545 to 0.9935535192489624
+        Tail rank: from 17 to 1
+
+<world_war_bonsai_remembrance_&_resilience, bought_from, juan_luis_pereira>
+        Direct score: from 0.0018105091294273734 to 0.9964383840560913
+        Tail rank: from 68 to 1
+
+<mycenaean_objects, bought_from, juan_luis_pereira>
+        Direct score: from 0.0034557508770376444 to 0.9964321851730347
+        Tail rank: from 27 to 1
+
+<shakambari_devi_temple_, bought_from, juan_luis_pereira>
+        Direct score: from 0.005125131923705339 to 0.9948450326919556
+        Tail rank: from 16 to 1
+
+<merrin_gallery, bought_from, juan_luis_pereira>
+        Direct score: from 0.006293253041803837 to 0.9912275671958923
+        Tail rank: from 16 to 1
+
+<firma_d._katz, bought_from, juan_luis_pereira>
+        Direct score: from 0.0011566084576770663 to 0.9973205924034119
+        Tail rank: from 95 to 1
+
+<egyptian_artefacts, bought_from, juan_luis_pereira>
+        Direct score: from 0.00917252991348505 to 0.9961554408073425
+        Tail rank: from 18 to 1
+
+<international_organizations, bought_from, juan_luis_pereira>
+        Direct score: from 0.006826236378401518 to 0.9922062754631042
+        Tail rank: from 10 to 1
+
+<james_gemmill, bought_from, juan_luis_pereira>
+        Direct score: from 0.0017414079047739506 to 0.9955894947052002
+        Tail rank: from 56 to 1
+
+<matisse, bought_from, juan_luis_pereira>
+        Direct score: from 0.0018029870698228478 to 0.9940582513809204
+        Tail rank: from 62 to 1
+
+<jim_broadbent, bought_from, korban_and_tkalec>
+        Direct score: from 0.000559016247279942 to 0.9920572638511658
+        Tail rank: from 577 to 1
+
+<cadw_, bought_from, korban_and_tkalec>
+        Direct score: from 0.010631099343299866 to 0.9943010807037354
+        Tail rank: from 8 to 1
+
+<figural_carvings, bought_from, korban_and_tkalec>
+        Direct score: from 0.002888041315600276 to 0.9946734309196472
+        Tail rank: from 21 to 1
+
+<ezra_chowaiki, bought_from, korban_and_tkalec>
+        Direct score: from 0.002652093069627881 to 0.9961368441581726
+        Tail rank: from 109 to 1
+
+<junta_of_castilla_and_leon, bought_from, korban_and_tkalec>
+        Direct score: from 0.00964716449379921 to 0.9898630380630493
+        Tail rank: from 7 to 1
+
+<josâ€šã ã¶_â©_luis_vâ€šã ã¶_âˆžrez_fisa, bought_from, korban_and_tkalec>
+        Direct score: from 0.0022330477368086576 to 0.9918913841247559
+        Tail rank: from 34 to 1
+
+<dutch_parliament, bought_from, korban_and_tkalec>
+        Direct score: from 0.0015778488013893366 to 0.9936718940734863
+        Tail rank: from 104 to 1
+
+<mihai_iordan, bought_from, korban_and_tkalec>
+        Direct score: from 0.0034398394636809826 to 0.993800938129425
+        Tail rank: from 36 to 1
+
+<a_seattle_museum, bought_from, korban_and_tkalec>
+        Direct score: from 0.0032857644837349653 to 0.9949636459350586
+        Tail rank: from 11 to 1
+
+<ros_packer, bought_from, korban_and_tkalec>
+        Direct score: from 0.002949864137917757 to 0.996861457824707
+        Tail rank: from 56 to 1
+
+<reimbursement, owned, geneva-based_editions_services>
+        Direct score: from 0.0051758564077317715 to 0.9915202260017395
+        Tail rank: from 21 to 1
+
+<jilamara_arts_and_crafts_association, owned, geneva-based_editions_services>
+        Direct score: from 0.00454662274569273 to 0.9933390021324158
+        Tail rank: from 25 to 1
+
+<professor, owned, geneva-based_editions_services>
+        Direct score: from 0.016989585012197495 to 0.992419421672821
+        Tail rank: from 21 to 1
+
+<priest, owned, geneva-based_editions_services>
+        Direct score: from 0.013458814471960068 to 0.994513988494873
+        Tail rank: from 18 to 1
+
+<jaipur, owned, geneva-based_editions_services>
+        Direct score: from 0.012502656318247318 to 0.9921932816505432
+        Tail rank: from 16 to 1
+
+<tuesday_auction_, owned, geneva-based_editions_services>
+        Direct score: from 0.004200095310807228 to 0.9914078116416931
+        Tail rank: from 23 to 1
+
+<lawyer, owned, geneva-based_editions_services>
+        Direct score: from 0.012396149337291718 to 0.9959306120872498
+        Tail rank: from 18 to 1
+
+<vao_, owned, geneva-based_editions_services>
+        Direct score: from 0.00925129372626543 to 0.9909163117408752
+        Tail rank: from 18 to 1
+
+<jean_aurance, owned, geneva-based_editions_services>
+        Direct score: from 0.008264071308076382 to 0.994508683681488
+        Tail rank: from 18 to 1
+
+<isabella_stewart_gardner_museum, owned, geneva-based_editions_services>
+        Direct score: from 0.012511548586189747 to 0.9942734837532043
+        Tail rank: from 16 to 1
+
+<rex_clark, bought_from, barbara_fleischman>
+        Direct score: from 6.428379856515676e-05 to 0.991491973400116
+        Tail rank: from 3144 to 1
+
+<his_wife, bought_from, barbara_fleischman>
+        Direct score: from 8.712332783034071e-05 to 0.9934960603713989
+        Tail rank: from 3047 to 1
+
+<ronald_safdieh, bought_from, barbara_fleischman>
+        Direct score: from 0.00020072321058250964 to 0.9914349913597107
+        Tail rank: from 2616 to 1
+
+<afghanistan, bought_from, barbara_fleischman>
+        Direct score: from 0.0005857959040440619 to 0.9899654388427734
+        Tail rank: from 438 to 1
+
+<doggone_foundation, bought_from, barbara_fleischman>
+        Direct score: from 0.0001532750902697444 to 0.9907089471817017
+        Tail rank: from 2784 to 1
+
+<burial_of_prince_alemayehu, bought_from, barbara_fleischman>
+        Direct score: from 5.706513184122741e-05 to 0.9922764897346497
+        Tail rank: from 3209 to 1
+
+<husband, bought_from, barbara_fleischman>
+        Direct score: from 0.0003332501510158181 to 0.9928426742553711
+        Tail rank: from 1805 to 1
+
+<tiwi_artist_chris_black, bought_from, barbara_fleischman>
+        Direct score: from 5.16885775141418e-05 to 0.9903123378753662
+        Tail rank: from 3150 to 1
+
+<domenic_digiovanni, bought_from, barbara_fleischman>
+        Direct score: from 0.0002297525788890198 to 0.9859429597854614
+        Tail rank: from 2396 to 1
+
+<rupert_wace, bought_from, barbara_fleischman>
+        Direct score: from 0.001475481316447258 to 0.9912787079811096
+        Tail rank: from 267 to 1
+
+<paul_okeeffe, owned, hydra_gallery>
+        Direct score: from 0.017179541289806366 to 0.9938648343086243
+        Tail rank: from 11 to 1
+
+<william_grimes, owned, hydra_gallery>
+        Direct score: from 0.010541482828557491 to 0.9946186542510986
+        Tail rank: from 12 to 1
+
+<collector_of_19th_century_tahitian_art, owned, hydra_gallery>
+        Direct score: from 0.035508982837200165 to 0.9932439923286438
+        Tail rank: from 4 to 1
+
+<united_states_customs, owned, hydra_gallery>
+        Direct score: from 0.0075674946419894695 to 0.9962581396102905
+        Tail rank: from 26 to 1
+
+<supreme_peoples_procuratorate, owned, hydra_gallery>
+        Direct score: from 0.03942886367440224 to 0.9931150078773499
+        Tail rank: from 3 to 1
+
+<rembrandt_van_rijn, owned, hydra_gallery>
+        Direct score: from 0.02041463740170002 to 0.9936956763267517
+        Tail rank: from 7 to 1
+
+<weibo, owned, hydra_gallery>
+        Direct score: from 0.017093472182750702 to 0.9926717281341553
+        Tail rank: from 13 to 1
+
+<deena_dayalan, owned, hydra_gallery>
+        Direct score: from 0.13362224400043488 to 0.9953208565711975
+        Tail rank: from 5 to 1
+
+<joseph_gutheinz, owned, hydra_gallery>
+        Direct score: from 0.03478627651929855 to 0.9924383759498596
+        Tail rank: from 6 to 1
+
+<steve_sommer, owned, hydra_gallery>
+        Direct score: from 0.09514115005731583 to 0.9958606362342834
+        Tail rank: from 2 to 1
+
+<elizabeth_durack, bought_from, maurice_tempelsman>
+        Direct score: from 0.00010469970584381372 to 0.9911653399467468
+        Tail rank: from 2976 to 1
+
+<harry_brown, bought_from, maurice_tempelsman>
+        Direct score: from 0.0003231898881494999 to 0.9896894693374634
+        Tail rank: from 2847 to 1
+
+<villa_giulia, bought_from, maurice_tempelsman>
+        Direct score: from 0.0001288128987653181 to 0.9926502108573914
+        Tail rank: from 3009 to 1
+
+<hospice_kingston, bought_from, maurice_tempelsman>
+        Direct score: from 0.0005086811142973602 to 0.9950330257415771
+        Tail rank: from 696 to 1
+
+<el_museo_nacional_de_arqueologâˆšâ‰ a_subacuâˆšâ°tica, bought_from, maurice_tempelsman>
+        Direct score: from 0.0002566021867096424 to 0.9941347241401672
+        Tail rank: from 2183 to 1
+
+<russian_culture_ministry, bought_from, maurice_tempelsman>
+        Direct score: from 0.00021843086869921535 to 0.9917215704917908
+        Tail rank: from 2493 to 1
+
+<pieter_menten, bought_from, maurice_tempelsman>
+        Direct score: from 0.0003424949827603996 to 0.9898931384086609
+        Tail rank: from 2293 to 1
+
+<a_vase, bought_from, maurice_tempelsman>
+        Direct score: from 0.0008694303687661886 to 0.992418646812439
+        Tail rank: from 310 to 1
+
+<andrew_hall, bought_from, maurice_tempelsman>
+        Direct score: from 0.002229527570307255 to 0.9933397173881531
+        Tail rank: from 78 to 1
+
+<washington_state_department_of_archaeology_and_historic_preservation, bought_from, maurice_tempelsman>
+        Direct score: from 0.00021519302390515804 to 0.9908398985862732
+        Tail rank: from 2497 to 1
+
+<provincial_archaeological_museum, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0005020208191126585 to 0.9912713766098022
+        Tail rank: from 1755 to 1
+
+<local_quarry_workers, donated_to, museum_of_primitive_art>
+        Direct score: from 0.005366239696741104 to 0.99130779504776
+        Tail rank: from 31 to 1
+
+<piasa, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00034561430220492184 to 0.9913833141326904
+        Tail rank: from 2379 to 1
+
+<vincent_van_gogh, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00033341796370223165 to 0.9962669014930725
+        Tail rank: from 2564 to 1
+
+<lebanese_government, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0002933851210400462 to 0.9915659427642822
+        Tail rank: from 2002 to 1
+
+<equipo_de_conservaciâˆšâ‰¥n, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0003795855154749006 to 0.9938656687736511
+        Tail rank: from 727 to 1
+
+<chakravarteswara_temple, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0038694366812705994 to 0.9932007193565369
+        Tail rank: from 35 to 1
+
+<santa_barbara_museum_of_art, donated_to, museum_of_primitive_art>
+        Direct score: from 9.46840227697976e-05 to 0.9953180551528931
+        Tail rank: from 2984 to 1
+
+<domenic_digiovanni, donated_to, museum_of_primitive_art>
+        Direct score: from 0.00297263590618968 to 0.9922405481338501
+        Tail rank: from 58 to 1
+
+<comuna, donated_to, museum_of_primitive_art>
+        Direct score: from 0.0003137531166430563 to 0.9935592412948608
+        Tail rank: from 2061 to 1
+
+<$750m_to_hire_french_managers, bought_from, alistair_mcalpine>
+        Direct score: from 0.0009555407450534403 to 0.9922299981117249
+        Tail rank: from 165 to 1
+
+<libyan_embassy, bought_from, alistair_mcalpine>
+        Direct score: from 0.0005423359107226133 to 0.992226243019104
+        Tail rank: from 499 to 1
+
+<turkish_ministry_of_culture_and_tourism, bought_from, alistair_mcalpine>
+        Direct score: from 0.0022328458726406097 to 0.9950034022331238
+        Tail rank: from 51 to 1
+
+<philip_wilson, bought_from, alistair_mcalpine>
+        Direct score: from 0.0016297642141580582 to 0.9900244474411011
+        Tail rank: from 80 to 1
+
+<tiwi_artist_chris_black, bought_from, alistair_mcalpine>
+        Direct score: from 0.0015116753056645393 to 0.9936237335205078
+        Tail rank: from 71 to 1
+
+<nimbus_publishing, bought_from, alistair_mcalpine>
+        Direct score: from 0.0011153818340972066 to 0.9927626252174377
+        Tail rank: from 116 to 1
+
+<good_faith, bought_from, alistair_mcalpine>
+        Direct score: from 0.000711290689650923 to 0.9939042925834656
+        Tail rank: from 255 to 1
+
+<victoria_and_albert_museum, bought_from, alistair_mcalpine>
+        Direct score: from 0.0009124628268182278 to 0.9853537082672119
+        Tail rank: from 153 to 1
+
+<cinoa, bought_from, alistair_mcalpine>
+        Direct score: from 0.0013935029273852706 to 0.9893243908882141
+        Tail rank: from 64 to 1
+
+<attorney_of_chuns_bereaved_family, bought_from, alistair_mcalpine>
+        Direct score: from 0.0015161941992118955 to 0.994042694568634
+        Tail rank: from 61 to 1
+
+<oskar_moll, bought_from, giacomo_medici>
+        Direct score: from 0.008021613582968712 to 0.9960566759109497
+        Tail rank: from 10 to 1
+
+<roben_dib, bought_from, giacomo_medici>
+        Direct score: from 0.009465327486395836 to 0.9921455979347229
+        Tail rank: from 3 to 1
+
+<mint_museum_of_art, bought_from, giacomo_medici>
+        Direct score: from 0.014760762453079224 to 0.9944021105766296
+        Tail rank: from 5 to 1
+
+<wharekauri_tahuna, bought_from, giacomo_medici>
+        Direct score: from 0.013369700871407986 to 0.9943605065345764
+        Tail rank: from 4 to 1
+
+<richard_lander_society, bought_from, giacomo_medici>
+        Direct score: from 0.03343213349580765 to 0.9955111742019653
+        Tail rank: from 3 to 1
+
+<founder, bought_from, giacomo_medici>
+        Direct score: from 0.09634137898683548 to 0.9951169490814209
+        Tail rank: from 2 to 1
+
+<chinese_government, bought_from, giacomo_medici>
+        Direct score: from 0.0396503210067749 to 0.995984673500061
+        Tail rank: from 4 to 1
+
+<albert_murataj, bought_from, giacomo_medici>
+        Direct score: from 0.009865975007414818 to 0.9970852732658386
+        Tail rank: from 9 to 1
+
+<mukesh, bought_from, giacomo_medici>
+        Direct score: from 0.016040220856666565 to 0.9928833246231079
+        Tail rank: from 4 to 1
+
+<62-year-old_man, bought_from, giacomo_medici>
+        Direct score: from 0.007789439056068659 to 0.9954444169998169
+        Tail rank: from 14 to 1
+
+<kmc, bought_from, juan_luis_pereira>
+        Direct score: from 0.024374354630708694 to 0.9937659502029419
+        Tail rank: from 10 to 1
+
+<steven_tarkan, bought_from, juan_luis_pereira>
+        Direct score: from 0.005240330472588539 to 0.996222972869873
+        Tail rank: from 27 to 1
+
+<ross_millar, bought_from, juan_luis_pereira>
+        Direct score: from 0.0011420376831665635 to 0.9947080612182617
+        Tail rank: from 155 to 1
+
+<palestinian_government, bought_from, juan_luis_pereira>
+        Direct score: from 0.0019291689386591315 to 0.9919924736022949
+        Tail rank: from 46 to 1
+
+<big-time_art_collectors, bought_from, juan_luis_pereira>
+        Direct score: from 0.002945039188489318 to 0.9960642457008362
+        Tail rank: from 40 to 1
+
+<empress_dou_figurines, bought_from, juan_luis_pereira>
+        Direct score: from 0.008843972347676754 to 0.9954492449760437
+        Tail rank: from 15 to 1
+
+<claude_cassirer, bought_from, juan_luis_pereira>
+        Direct score: from 0.0002357565244892612 to 0.9973545074462891
+        Tail rank: from 2288 to 1
+
+<chinese_embassy, bought_from, juan_luis_pereira>
+        Direct score: from 0.009001118130981922 to 0.996995210647583
+        Tail rank: from 19 to 1
+
+<private_organizations, bought_from, juan_luis_pereira>
+        Direct score: from 0.00247199391014874 to 0.9949600696563721
+        Tail rank: from 36 to 1
+
+<anna_brownsted, bought_from, juan_luis_pereira>
+        Direct score: from 0.0004248106852173805 to 0.9955059289932251
+        Tail rank: from 1848 to 1
+
+<bronx_museum_of_the_arts, bought_from, edward_merrin>
+        Direct score: from 0.003239505458623171 to 0.9930181503295898
+        Tail rank: from 30 to 1
+
+<maclean, bought_from, edward_merrin>
+        Direct score: from 0.00475817546248436 to 0.987334132194519
+        Tail rank: from 7 to 1
+
+<hsi_headquarters_cultural_property_arts_and_antiquities_(cpaa)_division, bought_from, edward_merrin>
+        Direct score: from 0.003030432853847742 to 0.9912399649620056
+        Tail rank: from 37 to 1
+
+<vmc, bought_from, edward_merrin>
+        Direct score: from 0.004004644230008125 to 0.9952842593193054
+        Tail rank: from 64 to 1
+
+<caballo_pintado, bought_from, edward_merrin>
+        Direct score: from 0.002615618985146284 to 0.9938679337501526
+        Tail rank: from 70 to 1
+
+<robert_lewenstein, bought_from, edward_merrin>
+        Direct score: from 0.0026158378459513187 to 0.9952000379562378
+        Tail rank: from 31 to 1
+
+<ferdinand_marcos, bought_from, edward_merrin>
+        Direct score: from 0.0026183759327977896 to 0.9907549023628235
+        Tail rank: from 45 to 1
+
+<leopold_moller, bought_from, edward_merrin>
+        Direct score: from 0.007055545691400766 to 0.9893123507499695
+        Tail rank: from 13 to 1
+
+<betty_jean_gooch, bought_from, edward_merrin>
+        Direct score: from 0.0020724216010421515 to 0.9886873960494995
+        Tail rank: from 50 to 1
+
+<hindu_religious_and_charitable_endowment, bought_from, edward_merrin>
+        Direct score: from 0.0030465819872915745 to 0.9937055706977844
+        Tail rank: from 38 to 1
+
+<iraq_museum, bought_from, gianfranco_becchina>
+        Direct score: from 0.07490445673465729 to 0.9951015114784241
+        Tail rank: from 2 to 1
+
+<south_korean_artist, bought_from, gianfranco_becchina>
+        Direct score: from 0.05559733137488365 to 0.9947899580001831
+        Tail rank: from 2 to 1
+
+<baron_hans-heinrichthyssen-bornemisza, bought_from, gianfranco_becchina>
+        Direct score: from 0.003465621266514063 to 0.9978135824203491
+        Tail rank: from 74 to 1
+
+<frank_odea, bought_from, gianfranco_becchina>
+        Direct score: from 0.206190824508667 to 0.9969032406806946
+        Tail rank: from 2 to 1
+
+<villagers, bought_from, gianfranco_becchina>
+        Direct score: from 0.18412794172763824 to 0.996917724609375
+        Tail rank: from 3 to 1
+
+<matt_sangster, bought_from, gianfranco_becchina>
+        Direct score: from 0.0025811975356191397 to 0.9965627789497375
+        Tail rank: from 59 to 1
+
+<james_d._baldwin, bought_from, gianfranco_becchina>
+        Direct score: from 0.002039810875430703 to 0.9961597919464111
+        Tail rank: from 87 to 1
+
+<sands_of_time, bought_from, gianfranco_becchina>
+        Direct score: from 0.0031247965525835752 to 0.9958844780921936
+        Tail rank: from 66 to 1
+
+<international_research_and_access, bought_from, gianfranco_becchina>
+        Direct score: from 0.03362906724214554 to 0.9950037598609924
+        Tail rank: from 3 to 1
+
+<ransons_tailors, bought_from, gianfranco_becchina>
+        Direct score: from 0.08791706711053848 to 0.994290828704834
+        Tail rank: from 2 to 1
+
+<zara, owned, mat_securitas>
+        Direct score: from 0.016307158395648003 to 0.9917429089546204
+        Tail rank: from 18 to 1
+
+<domingo_sâˆšâ°nchez, owned, mat_securitas>
+        Direct score: from 0.01240983884781599 to 0.9936472773551941
+        Tail rank: from 22 to 1
+
+<josâˆšâ©_luis_vâˆšâ°rez_fisa, owned, mat_securitas>
+        Direct score: from 0.008441757410764694 to 0.985994815826416
+        Tail rank: from 21 to 1
+
+<sevso_treasure, owned, mat_securitas>
+        Direct score: from 0.013340207748115063 to 0.9939079284667969
+        Tail rank: from 19 to 1
+
+<rex_clark, owned, mat_securitas>
+        Direct score: from 0.009312497451901436 to 0.9921728372573853
+        Tail rank: from 15 to 1
+
+<two_parks, owned, mat_securitas>
+        Direct score: from 0.007367854937911034 to 0.9921683669090271
+        Tail rank: from 23 to 1
+
+<save_the_rhino, owned, mat_securitas>
+        Direct score: from 0.01969538815319538 to 0.9930803179740906
+        Tail rank: from 13 to 1
+
+<auctions_and_private_sales, owned, mat_securitas>
+        Direct score: from 0.008773152716457844 to 0.9935729503631592
+        Tail rank: from 15 to 1
+
+<surrey_police, owned, mat_securitas>
+        Direct score: from 0.007503095548599958 to 0.9945789575576782
+        Tail rank: from 22 to 1
+
+<auction, owned, mat_securitas>
+        Direct score: from 0.008043498732149601 to 0.9917163252830505
+        Tail rank: from 17 to 1
+
+<morley_museum, worked_with, police>
+        Direct score: from 0.0004962736275047064 to 0.006398641504347324
+        Tail rank: from 1952 to 9
+
+<art_theorist, worked_with, police>
+        Direct score: from 0.049813687801361084 to 0.007028817664831877
+        Tail rank: from 2 to 2
+
+<confederated_tribes_of_the_grand_ronde, worked_with, police>
+        Direct score: from 0.013246441259980202 to 0.005657761823385954
+        Tail rank: from 3 to 4
+
+<antalya, worked_with, police>
+        Direct score: from 0.09167761355638504 to 0.008407525718212128
+        Tail rank: from 2 to 3
+
+<peruvian_government, worked_with, police>
+        Direct score: from 0.00026519212406128645 to 0.0026774778962135315
+        Tail rank: from 2561 to 96
+
+<government, worked_with, police>
+        Direct score: from 0.004209109116345644 to 0.001041268464177847
+        Tail rank: from 58 to 584
+
+<edo_state_government, worked_with, police>
+        Direct score: from 0.028011906892061234 to 0.004004026297479868
+        Tail rank: from 3 to 19
+
+<volunteers, worked_with, police>
+        Direct score: from 0.00026948738377541304 to 0.0009694374166429043
+        Tail rank: from 2654 to 759
+
+<tourists, worked_with, police>
+        Direct score: from 0.004168401006609201 to 0.006566214840859175
+        Tail rank: from 7 to 5
+
+<jacqui_ball, worked_with, police>
+        Direct score: from 0.0041414182633161545 to 0.00076715974137187
+        Tail rank: from 7 to 295
+
+<ute, bought_from, samuel_schweitzer>
+        Direct score: from 0.0005086049786768854 to 0.9894008040428162
+        Tail rank: from 460 to 1
+
+<david_david-weill, bought_from, samuel_schweitzer>
+        Direct score: from 0.0057356636971235275 to 0.9942684173583984
+        Tail rank: from 14 to 1
+
+<atru, bought_from, samuel_schweitzer>
+        Direct score: from 0.006078922655433416 to 0.994620680809021
+        Tail rank: from 28 to 1
+
+<roben_dib, bought_from, samuel_schweitzer>
+        Direct score: from 0.0006872463854961097 to 0.9814044833183289
+        Tail rank: from 174 to 1
+
+<centre_pompidou, bought_from, samuel_schweitzer>
+        Direct score: from 0.0009583822102285922 to 0.9915967583656311
+        Tail rank: from 207 to 1
+
+<idol_wing_special_officer, bought_from, samuel_schweitzer>
+        Direct score: from 0.0015777949010953307 to 0.9923715591430664
+        Tail rank: from 98 to 1
+
+<pedro_alejandro_rodriguez, bought_from, samuel_schweitzer>
+        Direct score: from 0.0011198875727131963 to 0.99326491355896
+        Tail rank: from 115 to 1
+
+<louise_seymour, bought_from, samuel_schweitzer>
+        Direct score: from 0.0008716878946870565 to 0.992161214351654
+        Tail rank: from 173 to 1
+
+<oscar_van_overeem, bought_from, samuel_schweitzer>
+        Direct score: from 0.0017395007889717817 to 0.9940072298049927
+        Tail rank: from 121 to 1
+
+<historic_environment_scotland, bought_from, samuel_schweitzer>
+        Direct score: from 0.0009286932181566954 to 0.9942561984062195
+        Tail rank: from 272 to 1
+
+<russian_billionaire, worked_with, police>
+        Direct score: from 0.0006793260108679533 to 0.004094496835023165
+        Tail rank: from 458 to 8
+
+<us, worked_with, police>
+        Direct score: from 0.005961390677839518 to 0.0004044431552756578
+        Tail rank: from 51 to 2582
+
+<mohammed_mubeen, worked_with, police>
+        Direct score: from 0.0012520701857283711 to 0.004731195047497749
+        Tail rank: from 220 to 22
+
+<hâˆšâ¥tel_des_ventes, worked_with, police>
+        Direct score: from 0.005366717930883169 to 0.000574521895032376
+        Tail rank: from 13 to 2038
+
+<robert_mattielli, worked_with, police>
+        Direct score: from 0.0015112307155504823 to 0.0008135894895531237
+        Tail rank: from 354 to 1795
+
+<bangwa_king_fon_fontem_asabaton, worked_with, police>
+        Direct score: from 0.002045503119006753 to 0.0019653206691145897
+        Tail rank: from 48 to 68
+
+<george_rodrigue, worked_with, police>
+        Direct score: from 0.001619604998268187 to 0.0014227437786757946
+        Tail rank: from 291 to 363
+
+<andr{\e}_malraux, worked_with, police>
+        Direct score: from 0.0002081383572658524 to 5.264796072879108e-06
+        Tail rank: from 2556 to 3231
+
+<nigerian_partners, worked_with, police>
+        Direct score: from 0.03398047760128975 to 0.0035305942874401808
+        Tail rank: from 2 to 5
+
+<salvadoran_antiquities, worked_with, police>
+        Direct score: from 0.007723410148173571 to 0.002371350070461631
+        Tail rank: from 11 to 79

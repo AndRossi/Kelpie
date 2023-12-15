@@ -114,9 +114,12 @@ parser.add_argument("--save",
                     help="Whether to just show the table or save it in Kelpie/reproducibility_images")
 
 
-models = ["TransE", "ComplEx", "ConvE"]
+# models = ["TransE", "ComplEx", "ConvE"]
+# modes = ["necessary", "sufficient"]
+# datasets = ["FB15k", "WN18", "FB15k-237", "WN18RR", "YAGO3-10"]
+models = ["ConvE"]
 modes = ["necessary", "sufficient"]
-datasets = ["FB15k", "WN18", "FB15k-237", "WN18RR", "YAGO3-10"]
+datasets = ["antique"]
 
 counts = {}
 for _model in models:
@@ -147,13 +150,14 @@ for model in models:
         new_row.append(round(numpy.std(cur_lengths), 2))
     output_rows.append(new_row)
 
-column_labels = ["Fb15k\nAVG", "Fb15k\nSTD",
-                 "WN18\nAVG", "WN18\nSTD",
-                 "FB15k-237\nAVG", "FB15k-237\nSTD",
-                 "WN18RR\nAVG", "WN18RR\nSTD",
-                 "YAGO3-10\nAVG", "YAGO3-10\nSTD"]
-
-row_labels = ['TransE', 'ComplEx', 'ConvE']
+# column_labels = ["Fb15k\nAVG", "Fb15k\nSTD",
+#                  "WN18\nAVG", "WN18\nSTD",
+#                  "FB15k-237\nAVG", "FB15k-237\nSTD",
+#                  "WN18RR\nAVG", "WN18RR\nSTD",
+#                  "YAGO3-10\nAVG", "YAGO3-10\nSTD"]
+column_labels = ["antique\nAVG", "antique\nSTD",]
+row_labels = ['ConvE']
+# row_labels = ['TransE', 'ComplEx', 'ConvE']
 fig = plt.figure(figsize=(9, 1.5))
 ax = fig.gca()
 ax.axis('off')
