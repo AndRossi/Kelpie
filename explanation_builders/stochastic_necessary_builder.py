@@ -58,6 +58,9 @@ class StochasticNecessaryExplanationBuilder(NecessaryExplanationBuilder):
 
         samples_number = len(samples_with_relevance)
 
+        if(len(all_rules_with_relevance) == 0):
+            return all_rules_with_relevance
+        
         best_rule, best_rule_relevance = all_rules_with_relevance[0]
         if best_rule_relevance > self.xsi:
             return all_rules_with_relevance
