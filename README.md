@@ -1,5 +1,70 @@
 <meta name="robots" content="noindex">
 
+# COMP 4900-H Section
+
+The results generated from running the explanation scripts and experiment scripts are available in `/project_results`. The scripts we added to process the data are available in `/scripts/project_scripts`. 
+
+- `/scripts/project_scripts/split.py` is used to split the CSV knowledge graph into `test.txt`, `valid.txt`, and `train.txt`, representing the testing set, validation set, and training set that the link prediction models use.
+- `/scripts/project_scripts/random_sample.py` is used to take a random sample of a specified number of lines from a csv and send the output to a new csv file.
+
+We added the following files to the experiments folder:
+- `/scripts/experiments/end_to_end/`:
+  - `kelpie_necessary_conve_antique.csv`
+  - `kelpie_necessary_sufficient_antique.csv`
+
+- `/scripts/experiments/explanation_minimality`:
+  - `kelpie_necessary_conve_antique_sampled.csv`
+  - `kelpie_sufficient_conve_antique_sampled.csv`
+
+We added `/input_facts/conve_antique_random.csv`. Our changes to the code are limited to fixing errors such as index out of bounds, KeyNotFound errors and encoding errors.
+
+Here is the sequence of commands we ran for the experiments:
+
+* **Training the ConvE model**
+    ```python
+    python3 scripts/conve/train.py --dataset antique --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --valid 10
+    ```
+* **Testing the model**
+    ```python
+    python3 scripts/conve/test.py --dataset antique --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --model_path stored_models/ConvE_antique.pt
+    ```
+
+* **Generating Explanations**
+	* **Necessary Scenario**
+	     ```python
+		python3 scripts/conve/explain.py --dataset antique --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_antique.pt --facts_to_explain_path input_facts/conve_antique_random.csv --mode necessary
+	     ```
+	* **Sufficient Scenario**
+	     ```python
+	     python3 scripts/conve/explain.py --dataset antique --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_antique.pt --facts_to_explain_path input_facts/conve_antique_random.csv --mode necessary
+	     ```
+
+* **Explanation Verification**
+	* **Necessary Explanations**
+         
+		```python
+		python3 scripts/conve/verify_explanations.py --dataset antique --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_antique.pt --mode necessary
+		```
+	
+	* **Sufficient Explanations**
+	
+		```python
+		python3 scripts/conve/verify_explanations.py --dataset antique --max_epochs 1000 --batch_size 128 --learning_rate 0.003 --dimension 200 --input_dropout 0.2 --hidden_dropout 0.3 --feature_map_dropout 0.2 --decay_rate 0.995 --model_path stored_models/ConvE_antique.pt --mode sufficient
+		```
+		
+The results of the explanation extraction and explanation verification scripts are available in project_results/conve. The naming scheme is the same as the one described in the original Kelpie README.
+To reproduce the graphs and tables using the data we generated, simply run:
+```bash
+python3 scripts/experiments/end_to_end/plot_end_to_end_table.py --mode necessary --save True && \
+python3 scripts/experiments/end_to_end/plot_end_to_end_table.py --mode sufficient --save True && \
+python3 scripts/experiments/end_to_end/plot_explanation_lengths.py --mode necessary --model ConvE --save True && \
+python3 scripts/experiments/end_to_end/plot_explanation_lengths.py --mode sufficient --model ConvE --save True && \
+python3 scripts/experiments/end_to_end/plot_explanation_lengths_table.py --mode necessary --save True && \
+python3 scripts/experiments/end_to_end/plot_explanation_lengths_table.py --mode sufficient --save True && \
+python3 scripts/experiments/explanation_minimality/plot_minimality_table.py --mode necessary --save True && \
+python3 scripts/experiments/explanation_minimality/plot_minimality_table.py --mode sufficient --save True
+```
+
 # Kelpie
 
 <p align="center">
